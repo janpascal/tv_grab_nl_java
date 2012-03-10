@@ -1,6 +1,9 @@
 package org.vanbest.xmltv;
 
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.stream.FactoryConfigurationError;
@@ -51,6 +54,52 @@ public class XmlTvWriter {
 			writer.writeAttribute("lang", "nl");
 			writer.writeCharacters(c.name);
 			writer.writeEndElement();
+			writer.writeEndElement();
+			writer.writeCharacters("\n");
+		}
+	}
+	
+	/*
+	 * 
+	 * <programme stop="20120309060000 +0100" start="20120309055200 +0100" channel="609.chello.nl">
+<title lang="nl">
+Mozart - Così fan tutte
+</title>
+<desc lang="nl">
+Opera, opgenomen in 2006 in het Amsterdamse Muziektheater als onderdeel van de
+eigentijdse enscenering van de drie Da Ponte opera's met o.a. Sally Matthews en
+Maite Beaumont.
+</desc>
+<category lang="en">
+Arts/Culture
+</category>
+</programme>
+
+	 */
+
+	public void writePrograms(Collection<Programme> programs) throws XMLStreamException {
+		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
+		for(Programme p: programs) {
+			writer.writeStartElement("programme");
+				writer.writeAttribute("start", df.format(p.datum_start));
+				writer.writeAttribute("stop", df.format(p.datum_end));
+				writer.writeAttribute("channel", ""+p.channel.id);
+				
+				writer.writeStartElement("title");
+					writer.writeAttribute("lang", "nl");
+					writer.writeCharacters(p.titel);
+				writer.writeEndElement();
+
+				writer.writeStartElement("desc");
+					writer.writeAttribute("lang", "nl");
+					writer.writeCharacters(p.details.synop);
+				writer.writeEndElement();
+
+				writer.writeStartElement("category");
+					writer.writeAttribute("lang", "en");
+					writer.writeCharacters(p.genre); // soort? FIXME translation to mythtv categories
+				writer.writeEndElement();
+
 			writer.writeEndElement();
 			writer.writeCharacters("\n");
 		}

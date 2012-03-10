@@ -94,6 +94,7 @@ public class Programme {
 	  boolean is_hightlight;
 	  String highlight_afbeelding;
 	  ProgrammeDetails details = null;
+	  Channel channel = null;
 	  
 	  public String toString() {
 		  StringBuffer s = new StringBuffer();

@@ -114,6 +114,7 @@ public class TvGids {
 				if (fetchDetails) {
 					p.details = getDetails(p.db_id);
 				}
+				p.channel = i;
 				result.add( p );
 			}
 		}

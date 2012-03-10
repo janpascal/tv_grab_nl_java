@@ -22,6 +22,7 @@ public class Main {
 			
 			XmlTvWriter writer = new XmlTvWriter(System.out);
 			writer.writeChannels(myChannels);
+			writer.writePrograms(programmes);
 			System.out.flush();
 			
 		} catch (Exception e) {
