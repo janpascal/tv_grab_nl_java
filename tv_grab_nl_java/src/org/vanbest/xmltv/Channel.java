@@ -12,4 +12,8 @@ public class Channel {
     public String toString() {
     	return "id: " + id + "; name: " + name + "; shortName: " + shortName;
     }
+    
+    public String getChannelId() {
+    	return id+".tvgids.nl";
+    }
 }

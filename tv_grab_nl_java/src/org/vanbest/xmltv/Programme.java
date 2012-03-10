@@ -67,12 +67,12 @@ public class Programme {
 		this.datum_end = datum_end;
 	}
 
-	public boolean isIs_hightlight() {
-		return is_hightlight;
+	public boolean isIs_highlight() {
+		return is_highlight;
 	}
 
-	public void setIs_hightlight(boolean is_hightlight) {
-		this.is_hightlight = is_hightlight;
+	public void setIs_highlight(boolean is_highlight) {
+		this.is_highlight = is_highlight;
 	}
 
 	public String getHighlight_afbeelding() {
@@ -83,6 +83,14 @@ public class Programme {
 		this.highlight_afbeelding = highlight_afbeelding;
 	}
 
+	public String getHighlight_content() {
+		return highlight_content;
+	}
+
+	public void setHighlight_content(String highlight_content) {
+		this.highlight_content = highlight_content;
+	}
+
 	String db_id;
 	  String titel;
 	  String genre;
@@ -91,8 +99,9 @@ public class Programme {
 	  String artikel_id;
 	  Date datum_start;
 	  Date datum_end;
-	  boolean is_hightlight;
+	  boolean is_highlight;
 	  String highlight_afbeelding;
+	  String highlight_content;
 	  ProgrammeDetails details = null;
 	  Channel channel = null;
 	  

@@ -1,6 +1,8 @@
 package org.vanbest.xmltv;
 
-public class ProgrammeDetails {
+import java.io.Serializable;
+
+public class ProgrammeDetails implements Serializable {
 	String db_id;
 	String titel;
 	String datum;
