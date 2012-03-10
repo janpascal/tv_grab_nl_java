@@ -56,7 +56,15 @@ public class Main {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public void configure() {
+		TvGids gids = new TvGids();
+		
+		List<Channel> channels = gids.getChannels();
+		
+		
+	}
+	
+	public void processOptions(String[] args) {
 		Options options = new Options();
 		options.addOption("d", "description", false, "Display a description to identify this grabber");
 		options.addOption("c", "capablities", false, "Show grabber capabilities");
@@ -88,7 +96,16 @@ public class Main {
 			// System.out.println("preferredmethod");
 			System.exit(0);
 		}
-		
+		if (line.hasOption("n")) {
+			configure();
+			System.exit(0);
+		}
+			
+	}
+	
+	public static void main(String[] args) {
+		Main main = new Main();
+		main.processOptions(args);
 	}
 
 }
