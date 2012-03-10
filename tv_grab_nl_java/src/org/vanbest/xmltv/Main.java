@@ -60,6 +60,19 @@ public class Main {
 		TvGids gids = new TvGids();
 		
 		List<Channel> channels = gids.getChannels();
+		System.out.println(channels);
+		
+		Config config = new Config();
+		config.setChannels(channels);
+		try {
+			config.writeConfig(Config.defaultConfigFile().getCanonicalPath());
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		
 	}
