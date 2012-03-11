@@ -98,4 +98,8 @@ public class XmlTvWriter {
 		writer.writeEndDocument();
 		writer.flush();
 	}
+
+	public void flush() throws XMLStreamException {
+		writer.flush();
+	}
 }

@@ -113,11 +113,11 @@ public class TvGids {
 		URL url = programmeUrl(channels, day);
 
 		JSONObject jsonObject = fetchJSON(url);  
-		System.out.println( jsonObject );  
+		//System.out.println( jsonObject );  
 		
 		for( Channel c: channels) {
 			JSON ps = (JSON) jsonObject.get(""+c.id);
-			System.out.println( ps );
+			//System.out.println( ps );
 			if ( ps.isArray() ) {
 				JSONArray programs = (JSONArray) ps;
 				for( int i=0; i<programs.size(); i++ ) {

@@ -11,6 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
@@ -23,8 +26,9 @@ public class Main {
 	private File configFile;
 	private PrintStream outputWriter;
 	private File cacheFile;
-	private int days = 1;
+	private int days = 9;
 	private int offset = 0;
+	private boolean quiet = false;
 	/**
 	 * @param args
 	 */
@@ -35,38 +39,36 @@ public class Main {
 		this.cacheFile = defaultCacheFile();
 	}
 	
-	public void run() throws IOException {
+	public void run() throws FactoryConfigurationError, Exception {
 		Config config = Config.readConfig(configFile);
 		
+		XmlTvWriter writer = new XmlTvWriter(outputWriter);
+		writer.writeChannels(config.channels);
+
 		TvGids gids = new TvGids(cacheFile);
-		
-		try {
+
+		for (int day=offset; day<offset+days; day++) {
+			if (!quiet) System.out.println("Fetching information for day " + day);
 			Set<Programme> programmes = new HashSet<Programme>();
 			for( Channel c: config.channels ) {
 				ArrayList<Channel> cs = new ArrayList<Channel>(2);
 				cs.add(c);
-				Set<Programme> p = gids.getProgrammes(cs, 0, true);
-				programmes.addAll( p );
+				Set<Programme> p = gids.getProgrammes(cs, day, true);
+				writer.writePrograms(p);
+				writer.flush();
 			}
+		}
+		
+		writer.close();
 			
-			XmlTvWriter writer = new XmlTvWriter(outputWriter);
-			writer.writeChannels(config.channels);
-			writer.writePrograms(programmes);
-			writer.close();
-			
-		} catch (Exception e) {
+		try {
+			gids.close();
+		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
-			try {
-				gids.close();
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -74,7 +76,7 @@ public class Main {
 		TvGids gids = new TvGids(cacheFile);
 		
 		List<Channel> channels = gids.getChannels();
-		System.out.println(channels);
+		//System.out.println(channels);
 		
 		Config config = new Config();
 		config.setChannels(channels);
@@ -94,7 +96,7 @@ public class Main {
 	public void processOptions(String[] args) throws FileNotFoundException {
 		Options options = new Options();
 		options.addOption("d", "description", false, "Display a description to identify this grabber");
-		options.addOption("c", "capablities", false, "Show grabber capabilities");
+		options.addOption("c", "capabilities", false, "Show grabber capabilities");
 		options.addOption("q", "quiet", false, "Be quiet");
 		options.addOption("o", "output", true, "Set xlmtv output filename");
 		options.addOption("y", "days", true, "Number of days to grab");
@@ -116,6 +118,9 @@ public class Main {
 			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
 			System.exit(0);
 		}
+		if (line.hasOption("q")) {
+			this.quiet = true;
+		}
 		if(line.hasOption("f")) { 
 			configFile = new File(line.getOptionValue("f"));	
 		}
@@ -124,6 +129,12 @@ public class Main {
 		}
 		if (line.hasOption("h")) {
 			this.cacheFile = new File(line.getOptionValue("h"));
+		}
+		if (line.hasOption("y")) {
+			this.days = Integer.parseInt(line.getOptionValue("y"));
+		}
+		if (line.hasOption("s")) {
+			this.offset = Integer.parseInt(line.getOptionValue("s"));
 		}
 		if (line.hasOption("c")) {
 			System.out.println("baseline");
@@ -152,7 +163,7 @@ public class Main {
 		try {
 			main.processOptions(args);
 			main.run();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
