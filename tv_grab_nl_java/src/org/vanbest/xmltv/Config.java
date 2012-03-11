@@ -21,26 +21,18 @@ public class Config {
 	public Config() {
 	}
 	
-	public void writeConfig(String filename) throws IOException {
-		FileUtils.forceMkdir(new File(filename).getParentFile());
-		PrintWriter out = new PrintWriter(new OutputStreamWriter( new FileOutputStream( filename )));
+	public void writeConfig(File configFile) throws IOException {
+		FileUtils.forceMkdir(configFile.getParentFile());
+		PrintWriter out = new PrintWriter(new OutputStreamWriter( new FileOutputStream( configFile )));
 		for(Channel c: channels) {
 			out.println(c.id + ": " + c.name);
 		}
 		out.close();
 	}
 	
-	public static File defaultConfigFile() {
-		return FileUtils.getFile(FileUtils.getUserDirectory(), ".xmltv", "tv_grab_nl_java.conf");
-	}
-
-	public static Config readConfig() throws IOException {
-		return readConfig(defaultConfigFile().getCanonicalPath());
-	}
-
-	public static Config readConfig(String filename) throws IOException {
+	public static Config readConfig(File file) throws IOException {
 		Config result = new Config();
-		BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( filename)));
+		BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file)));
 		List<Channel> channels = new ArrayList<Channel>();
 		while(true) {
 			String s = reader.readLine();
@@ -48,7 +40,7 @@ public class Config {
 			if (!s.contains(":")) continue;
 			if (s.startsWith("#")) continue;
 			String[] parts = s.split("[[:space:]]*:[[:space:]]*", 2);
-			Channel c = new Channel(Integer.parseInt(parts[0]), parts[1], "");
+			Channel c = new Channel(Integer.parseInt(parts[0]), parts[1].trim(), "");
 			channels.add(c);
 		}
 		result.setChannels(channels);

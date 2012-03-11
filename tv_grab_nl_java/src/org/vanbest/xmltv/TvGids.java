@@ -1,6 +1,7 @@
 package org.vanbest.xmltv;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,8 +31,8 @@ public class TvGids {
 	ProgrammeCache cache;
 	boolean initialised = false;
 	
-	public TvGids() {
-		cache = new ProgrammeCache();
+	public TvGids(File cacheFile) {
+		cache = new ProgrammeCache(cacheFile);
 		if ( ! initialised ) {
 			String[] formats = {"yyyy-MM-dd HH:mm:ss"};
 			JSONUtils.getMorpherRegistry().registerMorpher( new DateMorpher(formats, new Locale("nl")));

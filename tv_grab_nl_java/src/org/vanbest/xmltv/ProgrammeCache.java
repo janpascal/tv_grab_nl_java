@@ -14,13 +14,11 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 
 public class ProgrammeCache {
-	
-	static String cacheDir = "/tmp/tv_grab_nl_java";
-	
-	private File cacheFile = new File(cacheDir);
+	private File cacheFile;
 	private Map<String,ProgrammeDetails> cache;
 	
-	public ProgrammeCache() {
+	public ProgrammeCache(File cacheFile) {
+		this.cacheFile = cacheFile;
 		if (cacheFile.canRead()) {
 			try {
 				cache = (Map<String,ProgrammeDetails>) new ObjectInputStream( new FileInputStream( cacheFile ) ).readObject();
