@@ -4,6 +4,7 @@ public class Channel {
 	int id;
     String name;
     String shortName;
+	String iconUrl;
     public Channel(int id, String name, String shortName) {
     	this.id = id;
     	this.name = name;
@@ -21,4 +22,7 @@ public class Channel {
 		 this.name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(name);
 		 this.shortName = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(shortName);
     }
+	public void setIconUrl(String url) {
+		this.iconUrl = url;
+	}
 }

@@ -25,9 +25,56 @@ public class Config {
 		FileUtils.forceMkdir(configFile.getParentFile());
 		PrintWriter out = new PrintWriter(new OutputStreamWriter( new FileOutputStream( configFile )));
 		for(Channel c: channels) {
-			out.println(c.id + ": " + c.name);
+			out.print(c.id + ": " + escape(c.name));
+			if (c.iconUrl != null) {
+				out.print(" : " + escape(c.iconUrl));
+			}
+			out.println();
 		}
 		out.close();
+	}
+	
+	public static String unescape(String s) {
+		String result = s.trim();
+		result = result.substring(1, result.length()-1);
+		result = result.replaceAll("\\\"", "\"");
+		return result;
+	}
+	
+	public static String escape(String s) {
+		return "\"" + s.replaceAll("\"", "\\\"") + "\"";
+	}
+	
+	public static String[] splitLine(String s) {
+		int colon = 0;
+		while (true) {
+			colon  = s.indexOf(':', colon+1);
+			if (colon<0 || s.charAt(colon-1) != '\\') {
+				break;
+			}
+		}
+		if (colon<0) {
+			String[] parts = {s};
+			return parts;
+		} 
+		String id = s.substring(0,  colon).trim();
+		int firstColon = colon;
+		while (true) {
+			colon  = s.indexOf(':', colon+1);
+			if (colon<0 || s.charAt(colon-1) != '\\') {
+				break;
+			}
+		}
+		if (colon<0) {
+			String name = unescape(s.substring(firstColon+1));
+			
+			String[] parts = {id, name};
+			return parts;
+		} 
+		String name = unescape(s.substring(firstColon+1, colon));
+		String icon = unescape(s.substring(colon+1));
+		String[] parts = {id,name,icon};
+		return parts;
 	}
 	
 	public static Config readConfig(File file) throws IOException {
@@ -39,8 +86,11 @@ public class Config {
 			if(s==null) break;
 			if (!s.contains(":")) continue;
 			if (s.startsWith("#")) continue;
-			String[] parts = s.split("[[:space:]]*:[[:space:]]*", 2);
-			Channel c = new Channel(Integer.parseInt(parts[0]), parts[1].trim(), "");
+			String[] parts = splitLine(s);
+			Channel c = new Channel(Integer.parseInt(parts[0]), parts[1], "");
+			if (parts.length>2) {
+				c.setIconUrl(parts[2]);
+			}
 			channels.add(c);
 		}
 		result.setChannels(channels);

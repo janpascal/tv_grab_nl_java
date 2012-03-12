@@ -16,17 +16,22 @@ public class ProgrammeDetails implements Serializable {
 	String regisseur;
 	String zender_id;
 	
-  public void fixup() {
-	 this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
-	 this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
-	 System.out.println("synop was:" + synop);
-	 this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);
-	 System.out.println("synop werd:" + synop);
-	 this.presentatie = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(presentatie);
-	 this.acteursnamen_rolverdeling = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(acteursnamen_rolverdeling);
-	 this.regisseur = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(regisseur);
-  }
-
+	public void fixup(Programme p) {
+		this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
+		this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
+		this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);
+		if (synop.isEmpty() && ( genre.toLowerCase().equals("movies") || genre.toLowerCase().equals("film"))) {
+			System.out.println("Splitting title: \"" + p.titel + "\"");
+			String[] parts = p.titel.split("[[:space:]]*:[[:space:]]*", 2);
+			titel = parts[0].trim();
+			p.titel = titel;
+			synop = parts[1].trim();
+			System.out.println("Splitting title to : \"" + p.titel + "\"; synop: \"" + synop + "\"");
+		}
+		this.presentatie = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(presentatie);
+		this.acteursnamen_rolverdeling = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(acteursnamen_rolverdeling);
+		this.regisseur = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(regisseur);
+	}
 
 	public String getDb_id() {
 		return db_id;

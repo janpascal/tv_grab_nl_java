@@ -93,6 +93,7 @@ public class TvGids {
 			//System.out.println( "id: " + zender.getString("id"));
 			//System.out.println( "name: " + zender.getString("name"));
 			Channel c = new Channel(zender.getInt("id"), zender.getString("name"), zender.getString("name_short"));
+			c.setIconUrl("http://tvgidsassets.nl/img/channels/53x27/" + c.id + ".png");
 			c.fixup();
 			result.add(c);
 		}
@@ -146,7 +147,12 @@ public class TvGids {
 					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
 					p.fixup();
 					if (fetchDetails) {
-						p.details = getDetails(p.db_id);
+						p.details = cache.getDetails(p.db_id);
+						if ( p.details == null ) {
+							p.details = getDetails(p.db_id);
+							p.details.fixup(p);
+							cache.add(p.db_id, p.details);
+						}
 					}
 					p.channel = c;
 					result.add( p );
@@ -182,16 +188,9 @@ public class TvGids {
 	}
 
 	private ProgrammeDetails getDetails(String db_id) throws Exception {
-		ProgrammeDetails d = cache.getDetails(db_id);
-		if ( d != null ) {
-			return d;
-		}
 		URL url = detailUrl(db_id);
 		JSONObject json = fetchJSON(url);
 		//System.out.println( json );  
-		d = (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
-		d.fixup();
-		cache.add(db_id, d);
-		return d;
+		return (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
 	}
 }
