@@ -16,6 +16,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import net.sf.ezmorph.MorpherRegistry;
+import net.sf.ezmorph.ObjectMorpher;
 import net.sf.ezmorph.object.DateMorpher;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
@@ -29,15 +31,32 @@ public class TvGids {
 	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
 
 	ProgrammeCache cache;
-	boolean initialised = false;
+	static boolean initialised = false;
 	
 	public TvGids(File cacheFile) {
 		cache = new ProgrammeCache(cacheFile);
 		if ( ! initialised ) {
-			String[] formats = {"yyyy-MM-dd HH:mm:ss"};
-			JSONUtils.getMorpherRegistry().registerMorpher( new DateMorpher(formats, new Locale("nl")));
+			init();
 			initialised = true;
 		}
+	}
+	
+	public static void init() {
+		String[] formats = {"yyyy-MM-dd HH:mm:ss"};
+		MorpherRegistry registry = JSONUtils.getMorpherRegistry();
+		registry.registerMorpher( new DateMorpher(formats, new Locale("nl")));
+		registry.registerMorpher( new ObjectMorpher() {
+			 public Object morph(Object value) {
+				 String s = (String) value;
+				 return org.apache.commons.lang.StringEscapeUtils.unescapeHtml(s);
+			 }
+			 public Class morphsTo() {
+				 return String.class;
+			 }
+			 public boolean supports(Class clazz) {
+				 return clazz == String.class;
+			 }
+		}, true);
 	}
 	
 	public void close() throws FileNotFoundException, IOException {
@@ -73,7 +92,9 @@ public class TvGids {
 			JSONObject zender = jsonArray.getJSONObject(i);
 			//System.out.println( "id: " + zender.getString("id"));
 			//System.out.println( "name: " + zender.getString("name"));
-			result.add( new Channel(zender.getInt("id"), zender.getString("name"), zender.getString("name_short")));
+			Channel c = new Channel(zender.getInt("id"), zender.getString("name"), zender.getString("name_short"));
+			c.fixup();
+			result.add(c);
 		}
 
 		return result;
@@ -123,6 +144,7 @@ public class TvGids {
 				for( int i=0; i<programs.size(); i++ ) {
 					JSONObject programme = programs.getJSONObject(i);
 					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
+					p.fixup();
 					if (fetchDetails) {
 						p.details = getDetails(p.db_id);
 					}
@@ -168,6 +190,7 @@ public class TvGids {
 		JSONObject json = fetchJSON(url);
 		//System.out.println( json );  
 		d = (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
+		d.fixup();
 		cache.add(db_id, d);
 		return d;
 	}

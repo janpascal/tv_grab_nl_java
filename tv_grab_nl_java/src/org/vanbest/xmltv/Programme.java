@@ -104,7 +104,14 @@ public class Programme {
 	  String highlight_content;
 	  ProgrammeDetails details = null;
 	  Channel channel = null;
-	  
+
+	  public void fixup() {
+		 this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
+		 this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
+		 this.soort = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(soort);
+		 this.highlight_content = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(highlight_content);
+	  }
+
 	  public String toString() {
 		  StringBuffer s = new StringBuffer();
 		  s.append("id: " + db_id + ";");

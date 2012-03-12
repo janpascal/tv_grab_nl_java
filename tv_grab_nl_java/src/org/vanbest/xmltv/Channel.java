@@ -16,4 +16,9 @@ public class Channel {
     public String getChannelId() {
     	return id+".tvgids.nl";
     }
+    
+    public void fixup() {
+		 this.name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(name);
+		 this.shortName = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(shortName);
+    }
 }

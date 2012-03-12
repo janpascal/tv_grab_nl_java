@@ -59,8 +59,6 @@ public class Main {
 			}
 		}
 		
-		writer.close();
-			
 		try {
 			gids.close();
 		} catch (FileNotFoundException e) {
@@ -70,6 +68,8 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		writer.close();
 	}
 	
 	public void configure() {
