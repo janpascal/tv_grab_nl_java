@@ -12,19 +12,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLStreamException;
 
-/*
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE tv SYSTEM "xmltv.dtd">
-<tv generator-info-url="http://www.caliban.org/ruby/xmltv_upc.shtml" source-info-url="http://tvgids.upc.nl/TV/" source-info-name="UPC TV Guide" generator-info-name="tv_grab_nl_upc $Id: tv_grab_nl_upc,v 1.228 2011/04/05 07:33:12 ianmacd Exp $">
-
-<channel id="16.chello.nl">
-<display-name lang="nl">
-Comedy C.\Kindernet
-</display-name>
-</channel>
-
-*/
-
 public class XmlTvWriter {
 
 	private XMLStreamWriter writer;
@@ -39,10 +26,10 @@ public class XmlTvWriter {
 		writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
 		writer.writeCharacters("\n");
 		writer.writeStartElement("tv");
-		writer.writeAttribute("generator-info-url","http://www.caliban.org/ruby/xmltv_upc.shtml");
+		writer.writeAttribute("generator-info-url","http://www.vanbest.org/");
 		writer.writeAttribute("source-info-url", "http://tvgids.nl/");
 		writer.writeAttribute("source-info-name", "TvGids.nl");
-		writer.writeAttribute("generator-info-name", "tv_grab_nl_java $Id: tv_grab_nl_java,v 1.228 2011/04/05 07:33:12 ianmacd Exp $");
+		writer.writeAttribute("generator-info-name", "tv_grab_nl_java $VERSION");
 		writer.writeCharacters("\n");
 	}
 	
@@ -60,12 +47,19 @@ public class XmlTvWriter {
 					writer.writeAttribute("src", c.iconUrl);
 					writer.writeEndElement();
 				}
-				
+
 			writer.writeEndElement();
 			writer.writeCharacters("\n");
 		}
 	}
-	
+
+	/* TODO: 
+	 * 	  boolean is_highlight;
+	 * 	  String highlight_afbeelding;
+	 *    String highlight_content;
+	 *    soort
+	 *    artikel_id ???
+	 */
 	public void writePrograms(Collection<Programme> programs) throws XMLStreamException {
 		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
 		for(Programme p: programs) {
@@ -95,6 +89,58 @@ public class XmlTvWriter {
 				writer.writeEndElement();
 				writer.writeCharacters("\n");
 
+				if (p.details != null) {
+					if ( p.is_highlight) {
+						//System.out.println("Highlight");
+						//System.out.println("	" + p.highlight_afbeelding);
+						//System.out.println("	" + p.highlight_content);
+					} else {
+						if (p.highlight_afbeelding!= null && !p.highlight_afbeelding.isEmpty()) {
+							//System.out.println("highlight_afbeelding: " + p.highlight_afbeelding);
+						}
+						if (p.highlight_content!= null && !p.highlight_content.isEmpty()) {
+							//System.out.println("highlight_content: " + p.highlight_content);
+						}
+					}
+					if (!p.details.kijkwijzer.isEmpty() ||
+							!p.details.presentatie.isEmpty() || 
+							!p.details.presentatie.isEmpty() ||
+							!p.details.acteursnamen_rolverdeling.isEmpty()
+							) {
+						writer.writeStartElement("credits");
+						if (!p.details.kijkwijzer.isEmpty()) {
+							writer.writeStartElement("rating");
+							writer.writeAttribute("system", "kijkwijzer");
+							writer.writeCharacters(p.details.kijkwijzer);
+							writer.writeEndElement();
+						}
+						if (!p.details.presentatie.isEmpty()) {
+							String[] parts = p.details.presentatie.split(",");
+							for (String s: parts) {
+								writer.writeStartElement("presenter");
+								writer.writeCharacters(s.trim());
+								writer.writeEndElement();
+							}
+						}
+						if (!p.details.regisseur.isEmpty()) {
+							String[] parts = p.details.regisseur.split(",");
+							for (String s: parts) {
+								writer.writeStartElement("director");
+								writer.writeCharacters(s.trim());
+								writer.writeEndElement();
+							}
+						}
+						if (!p.details.acteursnamen_rolverdeling.isEmpty()) {
+							String[] parts = p.details.acteursnamen_rolverdeling.split(",");
+							for (String s: parts) {
+								writer.writeStartElement("actor");
+								writer.writeCharacters(s.trim());
+								writer.writeEndElement();
+							}
+						}
+						writer.writeEndElement();
+					}
+				}
 			writer.writeEndElement();
 			writer.writeCharacters("\n");
 		}

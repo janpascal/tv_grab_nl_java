@@ -21,12 +21,14 @@ public class ProgrammeDetails implements Serializable {
 		this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
 		this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);
 		if (synop.isEmpty() && ( genre.toLowerCase().equals("movies") || genre.toLowerCase().equals("film"))) {
-			System.out.println("Splitting title: \"" + p.titel + "\"");
+			//System.out.println("Splitting title: \"" + p.titel + "\"");
 			String[] parts = p.titel.split("[[:space:]]*:[[:space:]]*", 2);
-			titel = parts[0].trim();
-			p.titel = titel;
-			synop = parts[1].trim();
-			System.out.println("Splitting title to : \"" + p.titel + "\"; synop: \"" + synop + "\"");
+			if (parts.length >= 2 ) {
+				titel = parts[0].trim();
+				p.titel = titel;
+				synop = parts[1].trim();
+				//System.out.println("Splitting title to : \"" + p.titel + "\"; synop: \"" + synop + "\"");
+			}
 		}
 		this.presentatie = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(presentatie);
 		this.acteursnamen_rolverdeling = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(acteursnamen_rolverdeling);
