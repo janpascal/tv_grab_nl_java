@@ -20,7 +20,7 @@ public class ProgrammeDetails implements Serializable {
 		this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
 		this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
 		this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);
-		if (synop.isEmpty() && ( genre.toLowerCase().equals("movies") || genre.toLowerCase().equals("film"))) {
+		if ((synop == null || synop.isEmpty()) && ( genre == null || (!genre.toLowerCase().equals("movies") && !genre.toLowerCase().equals("film")))) {
 			//System.out.println("Splitting title: \"" + p.titel + "\"");
 			String[] parts = p.titel.split("[[:space:]]*:[[:space:]]*", 2);
 			if (parts.length >= 2 ) {

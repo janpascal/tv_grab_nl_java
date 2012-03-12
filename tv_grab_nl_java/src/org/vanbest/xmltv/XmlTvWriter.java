@@ -102,19 +102,19 @@ public class XmlTvWriter {
 							//System.out.println("highlight_content: " + p.highlight_content);
 						}
 					}
-					if (!p.details.kijkwijzer.isEmpty() ||
-							!p.details.presentatie.isEmpty() || 
-							!p.details.presentatie.isEmpty() ||
-							!p.details.acteursnamen_rolverdeling.isEmpty()
+					if ((p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) ||
+							(p.details.presentatie != null && !p.details.presentatie.isEmpty()) || 
+							(p.details.regisseur != null && !p.details.regisseur.isEmpty()) ||
+							(p.details.acteursnamen_rolverdeling != null && !p.details.acteursnamen_rolverdeling.isEmpty())
 							) {
 						writer.writeStartElement("credits");
-						if (!p.details.kijkwijzer.isEmpty()) {
+						if (p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) {
 							writer.writeStartElement("rating");
 							writer.writeAttribute("system", "kijkwijzer");
 							writer.writeCharacters(p.details.kijkwijzer);
 							writer.writeEndElement();
 						}
-						if (!p.details.presentatie.isEmpty()) {
+						if (p.details.presentatie != null && !p.details.presentatie.isEmpty()) {
 							String[] parts = p.details.presentatie.split(",");
 							for (String s: parts) {
 								writer.writeStartElement("presenter");
@@ -122,7 +122,7 @@ public class XmlTvWriter {
 								writer.writeEndElement();
 							}
 						}
-						if (!p.details.regisseur.isEmpty()) {
+						if (p.details.regisseur != null && !p.details.regisseur.isEmpty()) {
 							String[] parts = p.details.regisseur.split(",");
 							for (String s: parts) {
 								writer.writeStartElement("director");
@@ -130,7 +130,7 @@ public class XmlTvWriter {
 								writer.writeEndElement();
 							}
 						}
-						if (!p.details.acteursnamen_rolverdeling.isEmpty()) {
+						if (p.details.acteursnamen_rolverdeling != null && !p.details.acteursnamen_rolverdeling.isEmpty()) {
 							String[] parts = p.details.acteursnamen_rolverdeling.split(",");
 							for (String s: parts) {
 								writer.writeStartElement("actor");
