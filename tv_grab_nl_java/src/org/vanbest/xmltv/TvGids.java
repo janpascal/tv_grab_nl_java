@@ -32,6 +32,7 @@ public class TvGids {
 
 	ProgrammeCache cache;
 	static boolean initialised = false;
+	int fetchErrors = 0;
 	
 	public TvGids(File cacheFile) {
 		cache = new ProgrammeCache(cacheFile);
@@ -147,12 +148,7 @@ public class TvGids {
 					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
 					p.fixup();
 					if (fetchDetails) {
-						p.details = cache.getDetails(p.db_id);
-						if ( p.details == null ) {
-							p.details = getDetails(p.db_id);
-							p.details.fixup(p);
-							cache.add(p.db_id, p.details);
-						}
+						fillDetails(p);
 					}
 					p.channel = c;
 					result.add( p );
@@ -163,12 +159,7 @@ public class TvGids {
 					JSONObject programme = programs.getJSONObject(o.toString());
 					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
 					if (fetchDetails) {
-						try {
-							p.details = getDetails(p.db_id);
-						} catch (Exception e) {
-							e.printStackTrace();
-							continue;
-						}
+						fillDetails(p);
 					}
 					p.channel = c;
 					result.add( p );
@@ -187,15 +178,20 @@ public class TvGids {
 			String s;
 			while ((s = reader.readLine()) != null) json.append(s);
 		} catch (IOException e) {
+			fetchErrors++;
 			throw new Exception("Error getting program data from url " + url, e);
 		}
 		return JSONObject.fromObject( json.toString() );  
 	}
 
-	private ProgrammeDetails getDetails(String db_id) throws Exception {
-		URL url = detailUrl(db_id);
-		JSONObject json = fetchJSON(url);
-		//System.out.println( json );  
-		return (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
+	private void fillDetails(Programme p) throws Exception {
+		p.details = cache.getDetails(p.db_id);
+		if ( p.details == null ) {
+			URL url = detailUrl(p.db_id);
+			JSONObject json = fetchJSON(url);
+			p.details = (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
+			p.details.fixup(p);
+			cache.add(p.db_id, p.details);
+		}
 	}
 }

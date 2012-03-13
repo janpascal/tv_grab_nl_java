@@ -1,9 +1,11 @@
 package org.vanbest.xmltv;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -42,6 +44,12 @@ public class Main {
 	public void run() throws FactoryConfigurationError, Exception {
 		Config config = Config.readConfig(configFile);
 		
+		if (!quiet) {
+			System.out.println("Fetching programme data for days " + this.offset + "-" + (this.offset+this.days-1));
+			System.out.println("... from " + config.channels.size() + " channels");
+			System.out.println("... using cache file " + cacheFile.getCanonicalPath());
+		}
+		
 		XmlTvWriter writer = new XmlTvWriter(outputWriter);
 		writer.writeChannels(config.channels);
 
@@ -70,13 +78,50 @@ public class Main {
 		}
 
 		writer.close();
+		if (!quiet) {
+			System.out.println("Number of fetch errors: " + gids.fetchErrors);
+		}
 	}
 	
-	public void configure() {
+	public void configure() throws IOException {
 		TvGids gids = new TvGids(cacheFile);
 		
 		List<Channel> channels = gids.getChannels();
-		//System.out.println(channels);
+		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		boolean all = false;
+		boolean none = false;
+		for (Channel c: channels) {
+			System.out.print("add channel " + c.id + " (" + c.name + ") [[y]es,[n]o,[a]ll,[none] (default=yes)] ");
+			if (all) {
+				c.selected = true;
+				System.out.println("Y");
+				continue;
+			} 
+			if (none) {
+				c.selected = false;
+				System.out.println("N");
+				continue;
+			} 
+			while(true) {
+				String s = reader.readLine().toLowerCase();
+				if ( s.isEmpty() || s.startsWith("y")) {
+					c.selected = true;
+					break;
+				} else if ( s.startsWith("a")) {
+					c.selected = true;
+					all = true;
+					break;
+				} else if ( s.startsWith("none")) {
+					c.selected = false;
+					none = true;
+					break;
+				} else if ( s.startsWith("n")) {
+					c.selected = false;
+					break;
+				}
+			}
+		}
 		
 		Config config = new Config();
 		config.setChannels(channels);
@@ -144,7 +189,12 @@ public class Main {
 			System.exit(0);
 		}
 		if (line.hasOption("n")) {
-			configure();
+			try {
+				configure();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			System.exit(0);
 		}
 

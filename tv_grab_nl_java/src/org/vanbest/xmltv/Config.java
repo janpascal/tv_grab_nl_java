@@ -25,7 +25,10 @@ public class Config {
 		FileUtils.forceMkdir(configFile.getParentFile());
 		PrintWriter out = new PrintWriter(new OutputStreamWriter( new FileOutputStream( configFile )));
 		for(Channel c: channels) {
-			out.print(c.id + ": " + escape(c.name));
+			if (!c.selected) {
+				out.print("#");
+			}
+			out.print("channel: " + c.id + ": " + escape(c.name));
 			if (c.iconUrl != null) {
 				out.print(" : " + escape(c.iconUrl));
 			}
@@ -36,16 +39,19 @@ public class Config {
 	
 	public static String unescape(String s) {
 		String result = s.trim();
-		result = result.substring(1, result.length()-1);
-		result = result.replaceAll("\\\"", "\"");
+		if (result.charAt(0)=='"') {
+			result = result.substring(1, result.length()-1);
+			result = result.replaceAll("\\:",":").replaceAll("\\\"", "\"");
+		}
 		return result;
 	}
 	
 	public static String escape(String s) {
-		return "\"" + s.replaceAll("\"", "\\\"") + "\"";
+		return "\"" + s.replaceAll("\"", "\\\"").replaceAll(":", "\\:") + "\"";
 	}
-	
-	public static String[] splitLine(String s) {
+
+
+	public static String[] old_splitLine(String s) {
 		int colon = 0;
 		while (true) {
 			colon  = s.indexOf(':', colon+1);
@@ -76,24 +82,54 @@ public class Config {
 		String[] parts = {id,name,icon};
 		return parts;
 	}
-	
-	public static Config readConfig(File file) throws IOException {
-		Config result = new Config();
-		BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file)));
-		List<Channel> channels = new ArrayList<Channel>();
-		while(true) {
-			String s = reader.readLine();
-			if(s==null) break;
-			if (!s.contains(":")) continue;
-			if (s.startsWith("#")) continue;
-			String[] parts = splitLine(s);
-			Channel c = new Channel(Integer.parseInt(parts[0]), parts[1], "");
-			if (parts.length>2) {
-				c.setIconUrl(parts[2]);
+	public static List<String> splitLine(String s) {
+		int colon = 0;
+		int prev = 0;
+		List<String> parts = new ArrayList<String>(5);
+		while (true) {
+			// Find first unescaped colon	
+			while (true) {
+				colon  = s.indexOf(':', prev);
+				if (colon<0 || s.charAt(colon-1) != '\\') {
+					break;
+				}
 			}
-			channels.add(c);
+			if (colon<0) {
+				// Last part
+				parts.add(unescape(s.substring(prev)));
+				break;
+			} else {
+				parts.add(unescape(s.substring(prev,colon)));
+				prev = colon+1;
+			}
 		}
-		result.setChannels(channels);
+		return parts;
+	}
+	
+	public static Config readConfig(File file) {
+		Config result = new Config();
+		try {
+			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file)));
+			List<Channel> channels = new ArrayList<Channel>();
+			while(true) {
+				String s = reader.readLine();
+				if(s==null) break;
+				if (!s.contains(":")) continue;
+				if (s.startsWith("#")) continue;
+				List<String> parts = splitLine(s);
+				if (parts.get(0).toLowerCase().equals("channel")) {
+					Channel c = new Channel(Integer.parseInt(parts.get(1)), parts.get(2), "");
+					if (parts.size()>3) {
+						c.setIconUrl(parts.get(3));
+					}
+					channels.add(c);
+				}
+			}
+			result.setChannels(channels);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Cannot read configuration file, continuing with empty configuration");
+		}
 		return result;
 	}
 	
@@ -102,3 +138,4 @@ public class Config {
 	}
 
 }
+

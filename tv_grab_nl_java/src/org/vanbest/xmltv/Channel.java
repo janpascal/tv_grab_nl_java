@@ -5,6 +5,8 @@ public class Channel {
     String name;
     String shortName;
 	String iconUrl;
+	boolean selected;
+	
     public Channel(int id, String name, String shortName) {
     	this.id = id;
     	this.name = name;
