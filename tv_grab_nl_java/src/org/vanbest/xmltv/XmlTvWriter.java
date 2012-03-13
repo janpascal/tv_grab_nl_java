@@ -83,12 +83,6 @@ public class XmlTvWriter {
 					writer.writeCharacters("\n");
 				}
 
-				writer.writeStartElement("category");
-					writer.writeAttribute("lang", "en");
-					writer.writeCharacters(p.genre); // soort? FIXME translation to mythtv categories
-				writer.writeEndElement();
-				writer.writeCharacters("\n");
-
 				if (p.details != null) {
 					if ( p.is_highlight) {
 						//System.out.println("Highlight");
@@ -102,25 +96,11 @@ public class XmlTvWriter {
 							//System.out.println("highlight_content: " + p.highlight_content);
 						}
 					}
-					if (p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) {
-						writer.writeStartElement("rating");
-						writer.writeAttribute("system", "kijkwijzer");
-						writer.writeCharacters(p.details.kijkwijzer);
-						writer.writeEndElement();
-					}
 					if (	(p.details.presentatie != null && !p.details.presentatie.isEmpty()) || 
 							(p.details.regisseur != null && !p.details.regisseur.isEmpty()) ||
 							(p.details.acteursnamen_rolverdeling != null && !p.details.acteursnamen_rolverdeling.isEmpty())
 							) {
 						writer.writeStartElement("credits");
-						if (p.details.presentatie != null && !p.details.presentatie.isEmpty()) {
-							String[] parts = p.details.presentatie.split(",");
-							for (String s: parts) {
-								writer.writeStartElement("presenter");
-								writer.writeCharacters(s.trim());
-								writer.writeEndElement();
-							}
-						}
 						if (p.details.regisseur != null && !p.details.regisseur.isEmpty()) {
 							String[] parts = p.details.regisseur.split(",");
 							for (String s: parts) {
@@ -137,6 +117,28 @@ public class XmlTvWriter {
 								writer.writeEndElement();
 							}
 						}
+						if (p.details.presentatie != null && !p.details.presentatie.isEmpty()) {
+							String[] parts = p.details.presentatie.split(",");
+							for (String s: parts) {
+								writer.writeStartElement("presenter");
+								writer.writeCharacters(s.trim());
+								writer.writeEndElement();
+							}
+						}
+						writer.writeEndElement();
+					}
+					writer.writeStartElement("category");
+						writer.writeAttribute("lang", "en");
+						writer.writeCharacters(p.genre); // soort? FIXME translation to mythtv categories
+					writer.writeEndElement();
+					writer.writeCharacters("\n");
+
+					if (p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) {
+						writer.writeStartElement("rating");
+							writer.writeAttribute("system", "kijkwijzer");
+							writer.writeStartElement("value");
+								writer.writeCharacters(p.details.kijkwijzer);
+							writer.writeEndElement();
 						writer.writeEndElement();
 					}
 				}
