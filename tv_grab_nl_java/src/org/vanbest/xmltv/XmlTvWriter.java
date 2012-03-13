@@ -126,6 +126,7 @@ public class XmlTvWriter {
 							}
 						}
 						writer.writeEndElement();
+						writer.writeCharacters("\n");
 					}
 					writer.writeStartElement("category");
 						writer.writeAttribute("lang", "en");
@@ -140,6 +141,7 @@ public class XmlTvWriter {
 								writer.writeCharacters(p.details.kijkwijzer);
 							writer.writeEndElement();
 						writer.writeEndElement();
+						writer.writeCharacters("\n");
 					}
 				}
 			writer.writeEndElement();
