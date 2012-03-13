@@ -37,75 +37,43 @@ public class Config {
 		out.close();
 	}
 	
-	public static String unescape(String s) {
-		String result = s.trim();
-		if (result.charAt(0)=='"') {
-			result = result.substring(1, result.length()-1);
-			result = result.replaceAll("\\:",":").replaceAll("\\\"", "\"");
-		}
-		return result;
-	}
-	
 	public static String escape(String s) {
-		return "\"" + s.replaceAll("\"", "\\\"").replaceAll(":", "\\:") + "\"";
+		return "\"" + s.replaceAll("\\\"", "\\\\\"") + "\"";
 	}
 
-
-	public static String[] old_splitLine(String s) {
-		int colon = 0;
-		while (true) {
-			colon  = s.indexOf(':', colon+1);
-			if (colon<0 || s.charAt(colon-1) != '\\') {
-				break;
-			}
-		}
-		if (colon<0) {
-			String[] parts = {s};
-			return parts;
-		} 
-		String id = s.substring(0,  colon).trim();
-		int firstColon = colon;
-		while (true) {
-			colon  = s.indexOf(':', colon+1);
-			if (colon<0 || s.charAt(colon-1) != '\\') {
-				break;
-			}
-		}
-		if (colon<0) {
-			String name = unescape(s.substring(firstColon+1));
-			
-			String[] parts = {id, name};
-			return parts;
-		} 
-		String name = unescape(s.substring(firstColon+1, colon));
-		String icon = unescape(s.substring(colon+1));
-		String[] parts = {id,name,icon};
-		return parts;
-	}
 	public static List<String> splitLine(String s) {
-		int colon = 0;
-		int prev = 0;
 		List<String> parts = new ArrayList<String>(5);
+		int pos=0;
 		while (true) {
-			// Find first unescaped colon	
-			while (true) {
-				colon  = s.indexOf(':', prev);
-				if (colon<0 || s.charAt(colon-1) != '\\') {
+			// Find first colon outside quotes
+			boolean quoted=false;
+			int quoteStart=-1;
+			StringBuffer buf = new StringBuffer();
+			for (; pos<s.length(); pos++) {
+				if (s.charAt(pos)=='"') {
+					if (quoted) {
+						buf.append(s.substring(quoteStart, pos).replaceAll("\\\\\"", "\\\""));
+					} else {
+						quoteStart = pos+1;
+					}
+					quoted=!quoted;
+					continue;
+				}
+				if(s.charAt(pos)=='\\') pos++;
+				if(quoted) continue;
+				if(s.charAt(pos)==':') {
 					break;
 				}
+				buf.append(s.charAt(pos));
 			}
-			if (colon<0) {
-				// Last part
-				parts.add(unescape(s.substring(prev)));
+			parts.add(buf.toString().trim());
+			if (pos>=s.length()) {
 				break;
-			} else {
-				parts.add(unescape(s.substring(prev,colon)));
-				prev = colon+1;
 			}
+			pos++;
 		}
 		return parts;
 	}
-	
 	public static Config readConfig(File file) {
 		Config result = new Config();
 		try {
