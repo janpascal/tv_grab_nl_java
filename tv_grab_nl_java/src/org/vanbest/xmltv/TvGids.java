@@ -163,7 +163,12 @@ public class TvGids {
 					JSONObject programme = programs.getJSONObject(o.toString());
 					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
 					if (fetchDetails) {
-						p.details = getDetails(p.db_id);
+						try {
+							p.details = getDetails(p.db_id);
+						} catch (Exception e) {
+							e.printStackTrace();
+							continue;
+						}
 					}
 					p.channel = c;
 					result.add( p );
@@ -182,7 +187,7 @@ public class TvGids {
 			String s;
 			while ((s = reader.readLine()) != null) json.append(s);
 		} catch (IOException e) {
-			throw new Exception("Error getting program data", e);
+			throw new Exception("Error getting program data from url " + url, e);
 		}
 		return JSONObject.fromObject( json.toString() );  
 	}

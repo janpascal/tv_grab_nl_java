@@ -26,7 +26,7 @@ public class Main {
 	private File configFile;
 	private PrintStream outputWriter;
 	private File cacheFile;
-	private int days = 9;
+	private int days = 5;
 	private int offset = 0;
 	private boolean quiet = false;
 	/**
