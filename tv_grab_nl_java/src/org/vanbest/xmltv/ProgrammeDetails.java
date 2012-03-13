@@ -20,6 +20,15 @@ public class ProgrammeDetails implements Serializable {
 		this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
 		this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
 		this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);
+		this.synop = this.synop.replaceAll("<br>", " ").
+				replaceAll("<br />", " ").
+				replaceAll("<p>", " ").
+				replaceAll("</p>", " ").
+				replaceAll("<strong>", " ").
+				replaceAll("</strong>", " ").
+				replaceAll("<em>", " ").
+				replaceAll("</em>", " ").
+				trim();
 		if ((synop == null || synop.isEmpty()) && ( genre == null || (!genre.toLowerCase().equals("movies") && !genre.toLowerCase().equals("film")))) {
 			String[] parts = p.titel.split("[[:space:]]*:[[:space:]]*", 2);
 			if (parts.length >= 2 ) {
@@ -29,14 +38,6 @@ public class ProgrammeDetails implements Serializable {
 				System.out.println("Splitting title to : \"" + p.titel + "\"; synop: \"" + synop + "\"");
 			}
 		}
-		this.synop = this.synop.replaceAll("<br>", " ");
-		this.synop = this.synop.replaceAll("<br />", " ");
-		this.synop = this.synop.replaceAll("<p>", " ");
-		this.synop = this.synop.replaceAll("</p>", " ");
-		this.synop = this.synop.replaceAll("<strong>", " ");
-		this.synop = this.synop.replaceAll("</strong>", " ");
-		this.synop = this.synop.replaceAll("<em>", " ");
-		this.synop = this.synop.replaceAll("</em>", " ");
 		this.presentatie = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(presentatie);
 		this.acteursnamen_rolverdeling = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(acteursnamen_rolverdeling);
 		this.regisseur = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(regisseur);
