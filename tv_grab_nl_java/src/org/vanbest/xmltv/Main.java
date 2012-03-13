@@ -18,6 +18,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.Parser;
@@ -131,6 +132,7 @@ public class Main {
 		config.setChannels(channels);
 		try {
 			config.writeConfig(configFile);
+			System.out.println("Configuration file written to " + configFile.getPath());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -153,6 +155,7 @@ public class Main {
 		options.addOption("n", "configure", false, "Interactive configuration");
 		options.addOption("f", "config-file", true, "Configuration file location");
 		options.addOption("h", "cache", true, "Cache file location");
+		options.addOption("e", "help", false, "Show this help");
 		//options.addOption("p", "preferredmethod", false, "Show preferred method");
 
 		CommandLine line = null;
@@ -165,6 +168,12 @@ public class Main {
 		
 		if (line.hasOption("d")) {
 			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
+			System.exit(0);
+		}
+		if (line.hasOption("e")) {
+			// automatically generate the help statement
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp( "tv_grab_nl_java", options );
 			System.exit(0);
 		}
 		if (line.hasOption("q")) {
