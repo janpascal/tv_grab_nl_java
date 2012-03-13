@@ -56,15 +56,17 @@ public class Main {
 		TvGids gids = new TvGids(cacheFile);
 
 		for (int day=offset; day<offset+days; day++) {
-			if (!quiet) System.out.println("Fetching information for day " + day);
+			if (!quiet) System.out.print("Fetching information for day " + day);
 			Set<Programme> programmes = new HashSet<Programme>();
 			for( Channel c: config.channels ) {
+				if (!quiet) System.out.print(".");
 				ArrayList<Channel> cs = new ArrayList<Channel>(2);
 				cs.add(c);
 				Set<Programme> p = gids.getProgrammes(cs, day, true);
 				writer.writePrograms(p);
 				writer.flush();
 			}
+			if (!quiet) System.out.println();
 		}
 		
 		try {
@@ -79,6 +81,8 @@ public class Main {
 
 		writer.close();
 		if (!quiet) {
+			System.out.println("Number of programmes from cache: " + gids.cacheHits);
+			System.out.println("Number of programmes fetched: " + gids.cacheMisses);
 			System.out.println("Number of fetch errors: " + gids.fetchErrors);
 		}
 	}

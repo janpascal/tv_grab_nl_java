@@ -33,6 +33,8 @@ public class TvGids {
 	ProgrammeCache cache;
 	static boolean initialised = false;
 	int fetchErrors = 0;
+	int cacheHits = 0;
+	int cacheMisses = 0;
 	
 	public TvGids(File cacheFile) {
 		cache = new ProgrammeCache(cacheFile);
@@ -187,11 +189,14 @@ public class TvGids {
 	private void fillDetails(Programme p) throws Exception {
 		p.details = cache.getDetails(p.db_id);
 		if ( p.details == null ) {
+			cacheMisses++;
 			URL url = detailUrl(p.db_id);
 			JSONObject json = fetchJSON(url);
 			p.details = (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
 			p.details.fixup(p);
 			cache.add(p.db_id, p.details);
+		} else {
+			cacheHits++;
 		}
 	}
 }
