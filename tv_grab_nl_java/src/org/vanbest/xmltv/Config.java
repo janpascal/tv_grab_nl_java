@@ -146,9 +146,8 @@ public class Config {
 			result.setChannels(channels);
 			result.cattrans = cattrans;
 			result.cacheFile = cacheFile;
-			System.out.println("CAche file: "+cacheFile.getPath());
+			//System.out.println("CAche file: "+cacheFile.getPath());
 		} catch (IOException e) {
-			e.printStackTrace();
 			System.out.println("Cannot read configuration file, continuing with empty configuration");
 			return getDefaultConfig();
 		}
