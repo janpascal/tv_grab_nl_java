@@ -30,7 +30,11 @@ public class XmlTvWriter {
 		writer.writeAttribute("source-info-url", "http://tvgids.nl/");
 		writer.writeAttribute("source-info-name", "TvGids.nl");
 		writer.writeAttribute("generator-info-name", "tv_grab_nl_java $VERSION");
-		writer.writeCharacters("\n");
+		writeln();
+	}
+	
+	public void writeln() throws XMLStreamException {
+		writer.writeCharacters(System.getProperty("line.separator"));
 	}
 	
 	public void writeChannels(List<Channel> channels) throws XMLStreamException {
@@ -49,8 +53,7 @@ public class XmlTvWriter {
 				}
 
 			writer.writeEndElement();
-			writer.writeCharacters("\n");
-		}
+			writeln();		}
 	}
 
 	/* TODO: 
@@ -67,20 +70,20 @@ public class XmlTvWriter {
 				writer.writeAttribute("start", df.format(p.datum_start));
 				writer.writeAttribute("stop", df.format(p.datum_end));
 				writer.writeAttribute("channel", ""+p.channel.getChannelId());
-				writer.writeCharacters("\n");
+				writeln();				
 				
 				writer.writeStartElement("title");
 					writer.writeAttribute("lang", "nl");
 					writer.writeCharacters(p.titel);
 				writer.writeEndElement();
-				writer.writeCharacters("\n");
-
+				writeln();
+				
 				if(p.details.synop != null && ! p.details.synop.isEmpty()) {
 					writer.writeStartElement("desc");
 						writer.writeAttribute("lang", "nl");
 						writer.writeCharacters(p.details.synop);
 					writer.writeEndElement();
-					writer.writeCharacters("\n");
+					writeln();
 				}
 
 				if (p.details != null) {
@@ -126,13 +129,13 @@ public class XmlTvWriter {
 							}
 						}
 						writer.writeEndElement();
-						writer.writeCharacters("\n");
+						writeln();
 					}
 					writer.writeStartElement("category");
 						writer.writeAttribute("lang", "en");
 						writer.writeCharacters(p.genre); // soort? FIXME translation to mythtv categories
 					writer.writeEndElement();
-					writer.writeCharacters("\n");
+					writeln();
 
 					if (p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) {
 						writer.writeStartElement("rating");
@@ -141,11 +144,11 @@ public class XmlTvWriter {
 								writer.writeCharacters(p.details.kijkwijzer);
 							writer.writeEndElement();
 						writer.writeEndElement();
-						writer.writeCharacters("\n");
+						writeln();
 					}
 				}
 			writer.writeEndElement();
-			writer.writeCharacters("\n");
+			writeln();
 		}
 	}
 	

@@ -105,11 +105,14 @@ public class Programme {
 	  ProgrammeDetails details = null;
 	  Channel channel = null;
 
-	  public void fixup() {
+	  public void fixup(Config config) {
 		 this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
 		 this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
 		 this.soort = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(soort);
 		 this.highlight_content = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(highlight_content);
+		 if(config.getCategories().containsKey(genre.toLowerCase())) {
+			 genre = config.getCategories().get(genre.toLowerCase());
+		 }
 	  }
 
 	  public String toString() {

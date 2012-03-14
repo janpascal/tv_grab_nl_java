@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
@@ -22,7 +23,19 @@ public class ProgrammeCache {
 		if (cacheFile.canRead()) {
 			try {
 				cache = (Map<String,ProgrammeDetails>) new ObjectInputStream( new FileInputStream( cacheFile ) ).readObject();
-			} catch (Exception e) {
+			} catch (InvalidClassException e) {
+				// TODO Auto-generated catch block
+				
+				cache = new HashMap<String,ProgrammeDetails>();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				cache = new HashMap<String,ProgrammeDetails>();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				cache = new HashMap<String,ProgrammeDetails>();
+			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				cache = new HashMap<String,ProgrammeDetails>();

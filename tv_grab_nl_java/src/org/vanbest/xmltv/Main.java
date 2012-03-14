@@ -25,10 +25,9 @@ import org.apache.commons.cli.Parser;
 import org.apache.commons.io.FileUtils;
 
 public class Main {
-	
 	private File configFile;
+	private Config config;
 	private PrintStream outputWriter;
-	private File cacheFile;
 	private int days = 5;
 	private int offset = 0;
 	private boolean quiet = false;
@@ -39,22 +38,19 @@ public class Main {
 	public Main() {
 		this.configFile = defaultConfigFile();
 		this.outputWriter = System.out;
-		this.cacheFile = defaultCacheFile();
 	}
 	
 	public void run() throws FactoryConfigurationError, Exception {
-		Config config = Config.readConfig(configFile);
-		
 		if (!quiet) {
 			System.out.println("Fetching programme data for days " + this.offset + "-" + (this.offset+this.days-1));
 			System.out.println("... from " + config.channels.size() + " channels");
-			System.out.println("... using cache file " + cacheFile.getCanonicalPath());
+			System.out.println("... using cache file " + config.cacheFile.getCanonicalPath());
 		}
 		
 		XmlTvWriter writer = new XmlTvWriter(outputWriter);
 		writer.writeChannels(config.channels);
 
-		TvGids gids = new TvGids(cacheFile);
+		TvGids gids = new TvGids(config);
 
 		for (int day=offset; day<offset+days; day++) {
 			if (!quiet) System.out.print("Fetching information for day " + day);
@@ -89,7 +85,7 @@ public class Main {
 	}
 	
 	public void configure() throws IOException {
-		TvGids gids = new TvGids(cacheFile);
+		TvGids gids = new TvGids(config);
 		
 		List<Channel> channels = gids.getChannels();
 		
@@ -128,7 +124,6 @@ public class Main {
 			}
 		}
 		
-		Config config = new Config();
 		config.setChannels(channels);
 		try {
 			config.writeConfig(configFile);
@@ -140,8 +135,6 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
 	}
 	
 	public void processOptions(String[] args) throws FileNotFoundException {
@@ -182,11 +175,13 @@ public class Main {
 		if(line.hasOption("f")) { 
 			configFile = new File(line.getOptionValue("f"));	
 		}
+		config = Config.readConfig(configFile);
+		
 		if (line.hasOption("o")) {
 			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("o")));
 		}
 		if (line.hasOption("h")) {
-			this.cacheFile = new File(line.getOptionValue("h"));
+			config.cacheFile = new File(line.getOptionValue("h"));
 		}
 		if (line.hasOption("y")) {
 			this.days = Integer.parseInt(line.getOptionValue("y"));
@@ -217,10 +212,6 @@ public class Main {
 		return FileUtils.getFile(FileUtils.getUserDirectory(), ".xmltv", "tv_grab_nl_java.conf");
 	}
 	
-	public static File defaultCacheFile() {
-		return FileUtils.getFile(FileUtils.getUserDirectory(), ".xmltv", "tv_grab_nl_java.cache");
-	}
-
 	public static void main(String[] args)  {
 		Main main = new Main();
 		try {

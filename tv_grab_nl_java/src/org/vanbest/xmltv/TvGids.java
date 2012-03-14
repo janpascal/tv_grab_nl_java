@@ -30,14 +30,16 @@ public class TvGids {
 	static String programme_base_url="http://www.tvgids.nl/json/lists/programs.php";
 	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
 
+	Config config;
 	ProgrammeCache cache;
 	static boolean initialised = false;
 	int fetchErrors = 0;
 	int cacheHits = 0;
 	int cacheMisses = 0;
 	
-	public TvGids(File cacheFile) {
-		cache = new ProgrammeCache(cacheFile);
+	public TvGids(Config config) {
+		this.config = config;
+		cache = new ProgrammeCache(config.cacheFile);
 		if ( ! initialised ) {
 			init();
 			initialised = true;
@@ -148,7 +150,7 @@ public class TvGids {
 				for( int i=0; i<programs.size(); i++ ) {
 					JSONObject programme = programs.getJSONObject(i);
 					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
-					p.fixup();
+					p.fixup(config);
 					if (fetchDetails) {
 						fillDetails(p);
 					}
@@ -160,6 +162,7 @@ public class TvGids {
 				for( Object o: programs.keySet() ) {
 					JSONObject programme = programs.getJSONObject(o.toString());
 					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
+					p.fixup(config);
 					if (fetchDetails) {
 						fillDetails(p);
 					}
