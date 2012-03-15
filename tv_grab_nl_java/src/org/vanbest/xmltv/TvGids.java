@@ -196,7 +196,7 @@ public class TvGids {
 			URL url = detailUrl(p.db_id);
 			JSONObject json = fetchJSON(url);
 			p.details = (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
-			p.details.fixup(p);
+			p.details.fixup(p, config.quiet);
 			cache.add(p.db_id, p.details);
 		} else {
 			cacheHits++;

@@ -30,7 +30,6 @@ public class Main {
 	private PrintStream outputWriter;
 	private int days = 5;
 	private int offset = 0;
-	private boolean quiet = false;
 	/**
 	 * @param args
 	 */
@@ -41,7 +40,7 @@ public class Main {
 	}
 	
 	public void run() throws FactoryConfigurationError, Exception {
-		if (!quiet) {
+		if (!config.quiet) {
 			System.out.println("Fetching programme data for days " + this.offset + "-" + (this.offset+this.days-1));
 			System.out.println("... from " + config.channels.size() + " channels");
 			System.out.println("... using cache file " + config.cacheFile.getCanonicalPath());
@@ -53,17 +52,17 @@ public class Main {
 		TvGids gids = new TvGids(config);
 
 		for (int day=offset; day<offset+days; day++) {
-			if (!quiet) System.out.print("Fetching information for day " + day);
+			if (!config.quiet) System.out.print("Fetching information for day " + day);
 			Set<Programme> programmes = new HashSet<Programme>();
 			for( Channel c: config.channels ) {
-				if (!quiet) System.out.print(".");
+				if (!config.quiet) System.out.print(".");
 				ArrayList<Channel> cs = new ArrayList<Channel>(2);
 				cs.add(c);
 				Set<Programme> p = gids.getProgrammes(cs, day, true);
 				writer.writePrograms(p);
 				writer.flush();
 			}
-			if (!quiet) System.out.println();
+			if (!config.quiet) System.out.println();
 		}
 		
 		try {
@@ -77,7 +76,7 @@ public class Main {
 		}
 
 		writer.close();
-		if (!quiet) {
+		if (!config.quiet) {
 			System.out.println("Number of programmes from cache: " + gids.cacheHits);
 			System.out.println("Number of programmes fetched: " + gids.cacheMisses);
 			System.out.println("Number of fetch errors: " + gids.fetchErrors);
@@ -169,13 +168,13 @@ public class Main {
 			formatter.printHelp( "tv_grab_nl_java", options );
 			System.exit(0);
 		}
-		if (line.hasOption("q")) {
-			this.quiet = true;
-		}
 		if(line.hasOption("f")) { 
 			configFile = new File(line.getOptionValue("f"));	
 		}
 		config = Config.readConfig(configFile);
+		if (line.hasOption("q")) {
+			config.quiet = true;
+		}
 		
 		if (line.hasOption("o")) {
 			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("o")));

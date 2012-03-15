@@ -16,7 +16,7 @@ public class ProgrammeDetails implements Serializable {
 	String regisseur;
 	String zender_id;
 	
-	public void fixup(Programme p) {
+	public void fixup(Programme p, boolean quiet) {
 		this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
 		this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
 		this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);
@@ -35,7 +35,9 @@ public class ProgrammeDetails implements Serializable {
 				titel = parts[0].trim();
 				p.titel = titel;
 				synop = parts[1].trim();
-				System.out.println("Splitting title to : \"" + p.titel + "\"; synop: \"" + synop + "\"");
+				if (!quiet) {
+					System.out.println("Splitting title to : \"" + p.titel + "\"; synop: \"" + synop + "\"");
+				}
 			}
 		}
 		this.presentatie = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(presentatie);

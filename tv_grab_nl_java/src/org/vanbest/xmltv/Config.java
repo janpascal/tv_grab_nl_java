@@ -21,6 +21,7 @@ public class Config {
 	public List<Channel> channels;
 	public Map<String, String> cattrans;
 	protected File cacheFile;
+	boolean quiet = false;
 	
 	private Config() {
 	}
@@ -146,7 +147,6 @@ public class Config {
 			result.setChannels(channels);
 			result.cattrans = cattrans;
 			result.cacheFile = cacheFile;
-			//System.out.println("CAche file: "+cacheFile.getPath());
 		} catch (IOException e) {
 			System.out.println("Cannot read configuration file, continuing with empty configuration");
 			return getDefaultConfig();
