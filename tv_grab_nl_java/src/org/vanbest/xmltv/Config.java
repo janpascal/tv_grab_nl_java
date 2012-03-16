@@ -18,6 +18,7 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 
 public class Config {
+	public int niceMilliseconds;
 	public List<Channel> channels;
 	public Map<String, String> cattrans;
 	protected File cacheFile;
@@ -26,8 +27,21 @@ public class Config {
 	private Config() {
 	}
 	
+	public static Config getDefaultConfig() {
+		Config result = new Config();
+		result.channels = new ArrayList<Channel>();
+		result.cattrans = getDefaultCattrans();
+		result.cacheFile = defaultCacheFile();
+		result.niceMilliseconds = 500;
+		return result;
+	}
+		
 	public Map<String,String> getCategories() {
 		return cattrans;
+	}
+
+	public void setChannels(List<Channel> channels) {
+		this.channels = channels;
 	}
 
 	public static File defaultCacheFile() {
@@ -63,6 +77,7 @@ public class Config {
 		FileUtils.forceMkdir(configFile.getParentFile());
 		PrintWriter out = new PrintWriter(new OutputStreamWriter( new FileOutputStream( configFile )));
 		out.println("cache-file: " + escape(cacheFile.getPath()));
+		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for(Channel c: channels) {
 			if (!c.selected) {
 				out.print("#");
@@ -117,13 +132,13 @@ public class Config {
 		}
 		return parts;
 	}
+
 	public static Config readConfig(File file) {
-		Config result = new Config();
+		Config result = getDefaultConfig();
+		result.cattrans = new HashMap<String,String>();
 		try {
 			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file)));
-			List<Channel> channels = new ArrayList<Channel>();
-			Map<String,String> cattrans = new HashMap<String,String>();
-			File cacheFile = defaultCacheFile();
+			
 			while(true) {
 				String s = reader.readLine();
 				if(s==null) break;
@@ -135,35 +150,25 @@ public class Config {
 					if (parts.size()>3) {
 						c.setIconUrl(parts.get(3));
 					}
-			 		channels.add(c);
+			 		result.channels.add(c);
 				}
-				if (parts.get(0).toLowerCase().equals("category")) {
-					cattrans.put(parts.get(1), parts.get(2));
-				}
-				if (parts.get(0).toLowerCase().equals("cache-file")) {
-					cacheFile = new File(parts.get(1));
+				switch (parts.get(0).toLowerCase()) {
+				case "category" :
+					result.cattrans.put(parts.get(1), parts.get(2));
+					break;
+				case "cache-file":
+					result.cacheFile = new File(parts.get(1));
+					break;
+				case "nice-time-milliseconds":
+					result.niceMilliseconds = Integer.parseInt(parts.get(1));
 				}
 			}
-			result.setChannels(channels);
-			result.cattrans = cattrans;
-			result.cacheFile = cacheFile;
 		} catch (IOException e) {
-			System.out.println("Cannot read configuration file, continuing with empty configuration");
+			e.printStackTrace();
+			System.out.println("Error reading configuration file, continuing with empty configuration");
 			return getDefaultConfig();
 		}
 		return result;
-	}
-	
-	public static Config getDefaultConfig() {
-		Config result = new Config();
-		result.channels = new ArrayList<Channel>();
-		result.cattrans = getDefaultCattrans();
-		result.cacheFile = defaultCacheFile();
-		return result;
-	}
-	
-	public void setChannels(List<Channel> channels) {
-		this.channels = channels;
 	}
 
 }

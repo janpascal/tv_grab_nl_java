@@ -176,7 +176,7 @@ public class TvGids {
 	}
 	
 	private JSONObject fetchJSON(URL url) throws Exception {
-		Thread.sleep(100);
+		Thread.sleep(config.niceMilliseconds);
 		StringBuffer json = new StringBuffer();
 		try {
 			BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
