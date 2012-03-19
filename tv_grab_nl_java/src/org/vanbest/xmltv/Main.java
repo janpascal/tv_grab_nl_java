@@ -148,6 +148,7 @@ public class Main {
 		options.addOption("f", "config-file", true, "Configuration file location");
 		options.addOption("h", "cache", true, "Cache file location");
 		options.addOption("e", "help", false, "Show this help");
+		options.addOption("l", "log-level", true, "Set log level (0x0100=JSON)");
 		//options.addOption("p", "preferredmethod", false, "Show preferred method");
 
 		CommandLine line = null;
@@ -178,6 +179,9 @@ public class Main {
 		
 		if (line.hasOption("o")) {
 			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("o")));
+		}
+		if (line.hasOption("o")) {
+			config.logLevel = Integer.parseInt(line.getOptionValue("l"));
 		}
 		if (line.hasOption("h")) {
 			config.cacheFile = new File(line.getOptionValue("h"));

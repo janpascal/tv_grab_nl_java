@@ -23,6 +23,13 @@ public class Config {
 	public Map<String, String> cattrans;
 	protected File cacheFile;
 	boolean quiet = false;
+	public int logLevel = LOG_DEFAULT;
+	
+	public static final int LOG_INFO = 0x0001;
+	public static final int LOG_JSON = 0x0100;
+	private static final int LOG_PROGRAMME_INFO = 0x0200;
+	
+	public static int LOG_DEFAULT = LOG_INFO;
 	
 	private Config() {
 	}
@@ -169,6 +176,14 @@ public class Config {
 			return getDefaultConfig();
 		}
 		return result;
+	}
+	
+	public boolean logJSON() {
+		return (logLevel & LOG_JSON) != 0;
+	}
+
+	public boolean logProgrammes() {
+		return (logLevel & LOG_PROGRAMME_INFO) != 0;
 	}
 
 }

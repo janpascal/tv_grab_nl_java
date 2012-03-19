@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.sf.ezmorph.MorpherRegistry;
 import net.sf.ezmorph.ObjectMorpher;
@@ -29,6 +31,7 @@ public class TvGids {
 	static String channels_url="http://www.tvgids.nl/json/lists/channels.php";
 	static String programme_base_url="http://www.tvgids.nl/json/lists/programs.php";
 	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
+	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
 
 	Config config;
 	ProgrammeCache cache;
@@ -68,7 +71,7 @@ public class TvGids {
 		cache.close();
 	}
 
-	static public List<Channel> getChannels() {
+	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
 		URL url = null;
 		try {
@@ -90,6 +93,7 @@ public class TvGids {
 			e.printStackTrace();
 		}
 
+		if (config.logJSON()) System.out.println(json.toString());
 		JSONArray jsonArray = JSONArray.fromObject( json.toString() );  
 		// System.out.println( jsonArray );  
 		
@@ -128,10 +132,17 @@ public class TvGids {
 		return new URL(s.toString());
 	}
 	
-	public static URL detailUrl(String id) throws Exception {
+	public static URL JSONDetailUrl(String id) throws Exception {
 		StringBuilder s = new StringBuilder(detail_base_url);
 		s.append("?id=");
 		s.append(id);
+		return new URL(s.toString());
+	}
+		
+	public static URL HTMLDetailUrl(String id) throws Exception {
+		StringBuilder s = new StringBuilder(html_detail_base_url);
+		s.append(id);
+		s.append("/");
 		return new URL(s.toString());
 	}
 		
@@ -144,16 +155,11 @@ public class TvGids {
 		
 		for( Channel c: channels) {
 			JSON ps = (JSON) jsonObject.get(""+c.id);
-			//System.out.println( ps );
 			if ( ps.isArray() ) {
 				JSONArray programs = (JSONArray) ps;
 				for( int i=0; i<programs.size(); i++ ) {
 					JSONObject programme = programs.getJSONObject(i);
-					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
-					p.fixup(config);
-					if (fetchDetails) {
-						fillDetails(p);
-					}
+					Programme p = programmeFromJSON(programme, fetchDetails);
 					p.channel = c;
 					result.add( p );
 				}
@@ -161,11 +167,7 @@ public class TvGids {
 				JSONObject programs = (JSONObject) ps;
 				for( Object o: programs.keySet() ) {
 					JSONObject programme = programs.getJSONObject(o.toString());
-					Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
-					p.fixup(config);
-					if (fetchDetails) {
-						fillDetails(p);
-					}
+					Programme p = programmeFromJSON(programme, fetchDetails);
 					p.channel = c;
 					result.add( p );
 				}
@@ -175,27 +177,76 @@ public class TvGids {
 		return result;
 	}
 	
-	private JSONObject fetchJSON(URL url) throws Exception {
+	private Programme programmeFromJSON(JSONObject programme, boolean fetchDetails) throws Exception {
+		Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
+		p.fixup(config);
+		if (fetchDetails) {
+			fillDetails(p);
+		}
+		if(config.logProgrammes()) {
+			System.out.println(p.toString());
+		}
+		return p;
+	}
+
+	private String fetchURL(URL url) throws Exception {
 		Thread.sleep(config.niceMilliseconds);
-		StringBuffer json = new StringBuffer();
+		StringBuffer buf = new StringBuffer();
 		try {
 			BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
 			String s;
-			while ((s = reader.readLine()) != null) json.append(s);
+			while ((s = reader.readLine()) != null) buf.append(s);
 		} catch (IOException e) {
 			fetchErrors++;
 			throw new Exception("Error getting program data from url " + url, e);
 		}
-		return JSONObject.fromObject( json.toString() );  
+		return buf.toString();  
+	}
+
+	private JSONObject fetchJSON(URL url) throws Exception {
+		String json = fetchURL(url);
+		if (config.logJSON()) System.out.println(json);
+		return JSONObject.fromObject( json );  
 	}
 
 	private void fillDetails(Programme p) throws Exception {
 		p.details = cache.getDetails(p.db_id);
 		if ( p.details == null ) {
 			cacheMisses++;
-			URL url = detailUrl(p.db_id);
+			
+			URL url = JSONDetailUrl(p.db_id);
 			JSONObject json = fetchJSON(url);
 			p.details = (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
+			
+			url = HTMLDetailUrl(p.db_id);
+			String clob=fetchURL(url);
+			//System.out.println("clob:");
+			//System.out.println(clob);
+			Pattern progInfoPattern = Pattern.compile("prog-info-content.*prog-info-footer", Pattern.DOTALL);
+			Matcher m = progInfoPattern.matcher(clob);
+			if (m.find()) {
+				String progInfo = m.group();
+				//System.out.println("progInfo");
+				//System.out.println(progInfo);
+				Pattern infoLinePattern = Pattern.compile("<li><strong>(.*?):</strong>(.*?)</li>");
+				Matcher m2 = infoLinePattern.matcher(progInfo);
+				while (m2.find()) {
+					//System.out.println("    infoLine: " + m2.group());
+					//System.out.println("         key: " + m2.group(1));
+					//System.out.println("       value: " + m2.group(2));
+					String key = m2.group(1);
+					String value = m2.group(2);
+					switch(key.toLowerCase()) {
+					case "bijzonderheden":
+						if (value.toLowerCase().contains("teletekst")) {
+							p.details.teletekst = true;
+						}
+						break;
+					}
+					
+				}
+			}
+			
 			p.details.fixup(p, config.quiet);
 			cache.add(p.db_id, p.details);
 		} else {
