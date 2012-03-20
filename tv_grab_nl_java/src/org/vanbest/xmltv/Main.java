@@ -180,7 +180,7 @@ public class Main {
 		if (line.hasOption("o")) {
 			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("o")));
 		}
-		if (line.hasOption("o")) {
+		if (line.hasOption("l")) {
 			config.logLevel = Integer.parseInt(line.getOptionValue("l"));
 		}
 		if (line.hasOption("h")) {

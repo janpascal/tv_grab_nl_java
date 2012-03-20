@@ -62,6 +62,11 @@ public class XmlTvWriter {
 	 *    String highlight_content;
 	 *    soort
 	 *    artikel_id ???
+	 *    					p.details.subtitle_teletekst = true;
+							p.details.breedbeeld = true;
+							p.details.blacknwhite = true;
+							p.details.stereo = true;
+				
 	 */
 	public void writePrograms(Collection<Programme> programs) throws XMLStreamException {
 		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
@@ -133,16 +138,33 @@ public class XmlTvWriter {
 					}
 					writer.writeStartElement("category");
 						writer.writeAttribute("lang", "en");
-						writer.writeCharacters(p.genre); // soort? FIXME translation to mythtv categories
+						writer.writeCharacters(p.genre); 
 					writer.writeEndElement();
 					writeln();
 
 					if (p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) {
 						writer.writeStartElement("rating");
 							writer.writeAttribute("system", "kijkwijzer");
-							writer.writeStartElement("value");
-								writer.writeCharacters(p.details.kijkwijzer);
-							writer.writeEndElement();
+							for (int i=0; i<p.details.kijkwijzer.length(); i++) {
+								char c = p.details.kijkwijzer.charAt(i);
+								writer.writeStartElement("value");
+								switch(c) {
+								case 'a':writer.writeCharacters("Angst"); break;
+								case 'd':writer.writeCharacters("Discriminatie"); break;
+								case 's':writer.writeCharacters("Seks"); break;
+								case 'g':writer.writeCharacters("Geweld"); break;
+								case 't':writer.writeCharacters("Grof taalgebruik"); break;
+								case '2':writer.writeCharacters("Afgeraden voor kinderen jonger dan 6 jaar"); break;
+								case '9':writer.writeCharacters("Afgeraden voor kinderen jonger dan 9 jaar"); break;
+								case '3':writer.writeCharacters("Afgeraden voor kinderen jonger dan 12 jaar"); break;
+								case '4':writer.writeCharacters("Afgeraden voor kinderen jonger dan 16 jaar"); break;
+								default: System.out.println("Unknown kijkwijzer character: " + p.details.kijkwijzer);
+								}
+								writer.writeEndElement();
+							}
+							//writer.writeStartElement("value");
+							//	writer.writeCharacters(p.details.kijkwijzer);
+							//writer.writeEndElement();
 						writer.writeEndElement();
 						writeln();
 					}

@@ -238,12 +238,30 @@ public class TvGids {
 					String value = m2.group(2);
 					switch(key.toLowerCase()) {
 					case "bijzonderheden":
-						if (value.toLowerCase().contains("teletekst")) {
-							p.details.teletekst = true;
+						if (value.toLowerCase().contains("subtitle_teletekst")) {
+							p.details.subtitle_teletekst = true;
+						}
+						if (value.toLowerCase().contains("breedbeeld")) {
+							p.details.breedbeeld = true;
+						}
+						if (value.toLowerCase().contains("zwart")) {
+							p.details.blacknwhite = true;
+						}
+						if (value.toLowerCase().contains("stereo")) {
+							p.details.stereo = true;
 						}
 						break;
 					}
-					
+					Pattern kijkwijzerPattern = Pattern.compile("<img src=\"http://tvgidsassets.nl/img/kijkwijzer/.*?\" alt=\"(.*?)\" />");
+					Matcher m3 = kijkwijzerPattern.matcher(progInfo);
+					boolean first=true;
+					while (m3.find()) {
+						if (first) {
+							System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
+							first = false;
+						}
+						System.out.println("    kijkwijzer: " + m3.group(1));
+					}
 				}
 			}
 			

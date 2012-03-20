@@ -15,7 +15,10 @@ public class ProgrammeDetails implements Serializable {
 	String acteursnamen_rolverdeling;
 	String regisseur;
 	String zender_id;
-	public boolean teletekst = false;
+	public boolean subtitle_teletekst = false;
+	public boolean stereo = false;
+	public boolean blacknwhite;
+	public boolean breedbeeld;
 	
 	public void fixup(Programme p, boolean quiet) {
 		this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
