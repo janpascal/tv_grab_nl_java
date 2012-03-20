@@ -210,6 +210,11 @@ public class TvGids {
 	}
 
 	private void fillDetails(Programme p) throws Exception {
+		Pattern progInfoPattern = Pattern.compile("prog-info-content.*prog-info-footer", Pattern.DOTALL);
+		Pattern infoLinePattern = Pattern.compile("<li><strong>(.*?):</strong>(.*?)</li>");
+		Pattern HDPattern = Pattern.compile("HD \\d+[ip]?");
+		Pattern kijkwijzerPattern = Pattern.compile("<img src=\"http://tvgidsassets.nl/img/kijkwijzer/.*?\" alt=\"(.*?)\" />");
+
 		p.details = cache.getDetails(p.db_id);
 		if ( p.details == null ) {
 			cacheMisses++;
@@ -222,13 +227,11 @@ public class TvGids {
 			String clob=fetchURL(url);
 			//System.out.println("clob:");
 			//System.out.println(clob);
-			Pattern progInfoPattern = Pattern.compile("prog-info-content.*prog-info-footer", Pattern.DOTALL);
 			Matcher m = progInfoPattern.matcher(clob);
 			if (m.find()) {
 				String progInfo = m.group();
 				//System.out.println("progInfo");
 				//System.out.println(progInfo);
-				Pattern infoLinePattern = Pattern.compile("<li><strong>(.*?):</strong>(.*?)</li>");
 				Matcher m2 = infoLinePattern.matcher(progInfo);
 				while (m2.find()) {
 					//System.out.println("    infoLine: " + m2.group());
@@ -238,29 +241,37 @@ public class TvGids {
 					String value = m2.group(2);
 					switch(key.toLowerCase()) {
 					case "bijzonderheden":
-						if (value.toLowerCase().contains("subtitle_teletekst")) {
-							p.details.subtitle_teletekst = true;
-						}
-						if (value.toLowerCase().contains("breedbeeld")) {
-							p.details.breedbeeld = true;
-						}
-						if (value.toLowerCase().contains("zwart")) {
-							p.details.blacknwhite = true;
-						}
-						if (value.toLowerCase().contains("stereo")) {
-							p.details.stereo = true;
+						String[] list = value.split(",");
+						for( String item: list) {
+							if (item.toLowerCase().contains("teletekst")) {
+								p.details.subtitle_teletekst = true;
+							} else if (item.toLowerCase().contains("breedbeeld")) {
+								p.details.breedbeeld = true;
+							} else if (value.toLowerCase().contains("zwart")) {
+								p.details.blacknwhite = true;
+							} else if (value.toLowerCase().contains("stereo")) {
+								p.details.stereo = true;
+							} else if (value.toLowerCase().contains("herhaling")) {
+								p.details.herhaling = true;
+							} else {
+								Matcher m3 = HDPattern.matcher(value);
+								if (m3.find()) {
+									p.details.quality = m3.group();
+								} else {
+									if (!config.quiet) System.out.println("  Unknown value in 'bijzonderheden': " + item);
+								}
+							}
 						}
 						break;
 					}
-					Pattern kijkwijzerPattern = Pattern.compile("<img src=\"http://tvgidsassets.nl/img/kijkwijzer/.*?\" alt=\"(.*?)\" />");
 					Matcher m3 = kijkwijzerPattern.matcher(progInfo);
 					boolean first=true;
 					while (m3.find()) {
 						if (first) {
-							System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
+							//System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
 							first = false;
 						}
-						System.out.println("    kijkwijzer: " + m3.group(1));
+						//System.out.println("    kijkwijzer: " + m3.group(1));
 					}
 				}
 			}

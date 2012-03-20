@@ -16,8 +16,10 @@ public class XmlTvWriter {
 
 	private XMLStreamWriter writer;
 	private XMLEventFactory eventFactory;
+	private Config config;
 	
-	public XmlTvWriter(OutputStream os) throws XMLStreamException, FactoryConfigurationError {
+	public XmlTvWriter(OutputStream os, Config config) throws XMLStreamException, FactoryConfigurationError {
+		this.config = config;
 		this.writer = XMLOutputFactory.newInstance().createXMLStreamWriter(os);
 		this.eventFactory = XMLEventFactory.newInstance();
 		
@@ -62,11 +64,7 @@ public class XmlTvWriter {
 	 *    String highlight_content;
 	 *    soort
 	 *    artikel_id ???
-	 *    					p.details.subtitle_teletekst = true;
-							p.details.breedbeeld = true;
-							p.details.blacknwhite = true;
-							p.details.stereo = true;
-				
+	 *    		
 	 */
 	public void writePrograms(Collection<Programme> programs) throws XMLStreamException {
 		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
@@ -141,13 +139,58 @@ public class XmlTvWriter {
 						writer.writeCharacters(p.genre); 
 					writer.writeEndElement();
 					writeln();
+					
+					if (p.details.blacknwhite || p.details.breedbeeld) {
+						writer.writeStartElement("video");
+					 	if (p.details.blacknwhite) {
+							writer.writeStartElement("colour");
+							writer.writeCharacters("no"); 
+							writer.writeEndElement();
+					 	}
+					 	if (p.details.breedbeeld) {
+							writer.writeStartElement("aspect");
+							writer.writeCharacters("16x9"); 
+							writer.writeEndElement();
+					 	}
+					 	if (p.details.quality != null) {
+							writer.writeStartElement("quality");
+							writer.writeCharacters(p.details.quality); 
+							writer.writeEndElement();
+					 	}
+						writer.writeEndElement();
+						writeln();
+					}
+					
+					if (p.details.stereo) {
+						writer.writeStartElement("audio");
+							writer.writeStartElement("stereo");
+							writer.writeCharacters("stereo"); 
+							writer.writeEndElement();
+						writer.writeEndElement();
+						writeln();
+					}
+					
+					if (p.details.herhaling) {
+						writer.writeEmptyElement("previously-shown");
+					}
+					
+					if (p.details.subtitle_teletekst) {
+						writer.writeStartElement("subtitles");
+						writer.writeAttribute("type", "teletext");
+						writer.writeEndElement();
+						writeln();
+					}
 
+					/* Icon attribuut gebruiken?
+					 * Juiste formaat voor meerdere ratings?
+					 */
 					if (p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) {
 						writer.writeStartElement("rating");
 							writer.writeAttribute("system", "kijkwijzer");
+							writer.writeStartElement("value");
 							for (int i=0; i<p.details.kijkwijzer.length(); i++) {
+								if (i!=0) writer.writeCharacters(", ");
 								char c = p.details.kijkwijzer.charAt(i);
-								writer.writeStartElement("value");
 								switch(c) {
 								case 'a':writer.writeCharacters("Angst"); break;
 								case 'd':writer.writeCharacters("Discriminatie"); break;
@@ -158,13 +201,13 @@ public class XmlTvWriter {
 								case '9':writer.writeCharacters("Afgeraden voor kinderen jonger dan 9 jaar"); break;
 								case '3':writer.writeCharacters("Afgeraden voor kinderen jonger dan 12 jaar"); break;
 								case '4':writer.writeCharacters("Afgeraden voor kinderen jonger dan 16 jaar"); break;
-								default: System.out.println("Unknown kijkwijzer character: " + p.details.kijkwijzer);
+								default: if (!config.quiet) System.out.println("Unknown kijkwijzer character: " + p.details.kijkwijzer);
 								}
-								writer.writeEndElement();
 							}
 							//writer.writeStartElement("value");
 							//	writer.writeCharacters(p.details.kijkwijzer);
 							//writer.writeEndElement();
+							writer.writeEndElement();
 						writer.writeEndElement();
 						writeln();
 					}

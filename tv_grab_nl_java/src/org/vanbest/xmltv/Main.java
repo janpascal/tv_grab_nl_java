@@ -46,7 +46,7 @@ public class Main {
 			System.out.println("... using cache file " + config.cacheFile.getCanonicalPath());
 		}
 		
-		XmlTvWriter writer = new XmlTvWriter(outputWriter);
+		XmlTvWriter writer = new XmlTvWriter(outputWriter, config);
 		writer.writeChannels(config.channels);
 
 		TvGids gids = new TvGids(config);
