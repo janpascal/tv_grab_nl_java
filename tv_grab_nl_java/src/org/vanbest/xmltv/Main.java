@@ -86,6 +86,10 @@ public class Main {
 	public void configure() throws IOException {
 		TvGids gids = new TvGids(config);
 		
+		Set<Integer> oldChannels = new HashSet<Integer>();
+		for (Channel c: config.channels) {
+			oldChannels.add(c.id);
+		}
 		List<Channel> channels = gids.getChannels();
 		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -93,7 +97,7 @@ public class Main {
 		boolean none = false;
 		boolean keep = false;
 		for (Channel c: channels) {
-			boolean selected = config.channels.contains(c.id);
+			boolean selected = oldChannels.contains(c.id);
 			System.out.print("add channel " + c.id + " (" + c.name + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
 			if (keep) {
 				c.selected = selected;
@@ -114,6 +118,7 @@ public class Main {
 				String s = reader.readLine().toLowerCase();
 				if (s.isEmpty()) {
 					c.selected = selected;
+					break;
 				} else if ( s.startsWith("k")) {
 					c.selected = selected;
 					keep = true;

@@ -31,7 +31,7 @@ public class XmlTvWriter {
 		writer.writeAttribute("generator-info-url","http://www.vanbest.org/");
 		writer.writeAttribute("source-info-url", "http://tvgids.nl/");
 		writer.writeAttribute("source-info-name", "TvGids.nl");
-		writer.writeAttribute("generator-info-name", "tv_grab_nl_java $VERSION");
+		writer.writeAttribute("generator-info-name", "tv_grab_nl_java release 0.4");
 		writeln();
 	}
 	
@@ -181,8 +181,7 @@ public class XmlTvWriter {
 						writeln();
 					}
 
-					/* Icon attribuut gebruiken?
-					 * Juiste formaat voor meerdere ratings?
+					/* TODO: Icon attribuut gebruiken?
 					 */
 					if (p.details.kijkwijzer != null && !p.details.kijkwijzer.isEmpty()) {
 						writer.writeStartElement("rating");
