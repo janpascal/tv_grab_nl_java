@@ -265,13 +265,13 @@ public class TvGids {
 						break;
 					}
 					Matcher m3 = kijkwijzerPattern.matcher(progInfo);
-					boolean first=true;
+					List<String> kijkwijzer = new ArrayList<String>();
 					while (m3.find()) {
-						if (first) {
-							//System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
-							first = false;
-						}
-						//System.out.println("    kijkwijzer: " + m3.group(1));
+						kijkwijzer.add(m3.group(1));
+					}
+					if (!kijkwijzer.isEmpty()) {
+						System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
+						System.out.println("    kijkwijzer: " + kijkwijzer);
 					}
 				}
 			}

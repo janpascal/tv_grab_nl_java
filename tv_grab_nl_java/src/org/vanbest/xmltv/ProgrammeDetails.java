@@ -38,12 +38,12 @@ public class ProgrammeDetails implements Serializable {
 		if ((synop == null || synop.isEmpty()) && ( genre == null || (!genre.toLowerCase().equals("movies") && !genre.toLowerCase().equals("film")))) {
 			String[] parts = p.titel.split("[[:space:]]*:[[:space:]]*", 2);
 			if (parts.length >= 2 ) {
+				if (!quiet) {
+					System.out.println("Splitting title from \"" + p.titel + "\" to: \"" + parts[0].trim() + "\"; synop: \"" + parts[1].trim() + "\"");
+				}
 				titel = parts[0].trim();
 				p.titel = titel;
 				synop = parts[1].trim();
-				if (!quiet) {
-					System.out.println("Splitting title to : \"" + p.titel + "\"; synop: \"" + synop + "\"");
-				}
 			}
 		}
 		this.presentatie = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(presentatie);

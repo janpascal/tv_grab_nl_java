@@ -197,11 +197,15 @@ public class XmlTvWriter {
 								case 's':writer.writeCharacters("Seks"); break;
 								case 'g':writer.writeCharacters("Geweld"); break;
 								case 't':writer.writeCharacters("Grof taalgebruik"); break;
+								case '1':writer.writeCharacters("Voor alle leeftijden"); break;
 								case '2':writer.writeCharacters("Afgeraden voor kinderen jonger dan 6 jaar"); break;
 								case '9':writer.writeCharacters("Afgeraden voor kinderen jonger dan 9 jaar"); break;
 								case '3':writer.writeCharacters("Afgeraden voor kinderen jonger dan 12 jaar"); break;
 								case '4':writer.writeCharacters("Afgeraden voor kinderen jonger dan 16 jaar"); break;
-								default: if (!config.quiet) System.out.println("Unknown kijkwijzer character: " + p.details.kijkwijzer);
+								default: if (!config.quiet) {
+									System.out.println("Unknown kijkwijzer character: " + p.details.kijkwijzer);
+									System.out.println("    for show " + p.titel + " at channel " + p.channel.name + " at " + p.datum_start);
+								}
 								}
 							}
 							//writer.writeStartElement("value");
