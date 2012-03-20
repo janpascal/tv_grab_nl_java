@@ -270,8 +270,9 @@ public class TvGids {
 						kijkwijzer.add(m3.group(1));
 					}
 					if (!kijkwijzer.isEmpty()) {
-						System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
-						System.out.println("    kijkwijzer: " + kijkwijzer);
+						// log.debug()
+						// System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
+						// System.out.println("    kijkwijzer: " + kijkwijzer);
 					}
 				}
 			}

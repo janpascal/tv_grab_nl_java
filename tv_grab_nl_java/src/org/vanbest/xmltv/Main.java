@@ -91,8 +91,15 @@ public class Main {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		boolean all = false;
 		boolean none = false;
+		boolean keep = false;
 		for (Channel c: channels) {
-			System.out.print("add channel " + c.id + " (" + c.name + ") [[y]es,[n]o,[a]ll,[none] (default=yes)] ");
+			boolean selected = config.channels.contains(c.id);
+			System.out.print("add channel " + c.id + " (" + c.name + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
+			if (keep) {
+				c.selected = selected;
+				System.out.println(selected?"Y":"N");
+				continue;
+			} 
 			if (all) {
 				c.selected = true;
 				System.out.println("Y");
@@ -105,7 +112,13 @@ public class Main {
 			} 
 			while(true) {
 				String s = reader.readLine().toLowerCase();
-				if ( s.isEmpty() || s.startsWith("y")) {
+				if (s.isEmpty()) {
+					c.selected = selected;
+				} else if ( s.startsWith("k")) {
+					c.selected = selected;
+					keep = true;
+					break;
+				} else if ( s.startsWith("y")) {
 					c.selected = true;
 					break;
 				} else if ( s.startsWith("a")) {
