@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 
@@ -30,8 +32,18 @@ public class Config {
 	private static final int LOG_PROGRAMME_INFO = 0x0200;
 	
 	public static int LOG_DEFAULT = LOG_INFO;
+
+	String project_version;
 	
 	private Config() {
+		Properties configProp = new Properties();
+        InputStream in = this.getClass().getResourceAsStream("tv_grab_nl_java.properties");
+        try {
+            configProp.load(in);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        project_version=configProp.getProperty("project.version");
 	}
 	
 	public static Config getDefaultConfig() {

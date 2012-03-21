@@ -178,6 +178,7 @@ public class Main {
 		}
 		
 		if (line.hasOption("d")) {
+			System.out.println("tv_grab_nl_java version " + config.project_version);
 			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
 			System.exit(0);
 		}

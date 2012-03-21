@@ -31,7 +31,7 @@ public class XmlTvWriter {
 		writer.writeAttribute("generator-info-url","http://www.vanbest.org/");
 		writer.writeAttribute("source-info-url", "http://tvgids.nl/");
 		writer.writeAttribute("source-info-name", "TvGids.nl");
-		writer.writeAttribute("generator-info-name", "tv_grab_nl_java release 0.4");
+		writer.writeAttribute("generator-info-name", "tv_grab_nl_java release "+config.project_version);
 		writeln();
 	}
 	
