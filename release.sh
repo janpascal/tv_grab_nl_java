@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.5.0
+VERSION=0.5.1
 
 tmpdir=$( mktemp -d ) || exit 1
 DESTDIR="$tmpdir/tv_grab_nl_java-$VERSION"
