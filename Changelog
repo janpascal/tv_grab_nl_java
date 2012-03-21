@@ -1,0 +1,12 @@
+Changelog for tv_grab_nl_java
+=============================
+
+tv_grab_nl_java-0.5 (unreleased)
+- kijkwijzer gefixt
+- categories vertaald naar mythtv standaard termen
+- teletekst ondertiteling, HD, breedbeeld, zwart-wit, herhaling nu in xmltv
+  uitvoer
+- de --configure optie geeft nu eerder gekozen kanalen als default
+
+tv_grab_nl_java-0.2 (2012-03-13)
+- Eerste release

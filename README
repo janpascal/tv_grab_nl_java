@@ -1,0 +1,79 @@
+README for tv_grab_nl_java
+==========================
+
+English Summary
+---------------
+tv_grab_nl_java is an XMLTV-compatible grabber for Dutch television that uses TVGids.nl as a source.
+
+Algemeen
+--------
+tv_grab_nl_java is een XMLTV-compatibele grabber voor Nederlandse televisie die TVGids.nl 
+als bron gebruikt. tv_grab_nl_java is geschreven in Java en gebruikt de JSON-interface van 
+TVGids.nl.
+
+Kenmerken van tv_grab_nl_java:
+- detailinformatie wordt gecached
+- links naar zenderlogo's worden automatisch toegevoegd 
+- kijkwijzeraanbevelingen worden toegevoegd
+- --configure behoudt de zenderinstellingen van het oude configuratiebestand als default
+- geeft informatie over acteurs, presentatie, regisseur weer in xmltv
+- geschikt voor mythtv
+
+Installatie 
+-----------
+
+0. Het programma vereist Java7. Onder Debian te installeren met 'apt-get install openjdk-7-jre'.
+
+1. Download de .zip file (tv_grab_nl_java-VERSIE.zip) en pak 'm uit. Op Github te vinden via de URL
+   https://github.com/janpascal/tv_grab_nl_java/downloads
+
+2. Voor Linux-gebruikers: plaats de tv_grab_nl_java.jar file uit de zipfile 
+   in /usr/local/share/java/ en plaats tv_grab_nl_java in /usr/local/bin:
+   $ mv tv_grab_nl_java.jar /usr/local/share/java/
+   $ mv tv_grab_nl_java /usr/local/bin
+   $ chmod a+x /usr/local/bin/tv_grab_nl_java
+
+3. Voor Windows-gebruikers: heb ik geen verstand van
+
+Configuratie
+------------
+
+Je kunt tv_grab_nl_java configureren met de --configure optie. De tool haalt dan de beschikbare kanalen
+op van tvgid.nl en vraagt je van welke kanalen je de programmagegevens op wilt halen. 
+
+$ tv_grab_nl_java --configure
+
+Je hebt telkens de keus uit:
+- Y (yes): gebruik kanaal
+- N (no): gebruik kanaal niet
+- A (all): gebruik kanaal en alle volgende kanalen
+- none: gebruik kanaal en alle volgende kanalen niet
+- k (keep): gebruik voor dit en de volgende kanalen de keuzes van de vorige keer
+
+De configuratie wordt opgeslagen in het bestand $HOME/.xmltv/tv_grab_nl_java.conf. Je kunt dit bestand
+eventueel handmatig bewerken. Als je tv_grab_nl_java nogmaals aanroept met de --configure optie, dan
+worden je eerdere keuzes als default gebruikt. 
+
+Gebruik
+-------
+$ tv_grab_nl_java [opties]
+
+Beschikbare opties:
+--capabilities        Show grabber capabilities
+--description         Display a description to identify this grabber
+--help                Show this help
+--config-file <arg>   Configuration file location
+--cache <arg>         Cache file location
+--log-level <arg>     Set log level (0x0100=JSON, 0x0200=program info)
+--configure           Interactive configuration
+--output <arg>        Set xlmtv output filename
+--quiet               Be quiet
+--offset <arg>        Start day for grabbing (0=today)
+--days <arg>          Number of days to grab
+
+Voorbeeld:
+$ tv_grab_nl_java --offset 1 --days 2 --output uitvoer.xml
+Dit commando haalt de programma-informatie van de geselecteerde kanalen op voor morgen en overmorgen 
+en schrijft de resultaten weg in het bestand 'uitvoer.xml'.
+
+
