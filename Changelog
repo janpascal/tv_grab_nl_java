@@ -1,7 +1,10 @@
 Changelog for tv_grab_nl_java
 =============================
 
-tv_grab_nl_java-0.5 (unreleased)
+tv_grab_nl_java-0.5.1 (2012-03-21)
+- haal versienummer uit projectconfiguratie
+
+tv_grab_nl_java-0.5 (2012-03-21)
 - kijkwijzer gefixt
 - categories vertaald naar mythtv standaard termen
 - teletekst ondertiteling, HD, breedbeeld, zwart-wit, herhaling nu in xmltv
