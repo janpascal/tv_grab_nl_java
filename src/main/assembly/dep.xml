@@ -1,0 +1,30 @@
+<assembly>
+  <!-- TODO: a jarjar format would be better -->
+  <id>dep</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <includes>
+        <include>target/classes</include>
+      </includes>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>/</outputDirectory>
+      <unpack>true</unpack>
+      <scope>runtime</scope>
+      <excludes>
+        <exclude>junit:junit</exclude>
+        <exclude>jsch:jsch</exclude>
+        <exclude>org.apache.maven.wagon:wagon-ssh</exclude>
+        <!-- TODO: can probably be removed now -->
+        <exclude>plexus:plexus-container-default</exclude>
+      </excludes>
+    </dependencySet>
+  </dependencySets>
+</assembly>
