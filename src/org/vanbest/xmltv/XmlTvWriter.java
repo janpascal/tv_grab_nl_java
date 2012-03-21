@@ -194,6 +194,7 @@ public class XmlTvWriter {
 								case 'a':writer.writeCharacters("Angst"); break;
 								case 'd':writer.writeCharacters("Discriminatie"); break;
 								case 's':writer.writeCharacters("Seks"); break;
+								case 'h':writer.writeCharacters("Drugs/Alcohol"); break;
 								case 'g':writer.writeCharacters("Geweld"); break;
 								case 't':writer.writeCharacters("Grof taalgebruik"); break;
 								case '1':writer.writeCharacters("Voor alle leeftijden"); break;
