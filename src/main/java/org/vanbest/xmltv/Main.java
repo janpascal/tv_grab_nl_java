@@ -41,6 +41,7 @@ public class Main {
 	
 	public void run() throws FactoryConfigurationError, Exception {
 		if (!config.quiet) {
+			System.out.println("tv_grab_nl_java version "+config.project_version);
 			System.out.println("Fetching programme data for days " + this.offset + "-" + (this.offset+this.days-1));
 			System.out.println("... from " + config.channels.size() + " channels");
 			System.out.println("... using cache file " + config.cacheFile.getCanonicalPath());
@@ -177,6 +178,13 @@ public class Main {
 			e.printStackTrace();
 		}
 		
+		if(line.hasOption("f")) { 
+			configFile = new File(line.getOptionValue("f"));	
+		}
+		config = Config.readConfig(configFile);
+		if (line.hasOption("q")) {
+			config.quiet = true;
+		}
 		if (line.hasOption("d")) {
 			System.out.println("tv_grab_nl_java version " + config.project_version);
 			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
@@ -188,14 +196,6 @@ public class Main {
 			formatter.printHelp( "tv_grab_nl_java", options );
 			System.exit(0);
 		}
-		if(line.hasOption("f")) { 
-			configFile = new File(line.getOptionValue("f"));	
-		}
-		config = Config.readConfig(configFile);
-		if (line.hasOption("q")) {
-			config.quiet = true;
-		}
-		
 		if (line.hasOption("o")) {
 			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("o")));
 		}

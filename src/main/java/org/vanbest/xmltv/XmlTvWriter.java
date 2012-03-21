@@ -28,7 +28,7 @@ public class XmlTvWriter {
 		writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
 		writer.writeCharacters("\n");
 		writer.writeStartElement("tv");
-		writer.writeAttribute("generator-info-url","http://www.vanbest.org/");
+		writer.writeAttribute("generator-info-url","http://github.com/janpascal/tv_grab_nl_java");
 		writer.writeAttribute("source-info-url", "http://tvgids.nl/");
 		writer.writeAttribute("source-info-name", "TvGids.nl");
 		writer.writeAttribute("generator-info-name", "tv_grab_nl_java release "+config.project_version);

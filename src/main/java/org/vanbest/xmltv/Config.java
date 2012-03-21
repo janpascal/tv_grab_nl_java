@@ -37,7 +37,7 @@ public class Config {
 	
 	private Config() {
 		Properties configProp = new Properties();
-        InputStream in = this.getClass().getResourceAsStream("tv_grab_nl_java.properties");
+        InputStream in = this.getClass().getResourceAsStream("/tv_grab_nl_java.properties");
         try {
             configProp.load(in);
         } catch (IOException e) {
