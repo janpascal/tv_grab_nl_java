@@ -1,6 +1,11 @@
 #!/bin/bash
 
-VERSION=0.5.1
+VERSION=$( xsltproc pom_version.xsl pom.xml )
+
+if ! head Changelog | grep -q "tv_grab_nl_java-$VERSION"; then
+  echo "Release $VERSION not found in changelog, please update Changelog first";
+  exit 1;
+fi
 
 tmpdir=$( mktemp -d ) || exit 1
 DESTDIR="$tmpdir/tv_grab_nl_java-$VERSION"
