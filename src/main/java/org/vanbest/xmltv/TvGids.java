@@ -205,7 +205,7 @@ public class TvGids {
 		return p;
 	}
 
-	private String fetchURL(URL url) throws Exception {
+	protected String fetchURL(URL url) throws Exception {
 		Thread.sleep(config.niceMilliseconds);
 		StringBuffer buf = new StringBuffer();
 		try {
