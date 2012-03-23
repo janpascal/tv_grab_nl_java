@@ -76,4 +76,24 @@ $ tv_grab_nl_java --offset 1 --days 2 --output uitvoer.xml
 Dit commando haalt de programma-informatie van de geselecteerde kanalen op voor morgen en overmorgen 
 en schrijft de resultaten weg in het bestand 'uitvoer.xml'.
 
+Compileren
+----------
+Als je de tool vanaf de source code wilt compileren, dan heb je een Java7 SDK
+nodig en maven2. De source code staat in git.
+1. Code downloaden:
+   $ git clone git://github.com/janpascal/tv_grab_nl_java.git
+   $ cd tv_grab_nl_java
+2. Compileren:
+   $ mvn compile
+3. jar file met alle dependencies erin maken:
+   $ mvn assembly:single
+   Deze stap levert de jar file in target/tv_grab_nl_java-<VERSION>-dep.jar
+4. Het release.sh script maakt een release zipfile, inclusief deze README en het
+   tv_grab_nl_java script.
+
+De git repository is ook meteen een Eclipse project. Hiervoor heb je Eclipse
+Indigo nodig, inclusief de git (www.eclipse.org/egit/) en maven
+(http://www.eclipse.org/m2e/) plugins. Importeer dan het project direct van
+github via File/Import/Git/Projects from Git.
+Het adres van de git repository is git://github.com/janpascal/tv_grab_nl_java.git
 
