@@ -57,7 +57,10 @@ public class Main {
 	
 	public void run() throws FactoryConfigurationError, Exception {
 		if (!config.quiet) {
-			System.out.println("tv_grab_nl_java version "+config.project_version);
+			System.out.println("tv_grab_nl_java version "+config.project_version + ", Copyright (C) 2012 Jan-Pascal van Best <janpascal@vanbest.org>");
+ 			System.out.println("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
+ 			System.out.println("under certain conditions; `tv_grab_nl_java --license' for details.");
+
 			System.out.println("Fetching programme data for days " + this.offset + "-" + (this.offset+this.days-1));
 			System.out.println("... from " + config.channels.size() + " channels");
 			System.out.println("... using cache file " + config.cacheFile.getCanonicalPath());
@@ -170,6 +173,15 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
+
+        public void showLicense() {
+          InputStream in = this.getClass().getResourceAsStream("/LICENSE");
+        try {
+            configProp.load(in);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        }
 	
 	public void processOptions(String[] args) throws FileNotFoundException {
 		Options options = new Options();
@@ -184,6 +196,7 @@ public class Main {
 		options.addOption("h", "cache", true, "Cache file location");
 		options.addOption("e", "help", false, "Show this help");
 		options.addOption("l", "log-level", true, "Set log level (0x0100=JSON)");
+		options.addOption("i", "license", false, "Show license information");
 		//options.addOption("p", "preferredmethod", false, "Show preferred method");
 
 		CommandLine line = null;
@@ -193,7 +206,11 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
+		if(line.hasOption("i")) { 
+                        showLicense();
+                        System.exit(0);
+		}
 		if(line.hasOption("f")) { 
 			configFile = new File(line.getOptionValue("f"));	
 		}
