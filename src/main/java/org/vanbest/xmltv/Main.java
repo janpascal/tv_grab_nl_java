@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -174,14 +175,25 @@ public class Main {
 		}
 	}
 
-        public void showLicense() {
-          InputStream in = this.getClass().getResourceAsStream("/LICENSE");
-        try {
-            configProp.load(in);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        }
+	static String copyright = "Copyright (c) 2012 Jan-Pascal van Best <janpascal@vanbest.org>" + System.getProperty("line.separator") +
+	  "" + System.getProperty("line.separator") +
+	  "This program is free software; you can redistribute it and/or modify" + System.getProperty("line.separator") +
+	  "it under the terms of the GNU General Public License as published by" + System.getProperty("line.separator") +
+	  "the Free Software Foundation; either version 2 of the License, or" + System.getProperty("line.separator") +
+	  "(at your option) any later version." + System.getProperty("line.separator") +
+      "" + System.getProperty("line.separator") +
+	  "This program is distributed in the hope that it will be useful," + System.getProperty("line.separator") +
+	  "but WITHOUT ANY WARRANTY; without even the implied warranty of" + System.getProperty("line.separator") +
+	  "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" + System.getProperty("line.separator") +
+	  "GNU General Public License for more details." + System.getProperty("line.separator") +
+	  "" + System.getProperty("line.separator") +
+      "You should have received a copy of the GNU General Public License along" + System.getProperty("line.separator") +
+	  "with this program; if not, write to the Free Software Foundation, Inc.," + System.getProperty("line.separator") +
+	  "51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.";
+	
+    public void showLicense() {
+      	System.out.println(copyright);
+    }
 	
 	public void processOptions(String[] args) throws FileNotFoundException {
 		Options options = new Options();

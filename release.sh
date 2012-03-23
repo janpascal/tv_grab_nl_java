@@ -17,7 +17,7 @@ rm -f "$ZIPFILE"
 mvn compile
 mvn assembly:single
 cp target/tv_grab_nl_java-$VERSION-dep.jar "$DESTDIR/tv_grab_nl_java.jar"
-cp tv_grab_nl_java README Changelog "$DESTDIR"
+cp tv_grab_nl_java README LICENSE Changelog "$DESTDIR"
 
 pushd "$tmpdir"
 zip -r "$ZIPFILE" *
