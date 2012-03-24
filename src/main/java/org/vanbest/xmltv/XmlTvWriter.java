@@ -76,7 +76,7 @@ public class XmlTvWriter {
 			writer.writeStartElement("programme");
 				writer.writeAttribute("start", df.format(p.datum_start));
 				writer.writeAttribute("stop", df.format(p.datum_end));
-				writer.writeAttribute("channel", ""+p.channel.getChannelId());
+				writer.writeAttribute("channel", ""+p.channel.id);
 				writeln();				
 				
 				writer.writeStartElement("title");
@@ -208,7 +208,7 @@ public class XmlTvWriter {
 								case '4':writer.writeCharacters("Afgeraden voor kinderen jonger dan 16 jaar"); break;
 								default: if (!config.quiet) {
 									System.out.println("Unknown kijkwijzer character: " + p.details.kijkwijzer);
-									System.out.println("    for show " + p.titel + " at channel " + p.channel.name + " at " + p.datum_start);
+									System.out.println("    for show " + p.titel + " at channel " + p.channel.defaultName() + " at " + p.datum_start);
 								}
 								}
 							}

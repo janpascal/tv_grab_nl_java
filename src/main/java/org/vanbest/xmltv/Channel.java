@@ -13,9 +13,10 @@ public class Channel {
 	List<String> names; // at least one name is obligatory
 	List<Icon> icons;
 	List<String> urls;
-	protected boolean selected;
+	protected boolean selected = true;
 	
-	protected Channel() {
+	protected Channel(String id) {
+		this.id = id;
 		names = new ArrayList<String>();
 		icons = new ArrayList<Icon>();
 		urls = new ArrayList<String>();
@@ -26,13 +27,13 @@ public class Channel {
 	}
 	
 	static Channel getChannel(String id, String name) {
-		Channel c = new Channel();
+		Channel c = new Channel(id);
 		c.names.add(name);
 		return c;
 	}
 
 	static Channel getChannel(String id, String name, String iconUrl) {
-		Channel c = new Channel();
+		Channel c = new Channel(id);
 		c.names.add(name);
 		c.icons.add(new Icon(iconUrl));
 		return c;

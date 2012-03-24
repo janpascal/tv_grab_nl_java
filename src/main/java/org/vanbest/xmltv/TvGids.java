@@ -130,14 +130,14 @@ public class TvGids {
 		
 	}
 	
-	public static URL programmeUrl(List<TvGidsChannel> channels, int day) throws Exception {
+	public static URL programmeUrl(List<Channel> channels, int day) throws Exception {
 		StringBuilder s = new StringBuilder(programme_base_url);
 		if (channels.size() < 1) {
 			throw new Exception("should have at least one channel");
 		}
 		s.append("?channels=");
 		boolean first = true;
-		for(TvGidsChannel i: channels) {
+		for(Channel i: channels) {
 			if (first) {
 				s.append(i.id);
 				first = false;
@@ -164,16 +164,23 @@ public class TvGids {
 		s.append("/");
 		return new URL(s.toString());
 	}
+	
+	// Convenience method
+	public Set<Programme> getProgrammes(Channel channel, int day, boolean fetchDetails) throws Exception {
+		ArrayList<Channel> list = new ArrayList<Channel>(2);
+		list.add(channel);
+		return getProgrammes(list, day, fetchDetails);
+	}
 		
-	public Set<Programme> getProgrammes(List<TvGidsChannel> channels, int day, boolean fetchDetails) throws Exception {
+	public Set<Programme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
 		Set<Programme> result = new HashSet<Programme>();
 		URL url = programmeUrl(channels, day);
 
 		JSONObject jsonObject = fetchJSON(url);  
 		//System.out.println( jsonObject );  
 		
-		for( TvGidsChannel c: channels) {
-			JSON ps = (JSON) jsonObject.get(""+c.id);
+		for(Channel c: channels) {
+			JSON ps = (JSON) jsonObject.get(c.id);
 			if ( ps.isArray() ) {
 				JSONArray programs = (JSONArray) ps;
 				for( int i=0; i<programs.size(); i++ ) {

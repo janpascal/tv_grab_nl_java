@@ -76,10 +76,9 @@ public class Main {
 			if (!config.quiet) System.out.print("Fetching information for day " + day);
 			Set<Programme> programmes = new HashSet<Programme>();
 			for(Channel c: config.channels) {
+				if (!c.selected) continue;
 				if (!config.quiet) System.out.print(".");
-				ArrayList<TvGidsChannel> cs = new ArrayList<TvGidsChannel>(2);
-				cs.add(c);
-				Set<Programme> p = gids.getProgrammes(cs, day, true);
+				Set<Programme> p = gids.getProgrammes(c, day, true);
 				writer.writePrograms(p);
 				writer.flush();
 			}
@@ -107,8 +106,8 @@ public class Main {
 	public void configure() throws IOException {
 		TvGids gids = new TvGids(config);
 		
-		Set<Integer> oldChannels = new HashSet<Integer>();
-		for (TvGidsChannel c: config.channels) {
+		Set<String> oldChannels = new HashSet<String>();
+		for (Channel c: config.channels) {
 			oldChannels.add(c.id);
 		}
 		List<Channel> channels = gids.getChannels();
