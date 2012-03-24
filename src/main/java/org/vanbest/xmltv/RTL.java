@@ -39,8 +39,8 @@ public class RTL {
 	}
 
 
-	protected void run() throws Exception {
-		URL url = new URL(programme_url+"1");
+	protected void fetchDay(int day) throws Exception {
+		URL url = new URL(programme_url+day);
 		String xmltext = fetchURL(url);
 		System.out.println(xmltext);
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
@@ -54,7 +54,7 @@ public class RTL {
 			JSONArray j = (JSONArray) o.get(k);
 			System.out.println(k.toString()+": "+j.toString());
 			System.out.println("Channel name:" + j.get(0));
-			for (int i=1; i<j.size(); i++) {
+			for (int i=1; i<j.size() && i<3; i++) {
 				JSONArray p = (JSONArray) j.get(i);
 				String starttime = p.getString(0);
 				String title = p.getString(1);
@@ -62,17 +62,57 @@ public class RTL {
 				String quark1 = p.getString(3);
 				String quark2 = p.getString(4);
 				System.out.println("    starttime: " + starttime);
-				
+				System.out.println("        title: " + title);
+				System.out.println("           id: " + id);
+				fetchDetail(id);
 			}
 		}
 	}
+	
+	/*
+	 * <?xml version="1.0" encoding="iso-8859-1" ?>
+	 * <uitzending_data>
+	 *   <uitzending_data_item>
+	 *     <zendernr>5</zendernr>
+	 *     <pgmsoort>Realityserie</pgmsoort>
+	 *     <genre>Amusement</genre>
+	 *     <bijvnwlanden></bijvnwlanden>
+	 *     <ondertiteling></ondertiteling>
+	 *     <begintijd>05:00</begintijd>
+	 *     <titel>Marriage Under Construction</titel>
+	 *     <site_path>0</site_path>
+	 *     <wwwadres></wwwadres>
+	 *     <presentatie></presentatie>
+	 *     <omroep></omroep>
+	 *     <eindtijd>06:00</eindtijd>
+	 *     <inhoud></inhoud>
+	 *     <tt_inhoud>Een jong stel wordt gevolgd bij het zoeken naar, en vervolgens verbouwen en inrichten van, hun eerste huis. Dit verloopt uiteraard niet zonder slag of stoot.</tt_inhoud>
+	 *     <alginhoud>Een jong stel wordt gevolgd bij het zoeken naar, en vervolgens verbouwen en inrichten van, hun eerste huis. Dit verloopt uiteraard niet zonder slag of stoot.</alginhoud>
+	 *     <afl_titel></afl_titel>
+	 *     <kijkwijzer></kijkwijzer>
+	 *   </uitzending_data_item>
+	 * </uitzending_data>
+
+	 */
+	private void fetchDetail(String id) throws Exception {
+		// TODO Auto-generated method stub
+		URL url = new URL(detail_url+id);
+		String xmltext = fetchURL(url);
+		System.out.println(xmltext);
+		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
+		Element root = xml.getDocumentElement();
+
+		
+	}
+
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		RTL rtl = new RTL();
 		try {
-			rtl.run();
+			rtl.fetchDay(1);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
