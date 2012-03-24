@@ -117,9 +117,12 @@ public class TvGids {
 			JSONObject zender = jsonArray.getJSONObject(i);
 			//System.out.println( "id: " + zender.getString("id"));
 			//System.out.println( "name: " + zender.getString("name"));
-			Channel c = new Channel(zender.getInt("id"), zender.getString("name"), zender.getString("name_short"));
-			c.setIconUrl("http://tvgidsassets.nl/img/channels/53x27/" + c.id + ".png");
-			c.fixup();
+			//TvGidsChannel c = new TvGidsChannel(zender.getInt("id"), zender.getString("name"), zender.getString("name_short"));
+			//c.setIconUrl("http://tvgidsassets.nl/img/channels/53x27/" + c.id + ".png");
+			int id = zender.getInt("id");
+			String name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(zender.getString("name"));
+			String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id + ".png"; 
+			Channel c = Channel.getChannel(Integer.toString(id), name, icon); 
 			result.add(c);
 		}
 
@@ -127,14 +130,14 @@ public class TvGids {
 		
 	}
 	
-	public static URL programmeUrl(List<Channel> channels, int day) throws Exception {
+	public static URL programmeUrl(List<TvGidsChannel> channels, int day) throws Exception {
 		StringBuilder s = new StringBuilder(programme_base_url);
 		if (channels.size() < 1) {
 			throw new Exception("should have at least one channel");
 		}
 		s.append("?channels=");
 		boolean first = true;
-		for(Channel i: channels) {
+		for(TvGidsChannel i: channels) {
 			if (first) {
 				s.append(i.id);
 				first = false;
@@ -162,14 +165,14 @@ public class TvGids {
 		return new URL(s.toString());
 	}
 		
-	public Set<Programme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
+	public Set<Programme> getProgrammes(List<TvGidsChannel> channels, int day, boolean fetchDetails) throws Exception {
 		Set<Programme> result = new HashSet<Programme>();
 		URL url = programmeUrl(channels, day);
 
 		JSONObject jsonObject = fetchJSON(url);  
 		//System.out.println( jsonObject );  
 		
-		for( Channel c: channels) {
+		for( TvGidsChannel c: channels) {
 			JSON ps = (JSON) jsonObject.get(""+c.id);
 			if ( ps.isArray() ) {
 				JSONArray programs = (JSONArray) ps;

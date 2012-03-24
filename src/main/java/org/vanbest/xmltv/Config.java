@@ -117,9 +117,10 @@ public class Config {
 			if (!c.selected) {
 				out.print("#");
 			}
-			out.print("channel: " + c.id + ": " + escape(c.name));
-			if (c.iconUrl != null) {
-				out.print(" : " + escape(c.iconUrl));
+			// FIXME: handle multiple channels names, icons and urls
+			out.print("channel: " + c.id + ": " + escape(c.defaultName()));
+			if (!c.icons.isEmpty()) {
+				out.print(" : " + escape(c.icons.get(0).url));
 			}
 			out.println();
 		}
@@ -181,9 +182,9 @@ public class Config {
 				if (s.startsWith("#")) continue;
 				List<String> parts = splitLine(s);
 				if (parts.get(0).toLowerCase().equals("channel")) {
-					Channel c = new Channel(Integer.parseInt(parts.get(1)), parts.get(2), "");
+					Channel c = Channel.getChannel(parts.get(1), parts.get(2));
 					if (parts.size()>3) {
-						c.setIconUrl(parts.get(3));
+						c.addIcon(parts.get(3));
 					}
 			 		result.channels.add(c);
 				}

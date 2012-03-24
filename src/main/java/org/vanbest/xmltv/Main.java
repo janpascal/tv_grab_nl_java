@@ -75,9 +75,9 @@ public class Main {
 		for (int day=offset; day<offset+days; day++) {
 			if (!config.quiet) System.out.print("Fetching information for day " + day);
 			Set<Programme> programmes = new HashSet<Programme>();
-			for( Channel c: config.channels ) {
+			for(Channel c: config.channels) {
 				if (!config.quiet) System.out.print(".");
-				ArrayList<Channel> cs = new ArrayList<Channel>(2);
+				ArrayList<TvGidsChannel> cs = new ArrayList<TvGidsChannel>(2);
 				cs.add(c);
 				Set<Programme> p = gids.getProgrammes(cs, day, true);
 				writer.writePrograms(p);
@@ -108,7 +108,7 @@ public class Main {
 		TvGids gids = new TvGids(config);
 		
 		Set<Integer> oldChannels = new HashSet<Integer>();
-		for (Channel c: config.channels) {
+		for (TvGidsChannel c: config.channels) {
 			oldChannels.add(c.id);
 		}
 		List<Channel> channels = gids.getChannels();
@@ -119,7 +119,7 @@ public class Main {
 		boolean keep = false;
 		for (Channel c: channels) {
 			boolean selected = oldChannels.contains(c.id);
-			System.out.print("add channel " + c.id + " (" + c.name + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
+			System.out.print("add channel " + c.id + " (" + c.defaultName() + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
 			if (keep) {
 				c.selected = selected;
 				System.out.println(selected?"Y":"N");

@@ -1,46 +1,66 @@
 package org.vanbest.xmltv;
 
-/*
-  Copyright (c) 2012 Jan-Pascal van Best <janpascal@vanbest.org>
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  The full license text can be found in the LICENSE file.
-*/
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 public class Channel {
-	int id;
-    String name;
-    String shortName;
-	String iconUrl;
-	boolean selected;
+	String id;
+	List<String> names; // at least one name is obligatory
+	List<Icon> icons;
+	List<String> urls;
+	protected boolean selected;
 	
-    public Channel(int id, String name, String shortName) {
-    	this.id = id;
-    	this.name = name;
-    	this.shortName = shortName;
+	protected Channel() {
+		names = new ArrayList<String>();
+		icons = new ArrayList<Icon>();
+		urls = new ArrayList<String>();
 	}
-    public String toString() {
-    	return "id: " + id + "; name: " + name + "; shortName: " + shortName;
-    }
-    
-    public String getChannelId() {
-    	return id+".tvgids.nl";
-    }
-    
-    public void fixup() {
-		 this.name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(name);
-		 this.shortName = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(shortName);
-    }
-	public void setIconUrl(String url) {
-		this.iconUrl = url;
+	
+	public String defaultName() {
+		return names.get(0);
+	}
+	
+	static Channel getChannel(String id, String name) {
+		Channel c = new Channel();
+		c.names.add(name);
+		return c;
+	}
+
+	static Channel getChannel(String id, String name, String iconUrl) {
+		Channel c = new Channel();
+		c.names.add(name);
+		c.icons.add(new Icon(iconUrl));
+		return c;
+	}
+	
+	public void serialize(XMLStreamWriter writer) throws XMLStreamException {
+		writer.writeStartElement("channel");
+		writer.writeAttribute("id", id);
+		for(String name: names) {
+			writer.writeStartElement("display-name");
+			writer.writeAttribute("lang", "nl");
+			writer.writeCharacters(name);
+			writer.writeEndElement();
+		}
+		for(Icon i: icons) {
+			i.serialize(writer);
+		}
+		for(String url: urls) {
+			writer.writeStartElement("url");
+			writer.writeCharacters(url);
+			writer.writeEndElement();
+		}
+		writer.writeEndElement();
+		writer.writeCharacters(System.getProperty("line.separator"));
+	}
+
+	// Convenience method
+	public void addIcon(String url) {
+		icons.add(new Icon(url));
 	}
 }

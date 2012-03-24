@@ -119,7 +119,7 @@ public class Programme {
 	  String highlight_afbeelding;
 	  String highlight_content;
 	  ProgrammeDetails details = null;
-	  Channel channel = null;
+	  TvGidsChannel channel = null;
 
 	  public void fixup(Config config) {
 		 this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);

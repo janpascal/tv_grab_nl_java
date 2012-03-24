@@ -57,21 +57,9 @@ public class XmlTvWriter {
 	
 	public void writeChannels(List<Channel> channels) throws XMLStreamException {
 		for(Channel c: channels) {
-			writer.writeStartElement("channel");
-			writer.writeAttribute("id", c.getChannelId());
-				writer.writeStartElement("display-name");
-				writer.writeAttribute("lang", "nl");
-				writer.writeCharacters(c.name);
-				writer.writeEndElement();
-
-				if (c.iconUrl != null) {
-					writer.writeStartElement("icon");
-					writer.writeAttribute("src", c.iconUrl);
-					writer.writeEndElement();
-				}
-
-			writer.writeEndElement();
-			writeln();		}
+			c.serialize(writer);
+			writeln();		
+		}
 	}
 
 	/* TODO: 
