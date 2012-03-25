@@ -67,6 +67,10 @@ public class Channel {
 
 	public void setEnabled(boolean b) {
 		this.enabled = b;
-		
 	}
+	
+    public String toString() {
+    	return "Channel " + id + " (" + defaultName() + ")";
+    }
+
 }

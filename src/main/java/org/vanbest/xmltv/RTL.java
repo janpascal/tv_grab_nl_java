@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
@@ -16,6 +20,7 @@ import net.sf.json.JSONObject;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 public class RTL {
 
@@ -24,7 +29,33 @@ public class RTL {
 	
 	int fetchErrors = 0;
 
+	public List<Channel> getChannels() throws Exception {
+		List<Channel> result = new ArrayList<Channel>(10);
 
+		URL url = new URL(programme_url+"1");
+		String xmltext = fetchURL(url);
+		System.out.println(xmltext);
+		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
+		Element root = xml.getDocumentElement();
+		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(root.getAttribute("date"));
+		System.out.println("date: " + date);
+		String json = root.getTextContent();
+		System.out.println("json: " + json);
+		JSONObject o = JSONObject.fromObject( json );
+		for( Object k: o.keySet()) {
+			JSONArray j = (JSONArray) o.get(k);
+			System.out.println(k.toString()+": "+j.toString());
+			System.out.println("Channel name:" + j.get(0));
+			String id = k.toString().replaceAll("^Z", ""); // remove initial Z
+			String name = (String) j.get(0);
+			
+			Channel c = Channel.getChannel(id, name);
+			result.add(c);
+		}
+
+		return result;
+	}
+	
 	protected String fetchURL(URL url) throws Exception {
 		StringBuffer buf = new StringBuffer();
 		try {
@@ -112,7 +143,9 @@ public class RTL {
 	public static void main(String[] args) {
 		RTL rtl = new RTL();
 		try {
-			rtl.fetchDay(1);
+			// rtl.fetchDay(1);
+			List<Channel> channels = rtl.getChannels();
+			System.out.println("Channels: " + channels);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
