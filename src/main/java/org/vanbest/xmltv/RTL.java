@@ -13,6 +13,9 @@ import java.util.List;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLEventFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
@@ -26,6 +29,7 @@ public class RTL {
 
 	static final String programme_url="http://www.rtl.nl/active/epg_data/dag_data/";
 	static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
+	static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	
 	int fetchErrors = 0;
 
@@ -41,8 +45,9 @@ public class RTL {
 			JSONArray j = (JSONArray) o.get(k);
 			String id = k.toString().replaceAll("^Z", ""); // remove initial Z
 			String name = (String) j.get(0);
+			String icon = icon_url+id+".gif";
 			
-			Channel c = Channel.getChannel(id, name);
+			Channel c = Channel.getChannel(id, name, icon);
 			result.add(c);
 		}
 
@@ -137,6 +142,15 @@ public class RTL {
 			// rtl.fetchDay(1);
 			List<Channel> channels = rtl.getChannels();
 			System.out.println("Channels: " + channels);
+			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(System.out);
+			
+			writer.writeStartDocument();
+			writer.writeCharacters("\n");
+			writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
+			writer.writeCharacters("\n");
+			writer.writeStartElement("tv");
+			for(Channel c: channels) {c.serialize(writer);}
+			System.out.flush();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
