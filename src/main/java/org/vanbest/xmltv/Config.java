@@ -117,11 +117,10 @@ public class Config {
 		out.println("cache-file: " + escape(cacheFile.getPath()));
 		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for(Channel c: channels) {
-			if (!c.selected) {
-				out.print("#");
-			}
 			// FIXME: handle multiple channels names, icons and urls
-			out.print("channel: " + c.id + ": " + escape(c.defaultName()));
+			out.print("channel: " + c.id +
+					": " + (c.enabled?"enabled":"disabled") +
+					": " + escape(c.defaultName()));
 			if (!c.icons.isEmpty()) {
 				out.print(" : " + escape(c.icons.get(0).url));
 			}
@@ -182,17 +181,34 @@ public class Config {
 			while(true) {
 				String s = reader.readLine();
 				if(s==null) break;
+				//System.out.println(s);
 				if (!s.contains(":")) continue;
 				if (s.startsWith("#")) continue;
 				List<String> parts = splitLine(s);
-				if (parts.get(0).toLowerCase().equals("channel")) {
-					Channel c = Channel.getChannel(parts.get(1), parts.get(2));
-					if (parts.size()>3) {
-						c.addIcon(parts.get(3));
+				switch (parts.get(0).toLowerCase()) {
+				case "channel":
+					Channel c = null;
+					System.out.println("Adding channel " + parts + " in file format " + fileformat);
+					switch(fileformat) {
+					case 0:
+						c = Channel.getChannel(parts.get(1), parts.get(2));
+						if (parts.size()>3) {
+							c.addIcon(parts.get(3));
+						}
+						break;
+					case 1:
+						c = Channel.getChannel(parts.get(1), parts.get(3));
+						if (parts.size()>4) {
+							c.addIcon(parts.get(4));
+						}
+						switch(parts.get(2)) {
+						case "enabled": c.setEnabled(true); break; 
+						case "disabled": c.setEnabled(false); break;
+						default: System.out.println("Unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
+						}
 					}
 			 		result.channels.add(c);
-				}
-				switch (parts.get(0).toLowerCase()) {
+			 		break;
 				case "category" :
 					result.cattrans.put(parts.get(1), parts.get(2));
 					break;

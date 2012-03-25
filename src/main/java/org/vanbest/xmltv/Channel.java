@@ -13,7 +13,7 @@ public class Channel {
 	List<String> names; // at least one name is obligatory
 	List<Icon> icons;
 	List<String> urls;
-	protected boolean selected = true;
+	protected boolean enabled = true;
 	
 	protected Channel(String id) {
 		this.id = id;
@@ -63,5 +63,10 @@ public class Channel {
 	// Convenience method
 	public void addIcon(String url) {
 		icons.add(new Icon(url));
+	}
+
+	public void setEnabled(boolean b) {
+		this.enabled = b;
+		
 	}
 }

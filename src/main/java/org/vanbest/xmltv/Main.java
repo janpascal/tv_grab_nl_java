@@ -76,7 +76,7 @@ public class Main {
 			if (!config.quiet) System.out.print("Fetching information for day " + day);
 			Set<Programme> programmes = new HashSet<Programme>();
 			for(Channel c: config.channels) {
-				if (!c.selected) continue;
+				if (!c.enabled) continue;
 				if (!config.quiet) System.out.print(".");
 				Set<Programme> p = gids.getProgrammes(c, day, true);
 				writer.writePrograms(p);
@@ -120,42 +120,42 @@ public class Main {
 			boolean selected = oldChannels.contains(c.id);
 			System.out.print("add channel " + c.id + " (" + c.defaultName() + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
 			if (keep) {
-				c.selected = selected;
+				c.enabled = selected;
 				System.out.println(selected?"Y":"N");
 				continue;
 			} 
 			if (all) {
-				c.selected = true;
+				c.enabled = true;
 				System.out.println("Y");
 				continue;
 			} 
 			if (none) {
-				c.selected = false;
+				c.enabled = false;
 				System.out.println("N");
 				continue;
 			} 
 			while(true) {
 				String s = reader.readLine().toLowerCase();
 				if (s.isEmpty()) {
-					c.selected = selected;
+					c.enabled = selected;
 					break;
 				} else if ( s.startsWith("k")) {
-					c.selected = selected;
+					c.enabled = selected;
 					keep = true;
 					break;
 				} else if ( s.startsWith("y")) {
-					c.selected = true;
+					c.enabled = true;
 					break;
 				} else if ( s.startsWith("a")) {
-					c.selected = true;
+					c.enabled = true;
 					all = true;
 					break;
 				} else if ( s.startsWith("none")) {
-					c.selected = false;
+					c.enabled = false;
 					none = true;
 					break;
 				} else if ( s.startsWith("n")) {
-					c.selected = false;
+					c.enabled = false;
 					break;
 				}
 			}
