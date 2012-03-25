@@ -33,19 +33,12 @@ public class RTL {
 		List<Channel> result = new ArrayList<Channel>(10);
 
 		URL url = new URL(programme_url+"1");
-		String xmltext = fetchURL(url);
-		System.out.println(xmltext);
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
 		Element root = xml.getDocumentElement();
-		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(root.getAttribute("date"));
-		System.out.println("date: " + date);
 		String json = root.getTextContent();
-		System.out.println("json: " + json);
 		JSONObject o = JSONObject.fromObject( json );
 		for( Object k: o.keySet()) {
 			JSONArray j = (JSONArray) o.get(k);
-			System.out.println(k.toString()+": "+j.toString());
-			System.out.println("Channel name:" + j.get(0));
 			String id = k.toString().replaceAll("^Z", ""); // remove initial Z
 			String name = (String) j.get(0);
 			
@@ -132,8 +125,6 @@ public class RTL {
 		System.out.println(xmltext);
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
 		Element root = xml.getDocumentElement();
-
-		
 	}
 
 
