@@ -48,6 +48,8 @@ public class Config {
 	private static final int LOG_PROGRAMME_INFO = 0x0200;
 	
 	public static int LOG_DEFAULT = LOG_INFO;
+	
+	private final static int CURRENT_FILE_FORMAT=1;
 
 	String project_version;
 	
@@ -111,6 +113,7 @@ public class Config {
 	public void writeConfig(File configFile) throws IOException {
 		FileUtils.forceMkdir(configFile.getParentFile());
 		PrintWriter out = new PrintWriter(new OutputStreamWriter( new FileOutputStream( configFile )));
+		out.println("config-file-format: " + CURRENT_FILE_FORMAT);
 		out.println("cache-file: " + escape(cacheFile.getPath()));
 		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for(Channel c: channels) {
@@ -172,6 +175,7 @@ public class Config {
 	public static Config readConfig(File file) {
 		Config result = getDefaultConfig();
 		result.cattrans = new HashMap<String,String>();
+		int fileformat=0; // Assume legacy config file format
 		try {
 			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file)));
 			
@@ -191,6 +195,18 @@ public class Config {
 				switch (parts.get(0).toLowerCase()) {
 				case "category" :
 					result.cattrans.put(parts.get(1), parts.get(2));
+					break;
+				case "current-file-format" :
+					try {
+						fileformat = Integer.parseInt(parts.get(1));
+					} catch (NumberFormatException e) {
+						System.out.println("Unknown config file format " + parts.get(1));
+						fileformat = CURRENT_FILE_FORMAT; // may crash later
+					}
+					if (fileformat > CURRENT_FILE_FORMAT) {
+						System.out.println("Unknown config file format " + parts.get(1));
+						fileformat = CURRENT_FILE_FORMAT;
+					}
 					break;
 				case "cache-file":
 					result.cacheFile = new File(parts.get(1));
