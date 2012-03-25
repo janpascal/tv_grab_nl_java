@@ -188,7 +188,7 @@ public class Config {
 				switch (parts.get(0).toLowerCase()) {
 				case "channel":
 					Channel c = null;
-					System.out.println("Adding channel " + parts + " in file format " + fileformat);
+					// System.out.println("Adding channel " + parts + " in file format " + fileformat);
 					switch(fileformat) {
 					case 0:
 						c = Channel.getChannel(parts.get(1), parts.get(2));
@@ -204,7 +204,7 @@ public class Config {
 						switch(parts.get(2)) {
 						case "enabled": c.setEnabled(true); break; 
 						case "disabled": c.setEnabled(false); break;
-						default: System.out.println("Unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
+						default: System.out.println("Error in config file, unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
 						}
 					}
 			 		result.channels.add(c);
@@ -212,7 +212,7 @@ public class Config {
 				case "category" :
 					result.cattrans.put(parts.get(1), parts.get(2));
 					break;
-				case "current-file-format" :
+				case "config-file-format" :
 					try {
 						fileformat = Integer.parseInt(parts.get(1));
 					} catch (NumberFormatException e) {
