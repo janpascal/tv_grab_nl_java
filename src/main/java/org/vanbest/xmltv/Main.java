@@ -36,6 +36,7 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.Parser;
@@ -196,21 +197,63 @@ public class Main {
       	System.out.println(copyright);
     }
 	
-	public void processOptions(String[] args) throws FileNotFoundException {
-		Options options = new Options();
-		options.addOption("d", "description", false, "Display a description to identify this grabber");
-		options.addOption("c", "capabilities", false, "Show grabber capabilities");
-		options.addOption("q", "quiet", false, "Be quiet");
-		options.addOption("o", "output", true, "Set xlmtv output filename");
-		options.addOption("y", "days", true, "Number of days to grab");
-		options.addOption("s", "offset", true, "Start day for grabbing (0=today)");
-		options.addOption("n", "configure", false, "Interactive configuration");
-		options.addOption("f", "config-file", true, "Configuration file location");
-		options.addOption("h", "cache", true, "Cache file location");
-		options.addOption("e", "help", false, "Show this help");
-		options.addOption("l", "log-level", true, "Set log level (0x0100=JSON)");
-		options.addOption("i", "license", false, "Show license information");
-		//options.addOption("p", "preferredmethod", false, "Show preferred method");
+    public void processOptions(String[] args) throws FileNotFoundException {
+    	Options options = new Options();
+    	options.addOption(OptionBuilder
+    					.withLongOpt("description")
+    					.withDescription("Display a description to identify this grabber")
+    					.create())
+    			.addOption(OptionBuilder
+    					.withLongOpt("capabilities")
+    					.withDescription("Show grabber capabilities")
+    					.create())
+				.addOption(OptionBuilder
+						.withLongOpt("quiet")
+						.withDescription("Be quiet")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("output")
+						.hasArg()
+						.withDescription("Set xlmtv output filename")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("days")
+						.hasArg()
+						.withDescription("Number of days to grab")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("offset")
+						.hasArg()
+						.withDescription("Start day for grabbing (0=today)")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("configure")
+						.withDescription("Interactive configuration")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("config-file")
+						.hasArg()
+						.withDescription("Configuration file location")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("cache")
+						.hasArg()
+						.withDescription("Cache file location")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("help")
+						.withDescription("Show this help")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("log-level")
+						.hasArg()
+						.withDescription("Set log level (0x0100=JSON)")
+						.create())
+				.addOption(OptionBuilder
+						.withLongOpt("license")
+						.withDescription("Show license information")
+						.create());
+		//.addOption(OptionBuilder.withLongOpt("preferredmethod").withDescription("Show preferred method").create();
 
 		CommandLine line = null;
 		try {
@@ -220,51 +263,51 @@ public class Main {
 			e.printStackTrace();
 		}
 
-		if(line.hasOption("i")) { 
+		if(line.hasOption("license")) { 
                         showLicense();
                         System.exit(0);
 		}
-		if(line.hasOption("f")) { 
-			configFile = new File(line.getOptionValue("f"));	
+		if(line.hasOption("config-file")) { 
+			configFile = new File(line.getOptionValue("config-file"));	
 		}
 		config = Config.readConfig(configFile);
-		if (line.hasOption("q")) {
+		if (line.hasOption("quiet")) {
 			config.quiet = true;
 		}
-		if (line.hasOption("d")) {
+		if (line.hasOption("description")) {
 			System.out.println("tv_grab_nl_java version " + config.project_version);
 			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
 			System.exit(0);
 		}
-		if (line.hasOption("e")) {
+		if (line.hasOption("help")) {
 			// automatically generate the help statement
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp( "tv_grab_nl_java", options );
 			System.exit(0);
 		}
-		if (line.hasOption("o")) {
-			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("o")));
+		if (line.hasOption("output")) {
+			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("output")));
 		}
-		if (line.hasOption("l")) {
-			config.logLevel = Integer.parseInt(line.getOptionValue("l"));
+		if (line.hasOption("log-level")) {
+			config.logLevel = Integer.parseInt(line.getOptionValue("log-level"));
 		}
-		if (line.hasOption("h")) {
-			config.cacheFile = new File(line.getOptionValue("h"));
+		if (line.hasOption("cache")) {
+			config.cacheFile = new File(line.getOptionValue("cache"));
 		}
-		if (line.hasOption("y")) {
-			this.days = Integer.parseInt(line.getOptionValue("y"));
+		if (line.hasOption("days")) {
+			this.days = Integer.parseInt(line.getOptionValue("days"));
 		}
-		if (line.hasOption("s")) {
-			this.offset = Integer.parseInt(line.getOptionValue("s"));
+		if (line.hasOption("offset")) {
+			this.offset = Integer.parseInt(line.getOptionValue("offset"));
 		}
-		if (line.hasOption("c")) {
+		if (line.hasOption("capabilities")) {
 			System.out.println("baseline");
 			System.out.println("manualconfig");
 			System.out.println("cache");
 			// System.out.println("preferredmethod");
 			System.exit(0);
 		}
-		if (line.hasOption("n")) {
+		if (line.hasOption("configure")) {
 			try {
 				configure();
 			} catch (IOException e) {
@@ -273,7 +316,6 @@ public class Main {
 			}
 			System.exit(0);
 		}
-
 	}
 	
 	public static File defaultConfigFile() {
