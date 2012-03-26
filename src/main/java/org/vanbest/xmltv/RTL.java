@@ -1,6 +1,7 @@
 package org.vanbest.xmltv;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -10,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,23 +23,36 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.vanbest.xmltv.EPGSource.Stats;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-public class RTL {
+public class RTL implements EPGSource {
 
 	static final String programme_url="http://www.rtl.nl/active/epg_data/dag_data/";
 	static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	
-	int fetchErrors = 0;
+	Stats stats = new Stats();
 
-	public List<Channel> getChannels() throws Exception {
+	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
 
-		URL url = new URL(programme_url+"1");
-		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
+		URL url = null;
+		try {
+			url = new URL(programme_url+"1");
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Document xml = null;
+		try {
+			xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
+		} catch (SAXException | IOException | ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Element root = xml.getDocumentElement();
 		String json = root.getTextContent();
 		JSONObject o = JSONObject.fromObject( json );
@@ -61,7 +76,7 @@ public class RTL {
 			String s;
 			while ((s = reader.readLine()) != null) buf.append(s);
 		} catch (IOException e) {
-			fetchErrors++;
+			stats.fetchErrors++;
 			throw new Exception("Error getting program data from url " + url, e);
 		}
 		return buf.toString();  
@@ -133,6 +148,32 @@ public class RTL {
 	}
 
 
+	@Override
+	public void close() throws FileNotFoundException, IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Set<Programme> getProgrammes(Channel channel, int day,
+			boolean fetchDetails) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<Programme> getProgrammes(List<Channel> channels, int day,
+			boolean fetchDetails) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Stats getStats() {
+		// TODO Auto-generated method stub
+		return stats;
+	}
+
 	/**
 	 * @param args
 	 */
@@ -156,5 +197,6 @@ public class RTL {
 			e.printStackTrace();
 		}
 	}
+
 
 }

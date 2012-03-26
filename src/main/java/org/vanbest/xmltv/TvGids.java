@@ -18,7 +18,6 @@ package org.vanbest.xmltv;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -42,23 +41,18 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.util.JSONUtils;
 
-public class TvGids {
+public class TvGids extends AbstractEPGSource implements EPGSource {
 
 	static String channels_url="http://www.tvgids.nl/json/lists/channels.php";
 	static String programme_base_url="http://www.tvgids.nl/json/lists/programs.php";
 	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
 	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
 
-	Config config;
-	ProgrammeCache cache;
 	static boolean initialised = false;
-	int fetchErrors = 0;
-	int cacheHits = 0;
-	int cacheMisses = 0;
 	
 	public TvGids(Config config) {
+		super(config);
 		this.config = config;
-		cache = new ProgrammeCache(config.cacheFile);
 		if ( ! initialised ) {
 			init();
 			initialised = true;
@@ -83,10 +77,10 @@ public class TvGids {
 		}, true);
 	}
 	
-	public void close() throws FileNotFoundException, IOException {
-		cache.close();
-	}
-
+	/* (non-Javadoc)
+	 * @see org.vanbest.xmltv.EPGSource#getChannels()
+	 */
+	@Override
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
 		URL url = null;
@@ -165,13 +159,10 @@ public class TvGids {
 		return new URL(s.toString());
 	}
 	
-	// Convenience method
-	public Set<Programme> getProgrammes(Channel channel, int day, boolean fetchDetails) throws Exception {
-		ArrayList<Channel> list = new ArrayList<Channel>(2);
-		list.add(channel);
-		return getProgrammes(list, day, fetchDetails);
-	}
-		
+	/* (non-Javadoc)
+	 * @see org.vanbest.xmltv.EPGSource#getProgrammes(java.util.List, int, boolean)
+	 */
+	@Override
 	public Set<Programme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
 		Set<Programme> result = new HashSet<Programme>();
 		URL url = programmeUrl(channels, day);
@@ -223,7 +214,7 @@ public class TvGids {
 			String s;
 			while ((s = reader.readLine()) != null) buf.append(s);
 		} catch (IOException e) {
-			fetchErrors++;
+			stats.fetchErrors++;
 			throw new Exception("Error getting program data from url " + url, e);
 		}
 		return buf.toString();  
@@ -243,7 +234,7 @@ public class TvGids {
 
 		p.details = cache.getDetails(p.db_id);
 		if ( p.details == null ) {
-			cacheMisses++;
+			stats.cacheMisses++;
 			
 			URL url = JSONDetailUrl(p.db_id);
 			JSONObject json = fetchJSON(url);
@@ -306,7 +297,7 @@ public class TvGids {
 			p.details.fixup(p, config.quiet);
 			cache.add(p.db_id, p.details);
 		} else {
-			cacheHits++;
+			stats.cacheHits++;
 		}
 	}
 }

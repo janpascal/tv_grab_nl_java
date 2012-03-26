@@ -73,7 +73,7 @@ public class Main {
 		XmlTvWriter writer = new XmlTvWriter(outputWriter, config);
 		writer.writeChannels(config.channels);
 
-		TvGids gids = new TvGids(config);
+		EPGSource gids = new TvGids(config);
 
 		for (int day=offset; day<offset+days; day++) {
 			if (!config.quiet) System.out.print("Fetching information for day " + day);
@@ -100,14 +100,15 @@ public class Main {
 
 		writer.close();
 		if (!config.quiet) {
-			System.out.println("Number of programmes from cache: " + gids.cacheHits);
-			System.out.println("Number of programmes fetched: " + gids.cacheMisses);
-			System.out.println("Number of fetch errors: " + gids.fetchErrors);
+			EPGSource.Stats stats = gids.getStats();
+			System.out.println("Number of programmes from cache: " + stats.cacheHits);
+			System.out.println("Number of programmes fetched: " + stats.cacheMisses);
+			System.out.println("Number of fetch errors: " + stats.fetchErrors);
 		}
 	}
 	
 	public void configure() throws IOException {
-		TvGids gids = new TvGids(config);
+		EPGSource gids = new TvGids(config);
 		
 		Set<String> oldChannels = new HashSet<String>();
 		for (Channel c: config.channels) {
