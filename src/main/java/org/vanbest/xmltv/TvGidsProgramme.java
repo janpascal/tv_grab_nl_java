@@ -18,7 +18,7 @@ package org.vanbest.xmltv;
 
 import java.util.Date;
 
-public class Programme {
+public class TvGidsProgramme {
 	  public String getDb_id() {
 		return db_id;
 	}
@@ -118,7 +118,7 @@ public class Programme {
 	  boolean is_highlight;
 	  String highlight_afbeelding;
 	  String highlight_content;
-	  ProgrammeDetails details = null;
+	  TvGidsProgrammeDetails details = null;
 	  Channel channel = null;
 
 	  public void fixup(Config config) {

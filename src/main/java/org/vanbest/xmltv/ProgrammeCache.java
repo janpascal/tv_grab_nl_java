@@ -32,41 +32,41 @@ import org.apache.commons.io.FileUtils;
 
 public class ProgrammeCache {
 	private File cacheFile;
-	private Map<String,ProgrammeDetails> cache;
+	private Map<String,TvGidsProgrammeDetails> cache;
 	
 	public ProgrammeCache(File cacheFile) {
 		this.cacheFile = cacheFile;
 		if (cacheFile.canRead()) {
 			try {
-				cache = (Map<String,ProgrammeDetails>) new ObjectInputStream( new FileInputStream( cacheFile ) ).readObject();
+				cache = (Map<String,TvGidsProgrammeDetails>) new ObjectInputStream( new FileInputStream( cacheFile ) ).readObject();
 			} catch (InvalidClassException e) {
 				// TODO Auto-generated catch block
 				
-				cache = new HashMap<String,ProgrammeDetails>();
+				cache = new HashMap<String,TvGidsProgrammeDetails>();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				cache = new HashMap<String,ProgrammeDetails>();
+				cache = new HashMap<String,TvGidsProgrammeDetails>();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				cache = new HashMap<String,ProgrammeDetails>();
+				cache = new HashMap<String,TvGidsProgrammeDetails>();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				cache = new HashMap<String,ProgrammeDetails>();
+				cache = new HashMap<String,TvGidsProgrammeDetails>();
 			}
 		} else {
-			cache = new HashMap<String,ProgrammeDetails>();
+			cache = new HashMap<String,TvGidsProgrammeDetails>();
 		}
 		// FileUtils.forceMkdir(root);
 	}
 	
-	public ProgrammeDetails getDetails(String id) {
+	public TvGidsProgrammeDetails getDetails(String id) {
 		return cache.get(id);
 	}
 	
-	public void add(String id, ProgrammeDetails d) {
+	public void add(String id, TvGidsProgrammeDetails d) {
 		cache.put(id, d);
 	}
 	

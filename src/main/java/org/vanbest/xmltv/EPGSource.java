@@ -18,10 +18,10 @@ public interface EPGSource {
 	public abstract List<Channel> getChannels();
 
 	// Convenience method
-	public abstract Set<Programme> getProgrammes(Channel channel, int day,
+	public abstract Set<TvGidsProgramme> getProgrammes(Channel channel, int day,
 			boolean fetchDetails) throws Exception;
 
-	public abstract Set<Programme> getProgrammes(List<Channel> channels,
+	public abstract Set<TvGidsProgramme> getProgrammes(List<Channel> channels,
 			int day, boolean fetchDetails) throws Exception;
 	
 	public abstract Stats getStats();

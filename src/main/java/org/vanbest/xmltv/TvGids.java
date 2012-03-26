@@ -163,8 +163,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 * @see org.vanbest.xmltv.EPGSource#getProgrammes(java.util.List, int, boolean)
 	 */
 	@Override
-	public Set<Programme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
-		Set<Programme> result = new HashSet<Programme>();
+	public Set<TvGidsProgramme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
+		Set<TvGidsProgramme> result = new HashSet<TvGidsProgramme>();
 		URL url = programmeUrl(channels, day);
 
 		JSONObject jsonObject = fetchJSON(url);  
@@ -176,7 +176,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 				JSONArray programs = (JSONArray) ps;
 				for( int i=0; i<programs.size(); i++ ) {
 					JSONObject programme = programs.getJSONObject(i);
-					Programme p = programmeFromJSON(programme, fetchDetails);
+					TvGidsProgramme p = programmeFromJSON(programme, fetchDetails);
 					p.channel = c;
 					result.add( p );
 				}
@@ -184,7 +184,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 				JSONObject programs = (JSONObject) ps;
 				for( Object o: programs.keySet() ) {
 					JSONObject programme = programs.getJSONObject(o.toString());
-					Programme p = programmeFromJSON(programme, fetchDetails);
+					TvGidsProgramme p = programmeFromJSON(programme, fetchDetails);
 					p.channel = c;
 					result.add( p );
 				}
@@ -194,8 +194,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		return result;
 	}
 	
-	private Programme programmeFromJSON(JSONObject programme, boolean fetchDetails) throws Exception {
-		Programme p = (Programme) JSONObject.toBean(programme, Programme.class);
+	private TvGidsProgramme programmeFromJSON(JSONObject programme, boolean fetchDetails) throws Exception {
+		TvGidsProgramme p = (TvGidsProgramme) JSONObject.toBean(programme, TvGidsProgramme.class);
 		p.fixup(config);
 		if (fetchDetails) {
 			fillDetails(p);
@@ -206,27 +206,13 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		return p;
 	}
 
-	protected String fetchURL(URL url) throws Exception {
-		Thread.sleep(config.niceMilliseconds);
-		StringBuffer buf = new StringBuffer();
-		try {
-			BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
-			String s;
-			while ((s = reader.readLine()) != null) buf.append(s);
-		} catch (IOException e) {
-			stats.fetchErrors++;
-			throw new Exception("Error getting program data from url " + url, e);
-		}
-		return buf.toString();  
-	}
-
 	private JSONObject fetchJSON(URL url) throws Exception {
 		String json = fetchURL(url);
 		if (config.logJSON()) System.out.println(json);
 		return JSONObject.fromObject( json );  
 	}
 
-	private void fillDetails(Programme p) throws Exception {
+	private void fillDetails(TvGidsProgramme p) throws Exception {
 		Pattern progInfoPattern = Pattern.compile("prog-info-content.*prog-info-footer", Pattern.DOTALL);
 		Pattern infoLinePattern = Pattern.compile("<li><strong>(.*?):</strong>(.*?)</li>");
 		Pattern HDPattern = Pattern.compile("HD \\d+[ip]?");
@@ -238,7 +224,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			
 			URL url = JSONDetailUrl(p.db_id);
 			JSONObject json = fetchJSON(url);
-			p.details = (ProgrammeDetails) JSONObject.toBean(json, ProgrammeDetails.class);
+			p.details = (TvGidsProgrammeDetails) JSONObject.toBean(json, TvGidsProgrammeDetails.class);
 			
 			url = HTMLDetailUrl(p.db_id);
 			String clob=fetchURL(url);

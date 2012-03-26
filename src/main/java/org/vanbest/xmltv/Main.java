@@ -77,11 +77,11 @@ public class Main {
 
 		for (int day=offset; day<offset+days; day++) {
 			if (!config.quiet) System.out.print("Fetching information for day " + day);
-			Set<Programme> programmes = new HashSet<Programme>();
+			Set<TvGidsProgramme> programmes = new HashSet<TvGidsProgramme>();
 			for(Channel c: config.channels) {
 				if (!c.enabled) continue;
 				if (!config.quiet) System.out.print(".");
-				Set<Programme> p = gids.getProgrammes(c, day, true);
+				Set<TvGidsProgramme> p = gids.getProgrammes(c, day, true);
 				writer.writePrograms(p);
 				writer.flush();
 			}

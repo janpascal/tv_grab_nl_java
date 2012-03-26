@@ -70,9 +70,9 @@ public class XmlTvWriter {
 	 *    artikel_id ???
 	 *    		
 	 */
-	public void writePrograms(Collection<Programme> programs) throws XMLStreamException {
+	public void writePrograms(Collection<TvGidsProgramme> programs) throws XMLStreamException {
 		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
-		for(Programme p: programs) {
+		for(TvGidsProgramme p: programs) {
 			writer.writeStartElement("programme");
 				writer.writeAttribute("start", df.format(p.datum_start));
 				writer.writeAttribute("stop", df.format(p.datum_end));

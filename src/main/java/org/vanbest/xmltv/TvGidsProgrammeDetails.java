@@ -18,7 +18,7 @@ package org.vanbest.xmltv;
 
 import java.io.Serializable;
 
-public class ProgrammeDetails implements Serializable {
+public class TvGidsProgrammeDetails implements Serializable {
 	String db_id;
 	String titel;
 	String datum;
@@ -38,7 +38,7 @@ public class ProgrammeDetails implements Serializable {
 	public String quality = null;
 	public boolean herhaling = false;
 	
-	public void fixup(Programme p, boolean quiet) {
+	public void fixup(TvGidsProgramme p, boolean quiet) {
 		this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
 		this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
 		this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);

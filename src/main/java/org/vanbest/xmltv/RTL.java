@@ -28,13 +28,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-public class RTL implements EPGSource {
+public class RTL extends AbstractEPGSource implements EPGSource  {
 
 	static final String programme_url="http://www.rtl.nl/active/epg_data/dag_data/";
 	static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	
 	Stats stats = new Stats();
+
+	public RTL(Config config) {
+		super(config);
+	}
 
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
@@ -69,20 +73,6 @@ public class RTL implements EPGSource {
 		return result;
 	}
 	
-	protected String fetchURL(URL url) throws Exception {
-		StringBuffer buf = new StringBuffer();
-		try {
-			BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
-			String s;
-			while ((s = reader.readLine()) != null) buf.append(s);
-		} catch (IOException e) {
-			stats.fetchErrors++;
-			throw new Exception("Error getting program data from url " + url, e);
-		}
-		return buf.toString();  
-	}
-
-
 	protected void fetchDay(int day) throws Exception {
 		URL url = new URL(programme_url+day);
 		String xmltext = fetchURL(url);
@@ -147,22 +137,8 @@ public class RTL implements EPGSource {
 		Element root = xml.getDocumentElement();
 	}
 
-
 	@Override
-	public void close() throws FileNotFoundException, IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Set<Programme> getProgrammes(Channel channel, int day,
-			boolean fetchDetails) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Set<Programme> getProgrammes(List<Channel> channels, int day,
+	public Set<TvGidsProgramme> getProgrammes(List<Channel> channels, int day,
 			boolean fetchDetails) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
@@ -191,7 +167,9 @@ public class RTL implements EPGSource {
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
-			System.out.flush();
+			writer.writeEndElement();
+			writer.writeEndDocument();
+			writer.flush();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
