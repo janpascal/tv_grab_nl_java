@@ -85,6 +85,13 @@ public class Config {
 		return FileUtils.getFile(FileUtils.getUserDirectory(), ".xmltv", "tv_grab_nl_java.cache");
 	}
 
+	public String translateCategory(String category) {
+		if(!cattrans.containsKey(category.toLowerCase())) {
+			return category;
+		}
+		return cattrans.get(category.toLowerCase());
+	}
+
 	static private Map<String,String> getDefaultCattrans() {
 		Map<String,String> result = new HashMap<String,String>();
 		result.put("amusement", "Animated");

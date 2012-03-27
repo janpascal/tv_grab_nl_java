@@ -126,9 +126,7 @@ public class TvGidsProgramme {
 		 this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
 		 this.soort = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(soort);
 		 this.highlight_content = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(highlight_content);
-		 if(config.getCategories().containsKey(genre.toLowerCase())) {
-			 genre = config.getCategories().get(genre.toLowerCase());
-		 }
+		 genre = config.translateCategory(genre);
 	  }
 
 	  public String toString() {
