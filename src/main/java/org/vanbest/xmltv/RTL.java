@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,7 +47,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	private static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	private static final String xmltv_channel_suffix = ".rtl.nl";
-	private static final int MAX_PROGRAMMES_PER_DAY = 5;
+	private static final int MAX_PROGRAMMES_PER_DAY = 99999;
 	
 	class RTLException extends Exception {
 		public RTLException(String s) {
@@ -120,8 +121,9 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 * </uitzending_data>
 
 	 */
-	private void fetchDetail(Programme prog, String id) throws Exception {
+	private void fetchDetail(Programme prog, Date date, String id) throws Exception {
 		URL url = detailUrl(id);
+		Thread.sleep(config.niceMilliseconds);
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
 		Element root = xml.getDocumentElement();
 		if (root.hasAttributes()) {
@@ -142,7 +144,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			NodeList subnodes = n.getChildNodes();
 			for( int j=0; j<subnodes.getLength(); j++) {
 				try {
-					handleNode(prog, subnodes.item(j));
+					handleNode(prog, date, subnodes.item(j));
 				} catch (RTLException e) {
 					System.out.println(e.getMessage());
 					Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -155,7 +157,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	}
 
 	
-	private void handleNode(Programme prog, Node n) throws RTLException {
+	private void handleNode(Programme prog, Date date, Node n) throws RTLException {
 		if (n.getNodeType() != Node.ELEMENT_NODE) {
 			throw new RTLException("Ignoring non-element node " + n.getNodeName());
 		}
@@ -164,15 +166,18 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		case "genre":
 			prog.addCategory(config.translateCategory(e.getTextContent()));
 			break;
+		case "eindtijd":
+			prog.endTime = parseTime(date, e.getTextContent());
+			break;
 		default:
 			throw new RTLException("Ignoring unknown tag " + n.getNodeName() + ", content: \"" + e.getTextContent() + "\"");
 		}
 		//prog.endTime = parseTime(date, root.)
 	}
 
-	public Set<Programme> getProgrammes1(List<Channel> channels, int day,
+	public List<Programme> getProgrammes1(List<Channel> channels, int day,
 			boolean fetchDetails) throws Exception {
-		Set<Programme> result = new HashSet<Programme>();
+		List<Programme> result = new LinkedList<Programme>();
 		Map<String,Channel> channelMap = new HashMap<String,Channel>();
 		for(Channel c: channels) {
 			if (c.enabled) channelMap.put(c.id, c);
@@ -209,7 +214,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				Date start = parseTime(date, starttime);
 				prog.startTime = start;
 				prog.channel = channelMap.get(id);
-				fetchDetail(prog, programme_id);
+				fetchDetail(prog, date, programme_id);
 				result.add(prog);
 			}
 		}
@@ -224,7 +229,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			
 		}
 		int hour = Integer.parseInt(parts[0]);
-		if (hour<4) {
+		if (hour<5) {
 			result.add(Calendar.DAY_OF_MONTH, 1); // early tomorrow morning
 		}
 		result.set(Calendar.HOUR_OF_DAY, hour);
@@ -257,7 +262,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
-			Set<Programme> programmes = rtl.getProgrammes1(channels.subList(0, 3), 0, true);
+			List<Programme> programmes = rtl.getProgrammes1(channels.subList(0, 3), 0, true);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
 			writer.writeEndDocument();

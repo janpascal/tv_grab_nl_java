@@ -110,6 +110,7 @@ public class Programme {
 
 		writer.writeStartElement("programme");
 		if(startTime != null) writer.writeAttribute("start", df.format(startTime));
+		if(endTime != null) writer.writeAttribute("stop", df.format(endTime));
 		if(channel != null) writer.writeAttribute("channel", ""+channel.id);
 		if(titles != null) {
 			for(Title title: titles) {
