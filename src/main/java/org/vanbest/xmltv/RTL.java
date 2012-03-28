@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,6 +40,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.vanbest.xmltv.EPGSource.Stats;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -49,6 +55,13 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String xmltv_channel_suffix = ".rtl.nl";
 	private static final int MAX_PROGRAMMES_PER_DAY = 99999;
 	
+	private Connection db;
+	
+	String[] xmlKeys = {"zendernr", "pgmsoort", "genre", "bijvnwlanden", "ondertiteling", "begintijd", "titel", 
+			"site_path", "wwwadres", "presentatie", "omroep", "eindtijd", "inhoud", "tt_inhoud", "alginhoud", "afl_titel", "kijkwijzer" };
+		
+	Map<String,Integer> xmlKeyMap = new HashMap<String,Integer>();
+	
 	class RTLException extends Exception {
 		public RTLException(String s) {
 			super(s);
@@ -57,6 +70,29 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	
 	public RTL(Config config) {
 		super(config);
+		try {
+			db = DriverManager.getConnection("jdbc:hsqldb:file:testdb", "SA", "");
+			Statement stat = db.createStatement();
+			StringBuilder s = new StringBuilder();
+			s.append("CREATE TABLE IF NOT EXISTS prog (id VARCHAR(32) primary key, ");
+			int i=0;
+			for( String key: xmlKeys) {
+				if(i>0) s.append(", ");
+				xmlKeyMap.put(key, i+1);
+				s.append(key);
+				s.append(" VARCHAR(4096)");
+				i++;
+			}
+			s.append(");");
+			System.out.println(s);
+			stat.execute(s.toString());
+			stat.execute("TRUNCATE TABLE prog");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
+			db = null;
+		}
 	}
 
 	public List<Channel> getChannels() {
@@ -129,10 +165,25 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		if (root.hasAttributes()) {
 			System.out.println("Unknown attributes for RTL detail root node");
 		}
+		StringBuilder sql = new StringBuilder("INSERT INTO prog (id");
+		StringBuilder sql2= new StringBuilder(") values (?");
+		for(String key:xmlKeys) {
+			sql.append(",");
+			sql.append(key);
+			sql2.append(",");
+			sql2.append("?");
+		}
+		sql.append(sql2);
+		sql.append(");");
+		// System.out.println(sql.toString());
+		PreparedStatement stat = db.prepareStatement(sql.toString());
+		stat.setString(1, id);
+		for(String key:xmlKeys) {
+			
+		}
 		NodeList nodes = root.getChildNodes();
 		for( int i=0; i<nodes.getLength(); i++) {
 			Node n = nodes.item(i);
-			System.out.println(n.getNodeName());
 			if (!n.getNodeName().equals("uitzending_data_item")) {
 				System.out.println("Ignoring RTL detail, tag " + n.getNodeName() +", full xml:");
 				Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -144,7 +195,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			NodeList subnodes = n.getChildNodes();
 			for( int j=0; j<subnodes.getLength(); j++) {
 				try {
-					handleNode(prog, date, subnodes.item(j));
+					handleNode(prog, date, stat, subnodes.item(j));
 				} catch (RTLException e) {
 					System.out.println(e.getMessage());
 					Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -153,21 +204,51 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 					continue;
 				}
 			}
+			System.out.println(stat.toString());
+			stat.execute();
 		}
 	}
 
 	
-	private void handleNode(Programme prog, Date date, Node n) throws RTLException {
+	private void handleNode(Programme prog, Date date, PreparedStatement stat, Node n) throws RTLException, DOMException, SQLException {
 		if (n.getNodeType() != Node.ELEMENT_NODE) {
 			throw new RTLException("Ignoring non-element node " + n.getNodeName());
 		}
+		if (n.hasAttributes()) {
+			throw new RTLException("Unknown attributes for RTL detail node " + n.getNodeName());
+		}
+		if (n.hasChildNodes()) {
+			NodeList list = n.getChildNodes();
+			for( int i=0; i<list.getLength(); i++) {
+				if(list.item(i).getNodeType() == Node.ELEMENT_NODE) {
+					throw new RTLException("RTL detail node " + n.getNodeName() + " has unexpected child element " + list.item(i).getNodeName());
+				}
+			}
+		}
 		Element e = (Element)n;
+		stat.setString(xmlKeyMap.get(e.getTagName())+1, e.getTextContent());
 		switch (e.getTagName()) {
 		case "genre":
 			prog.addCategory(config.translateCategory(e.getTextContent()));
 			break;
 		case "eindtijd":
 			prog.endTime = parseTime(date, e.getTextContent());
+			break;
+		case "omroep":
+		case "kijkwijzer":
+		case "presentatie":
+		case "wwwadres":
+		case "alginhoud":
+		case "inhoud":
+		case "tt_inhoud":
+		case "zendernr":
+		case "titel":
+		case "bijvnwlanden":
+		case "afl_titel":
+		case "site_path":
+		case "ondertiteling":
+		case "begintijd":
+		case "pgmsoort":
 			break;
 		default:
 			throw new RTLException("Ignoring unknown tag " + n.getNodeName() + ", content: \"" + e.getTextContent() + "\"");
@@ -250,6 +331,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
+		System.exit(0);
 		RTL rtl = new RTL(config);
 		try {
 			List<Channel> channels = rtl.getChannels();
@@ -262,7 +344,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
-			List<Programme> programmes = rtl.getProgrammes1(channels.subList(0, 3), 0, true);
+			//List<Programme> programmes = rtl.getProgrammes1(channels.subList(0, 13), 0, true);
+			List<Programme> programmes = rtl.getProgrammes1(channels, 0, true);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
 			writer.writeEndDocument();
