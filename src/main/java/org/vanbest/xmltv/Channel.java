@@ -14,6 +14,7 @@ public class Channel {
 	List<Icon> icons;
 	List<String> urls;
 	protected boolean enabled = true;
+	private String suffix = "";
 	
 	protected Channel(String id) {
 		this.id = id;
@@ -39,9 +40,13 @@ public class Channel {
 		return c;
 	}
 	
+	public String getXmltvChannelId() {
+		return id+suffix;
+	}
+	 
 	public void serialize(XMLStreamWriter writer) throws XMLStreamException {
 		writer.writeStartElement("channel");
-		writer.writeAttribute("id", id);
+		writer.writeAttribute("id", getXmltvChannelId());
 		for(String name: names) {
 			writer.writeStartElement("display-name");
 			writer.writeAttribute("lang", "nl");
@@ -72,5 +77,9 @@ public class Channel {
     public String toString() {
     	return "Channel " + id + " (" + defaultName() + ")";
     }
+
+	public void setSuffix(String suffix) {
+		this.suffix  = suffix;
+	}
 
 }
