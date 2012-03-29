@@ -77,7 +77,7 @@ public class XmlTvWriter {
 			writer.writeStartElement("programme");
 				writer.writeAttribute("start", df.format(p.datum_start));
 				writer.writeAttribute("stop", df.format(p.datum_end));
-				writer.writeAttribute("channel", ""+p.channel.id);
+				writer.writeAttribute("channel", ""+p.channel.getXmltvChannelId());
 				writeln();				
 				
 				writer.writeStartElement("title");

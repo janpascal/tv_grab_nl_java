@@ -49,7 +49,7 @@ public class Config {
 	
 	public static int LOG_DEFAULT = LOG_INFO;
 	
-	private final static int CURRENT_FILE_FORMAT=1;
+	private final static int CURRENT_FILE_FORMAT=2;
 
 	String project_version;
 	
@@ -125,7 +125,8 @@ public class Config {
 		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for(Channel c: channels) {
 			// FIXME: handle multiple channels names, icons and urls
-			out.print("channel: " + c.id +
+			out.print("channel: " + c.source + 
+					":" + c.id +
 					": " + (c.enabled?"enabled":"disabled") +
 					": " + escape(c.defaultName()));
 			if (!c.icons.isEmpty()) {
@@ -198,13 +199,13 @@ public class Config {
 					// System.out.println("Adding channel " + parts + " in file format " + fileformat);
 					switch(fileformat) {
 					case 0:
-						c = Channel.getChannel(parts.get(1), parts.get(2));
+						c = Channel.getChannel(Channel.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(2));
 						if (parts.size()>3) {
 							c.addIcon(parts.get(3));
 						}
 						break;
 					case 1:
-						c = Channel.getChannel(parts.get(1), parts.get(3));
+						c = Channel.getChannel(Channel.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(3));
 						if (parts.size()>4) {
 							c.addIcon(parts.get(4));
 						}
@@ -215,6 +216,20 @@ public class Config {
 							c.setEnabled(false); 
 						} else {
 							System.out.println("Error in config file, unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
+						}
+						break;
+					case 2:
+						c = Channel.getChannel(Integer.parseInt(parts.get(1)), parts.get(2), parts.get(4));
+						if (parts.size()>5) {
+							c.addIcon(parts.get(5));
+						}
+						value = parts.get(3);
+						if (value.equals("enabled")) {
+							c.setEnabled(true); 
+						} else if (value.equals("disabled")) {
+							c.setEnabled(false); 
+						} else {
+							System.out.println("Error in config file, unknown channel status \"" + parts.get(3) + "\", should be enabled or disabled");
 						}
 					}
 			 		result.channels.add(c);

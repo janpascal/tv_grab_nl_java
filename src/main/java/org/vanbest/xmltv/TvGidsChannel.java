@@ -16,31 +16,27 @@ package org.vanbest.xmltv;
   The full license text can be found in the LICENSE file.
 */
 
-public class TvGidsChannel {
-	int id;
-    String name;
-    String shortName;
-	String iconUrl;
-	boolean selected;
-	
-    public TvGidsChannel(int id, String name, String shortName) {
-    	this.id = id;
-    	this.name = name;
-    	this.shortName = shortName;
+public class TvGidsChannel extends Channel {
+
+	protected TvGidsChannel(String id) {
+		super(CHANNEL_SOURCE_TVGIDS, id);
 	}
-    public String toString() {
-    	return "id: " + id + "; name: " + name + "; shortName: " + shortName;
-    }
-    
-    public String getChannelId() {
+
+	static Channel getChannel(String id, String name) {
+		Channel c = new TvGidsChannel(id);
+		c.names.add(name);
+		return c;
+	}
+
+	static Channel getChannel(String id, String name, String iconUrl) {
+		Channel c = new TvGidsChannel(id);
+		c.names.add(name);
+		c.icons.add(new Icon(iconUrl));
+		return c;
+	}
+
+    public String getXmltvChannelId() {
     	return id+".tvgids.nl";
     }
     
-    public void fixup() {
-		 this.name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(name);
-		 this.shortName = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(shortName);
-    }
-	public void setIconUrl(String url) {
-		this.iconUrl = url;
-	}
 }

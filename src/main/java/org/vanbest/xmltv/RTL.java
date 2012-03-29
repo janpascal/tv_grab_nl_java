@@ -137,7 +137,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			String name = (String) j.get(0);
 			String icon = icon_url+id+".gif";
 			
-			Channel c = Channel.getChannel(id, name, icon);
+			Channel c = Channel.getChannel(Channel.CHANNEL_SOURCE_RTL, id, name, icon);
 			result.add(c);
 		}
 
@@ -145,7 +145,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	}
 	
 	private String genericChannelId(String jsonid) {
-		return jsonid.replaceAll("^Z", "")+xmltv_channel_suffix; // remove initial Z
+		return jsonid.replaceAll("^Z", ""); // remove initial Z
 	}
 	
 	/*

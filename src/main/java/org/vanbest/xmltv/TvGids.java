@@ -116,8 +116,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			int id = zender.getInt("id");
 			String name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(zender.getString("name"));
 			String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id + ".png"; 
-			Channel c = Channel.getChannel(Integer.toString(id), name, icon); 
-			c.setSuffix(".tvgids.nl");
+			Channel c = Channel.getChannel(Channel.CHANNEL_SOURCE_TVGIDS, Integer.toString(id), name, icon); 
 			result.add(c);
 		}
 

@@ -14,10 +14,14 @@ public class Channel {
 	List<Icon> icons;
 	List<String> urls;
 	protected boolean enabled = true;
-	private String suffix = "";
+	int source;
 	
-	protected Channel(String id) {
+	public final static int CHANNEL_SOURCE_TVGIDS=1;
+	public final static int CHANNEL_SOURCE_RTL=2;
+	
+	protected Channel(int source, String id) {
 		this.id = id;
+		this.source = source;
 		names = new ArrayList<String>();
 		icons = new ArrayList<Icon>();
 		urls = new ArrayList<String>();
@@ -27,21 +31,28 @@ public class Channel {
 		return names.get(0);
 	}
 	
-	static Channel getChannel(String id, String name) {
-		Channel c = new Channel(id);
+	static Channel getChannel(int source, String id, String name) {
+		Channel c = new Channel(source, id);
 		c.names.add(name);
 		return c;
 	}
 
-	static Channel getChannel(String id, String name, String iconUrl) {
-		Channel c = new Channel(id);
+	static Channel getChannel(int source, String id, String name, String iconUrl) {
+		Channel c = new Channel(source, id);
 		c.names.add(name);
 		c.icons.add(new Icon(iconUrl));
 		return c;
 	}
 	
 	public String getXmltvChannelId() {
-		return id+suffix;
+		switch (source) {
+		case CHANNEL_SOURCE_TVGIDS:
+			return id+".tvgids.nl";
+		case CHANNEL_SOURCE_RTL:
+			return id;
+		default:
+			return id;
+		}
 	}
 	 
 	public void serialize(XMLStreamWriter writer) throws XMLStreamException {
@@ -75,11 +86,6 @@ public class Channel {
 	}
 	
     public String toString() {
-    	return "Channel " + id + " (" + defaultName() + ")";
+    	return "Channel " + source + "::" + id + " (" + defaultName() + ")";
     }
-
-	public void setSuffix(String suffix) {
-		this.suffix  = suffix;
-	}
-
 }
