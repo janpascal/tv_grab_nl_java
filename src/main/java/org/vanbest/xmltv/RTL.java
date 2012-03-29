@@ -108,7 +108,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		Document xml = null;
 		try {
 			xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
-		} catch (SAXException | IOException | ParserConfigurationException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -227,30 +227,27 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		}
 		Element e = (Element)n;
 		stat.setString(xmlKeyMap.get(e.getTagName())+1, e.getTextContent());
-		switch (e.getTagName()) {
-		case "genre":
+		String tag = e.getTagName();
+		if (tag.equals("genre")) {
 			prog.addCategory(config.translateCategory(e.getTextContent()));
-			break;
-		case "eindtijd":
+		} else if (tag.equals("eindtijd")) {
 			prog.endTime = parseTime(date, e.getTextContent());
-			break;
-		case "omroep":
-		case "kijkwijzer":
-		case "presentatie":
-		case "wwwadres":
-		case "alginhoud":
-		case "inhoud":
-		case "tt_inhoud":
-		case "zendernr":
-		case "titel":
-		case "bijvnwlanden":
-		case "afl_titel":
-		case "site_path":
-		case "ondertiteling":
-		case "begintijd":
-		case "pgmsoort":
-			break;
-		default:
+		} else if (tag.equals("omroep")) {
+		} else if (tag.equals("kijkwijzer")) {
+		} else if (tag.equals("presentatie")) {
+		} else if (tag.equals("wwwadres")) {
+		} else if (tag.equals("alginhoud")) {
+		} else if (tag.equals("inhoud")) {
+		} else if (tag.equals("tt_inhoud")) {
+		} else if (tag.equals("zendernr")) {
+		} else if (tag.equals("titel")) {
+		} else if (tag.equals("bijvnwlanden")) {
+		} else if (tag.equals("afl_titel")) {
+		} else if (tag.equals("site_path")) {
+		} else if (tag.equals("ondertiteling")) {
+		} else if (tag.equals("begintijd")) {
+		} else if (tag.equals("pgmsoort")) {
+		} else {
 			throw new RTLException("Ignoring unknown tag " + n.getNodeName() + ", content: \"" + e.getTextContent() + "\"");
 		}
 		//prog.endTime = parseTime(date, root.)

@@ -192,8 +192,8 @@ public class Config {
 				if (!s.contains(":")) continue;
 				if (s.startsWith("#")) continue;
 				List<String> parts = splitLine(s);
-				switch (parts.get(0).toLowerCase()) {
-				case "channel":
+				String key = parts.get(0).toLowerCase(); 
+				if(key.equals("channel")) {
 					Channel c = null;
 					// System.out.println("Adding channel " + parts + " in file format " + fileformat);
 					switch(fileformat) {
@@ -208,18 +208,19 @@ public class Config {
 						if (parts.size()>4) {
 							c.addIcon(parts.get(4));
 						}
-						switch(parts.get(2)) {
-						case "enabled": c.setEnabled(true); break; 
-						case "disabled": c.setEnabled(false); break;
-						default: System.out.println("Error in config file, unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
+						String value = parts.get(2);
+						if (value.equals("enabled")) {
+							c.setEnabled(true); 
+						} else if (value.equals("disabled")) {
+							c.setEnabled(false); 
+						} else {
+							System.out.println("Error in config file, unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
 						}
 					}
 			 		result.channels.add(c);
-			 		break;
-				case "category" :
+				} else if (key.equals("category")) {
 					result.cattrans.put(parts.get(1), parts.get(2));
-					break;
-				case "config-file-format" :
+				} else if (key.equals("config-file-format")) {
 					try {
 						fileformat = Integer.parseInt(parts.get(1));
 					} catch (NumberFormatException e) {
@@ -230,12 +231,12 @@ public class Config {
 						System.out.println("Unknown config file format " + parts.get(1));
 						fileformat = CURRENT_FILE_FORMAT;
 					}
-					break;
-				case "cache-file":
+				} else if (key.equals("cache-file")) {
 					result.cacheFile = new File(parts.get(1));
-					break;
-				case "nice-time-milliseconds":
+				} else if (key.equals("nice-time-milliseconds")) {
 					result.niceMilliseconds = Integer.parseInt(parts.get(1));
+				} else {
+					System.out.println("Unknown key " + key + " in config file!");
 				}
 			}
 		} catch (IOException e) {

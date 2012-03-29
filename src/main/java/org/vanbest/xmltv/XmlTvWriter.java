@@ -57,6 +57,7 @@ public class XmlTvWriter {
 	
 	public void writeChannels(List<Channel> channels) throws XMLStreamException {
 		for(Channel c: channels) {
+			if (!c.enabled) continue;
 			c.serialize(writer);
 			writeln();		
 		}

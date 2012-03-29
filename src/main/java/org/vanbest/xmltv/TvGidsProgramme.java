@@ -17,6 +17,7 @@ package org.vanbest.xmltv;
 */
 
 import java.util.Date;
+import org.apache.commons.lang.StringEscapeUtils;
 
 public class TvGidsProgramme {
 	  public String getDb_id() {
@@ -122,10 +123,10 @@ public class TvGidsProgramme {
 	  Channel channel = null;
 
 	  public void fixup(Config config) {
-		 this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
-		 this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
-		 this.soort = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(soort);
-		 this.highlight_content = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(highlight_content);
+		 titel = titel==null?"":StringEscapeUtils.unescapeHtml(titel);
+		 genre = genre==null?"":StringEscapeUtils.unescapeHtml(genre);
+		 soort = soort==null?"":StringEscapeUtils.unescapeHtml(soort);
+		 highlight_content = highlight_content==null?"":StringEscapeUtils.unescapeHtml(highlight_content);
 		 genre = config.translateCategory(genre);
 	  }
 

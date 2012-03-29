@@ -15,6 +15,8 @@ public abstract class AbstractEPGSource implements EPGSource {
 	protected Config config;
 	protected ProgrammeCache cache;
 	protected Stats stats = new Stats();
+	
+	public static final int MAX_FETCH_TRIES=5;
 
 	public AbstractEPGSource(Config config) {
 		this.config = config;
@@ -41,13 +43,24 @@ public abstract class AbstractEPGSource implements EPGSource {
 	protected String fetchURL(URL url) throws Exception {
 		Thread.sleep(config.niceMilliseconds);
 		StringBuffer buf = new StringBuffer();
-		try {
-			BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
-			String s;
-			while ((s = reader.readLine()) != null) buf.append(s);
-		} catch (IOException e) {
+		boolean done = false;
+		IOException finalException = null;
+		for(int count = 0; count<MAX_FETCH_TRIES && !done; count++) {
+			try {
+				BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
+				String s;
+				while ((s = reader.readLine()) != null) buf.append(s);
+				done = true;
+			} catch (IOException e) {
+				if (!config.quiet) {
+					System.out.println("Error fetching from url " + url + ", count="+count);
+				}
+				finalException = e;
+			}
+		}
+		if (!done) {
 			stats.fetchErrors++;
-			throw new Exception("Error getting program data from url " + url, e);
+			throw new Exception("Error getting program data from url " + url, finalException);
 		}
 		return buf.toString();  
 	}

@@ -63,7 +63,7 @@ public class Main {
  			System.out.println("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
  			System.out.println("under certain conditions; `tv_grab_nl_java --license' for details.");
 
-			System.out.println("Fetching programme data for days " + this.offset + "-" + (this.offset+this.days-1));
+			System.out.println("Fetching programme data for " + this.days + " starting from day " + this.offset);
 			int enabledCount = 0;
 			for(Channel c: config.channels) { if (c.enabled) enabledCount++; } 
 			System.out.println("... from " + enabledCount + " channels");

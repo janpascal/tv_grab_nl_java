@@ -240,10 +240,9 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 					//System.out.println("    infoLine: " + m2.group());
 					//System.out.println("         key: " + m2.group(1));
 					//System.out.println("       value: " + m2.group(2));
-					String key = m2.group(1);
+					String key = m2.group(1).toLowerCase();
 					String value = m2.group(2);
-					switch(key.toLowerCase()) {
-					case "bijzonderheden":
+					if (key.equals("bijzonderheden")) {
 						String[] list = value.split(",");
 						for( String item: list) {
 							if (item.toLowerCase().contains("teletekst")) {
@@ -265,7 +264,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 								}
 							}
 						}
-						break;
+					} else {
+						// ignore other keys for now
 					}
 					Matcher m3 = kijkwijzerPattern.matcher(progInfo);
 					List<String> kijkwijzer = new ArrayList<String>();

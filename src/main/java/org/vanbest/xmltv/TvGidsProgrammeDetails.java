@@ -18,6 +18,8 @@ package org.vanbest.xmltv;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 public class TvGidsProgrammeDetails implements Serializable {
 	String db_id;
 	String titel;
@@ -39,10 +41,10 @@ public class TvGidsProgrammeDetails implements Serializable {
 	public boolean herhaling = false;
 	
 	public void fixup(TvGidsProgramme p, boolean quiet) {
-		this.titel = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(titel);
-		this.genre = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(genre);
-		this.synop = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(synop);
-		this.synop = this.synop.replaceAll("<br>", " ").
+		titel = titel==null?"":StringEscapeUtils.unescapeHtml(titel);
+		genre = genre==null?"":StringEscapeUtils.unescapeHtml(genre);
+		synop = synop==null?"":StringEscapeUtils.unescapeHtml(synop);
+		synop = this.synop.replaceAll("<br>", " ").
 				replaceAll("<br />", " ").
 				replaceAll("<p>", " ").
 				replaceAll("</p>", " ").
@@ -51,7 +53,7 @@ public class TvGidsProgrammeDetails implements Serializable {
 				replaceAll("<em>", " ").
 				replaceAll("</em>", " ").
 				trim();
-		if ((synop == null || synop.isEmpty()) && ( genre == null || (!genre.toLowerCase().equals("movies") && !genre.toLowerCase().equals("film")))) {
+		if (synop.isEmpty() && (!genre.toLowerCase().equals("movies") && !genre.toLowerCase().equals("film"))) {
 			String[] parts = p.titel.split("[[:space:]]*:[[:space:]]*", 2);
 			if (parts.length >= 2 ) {
 				if (!quiet) {
@@ -62,9 +64,9 @@ public class TvGidsProgrammeDetails implements Serializable {
 				synop = parts[1].trim();
 			}
 		}
-		this.presentatie = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(presentatie);
-		this.acteursnamen_rolverdeling = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(acteursnamen_rolverdeling);
-		this.regisseur = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(regisseur);
+		presentatie = presentatie==null?"":StringEscapeUtils.unescapeHtml(presentatie);
+		acteursnamen_rolverdeling = acteursnamen_rolverdeling==null?"":StringEscapeUtils.unescapeHtml(acteursnamen_rolverdeling);
+		regisseur = regisseur==null?"":StringEscapeUtils.unescapeHtml(regisseur);
 	}
 
 	public String getDb_id() {

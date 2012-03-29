@@ -22,7 +22,8 @@ Kenmerken van tv_grab_nl_java:
 Installatie 
 -----------
 
-0. Het programma vereist Java7. Onder Debian te installeren met 'apt-get install openjdk-7-jre'.
+0. Het programma vereist een Java runtime, versie 6 of hoger. Onder Debian te installeren met 
+   $ apt-get install openjdk-6-jre
 
 1. Download de .zip file (tv_grab_nl_java-VERSIE.zip) en pak 'm uit. Op Github te vinden via de URL
    https://github.com/janpascal/tv_grab_nl_java/downloads
