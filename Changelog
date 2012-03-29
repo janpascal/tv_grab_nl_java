@@ -1,6 +1,14 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.0.0RC1 (2012-03-29)
+- ondersteunt nu ook Java6
+- aantal bugfixes, met dank aan Rick Mud
+- korte opties (-c, -l etc) verwijderd omdat ze verwarrend zijn
+- nieuw config file format. Wordt automatisch naar het nieuwe 
+  format herschreven bij een --configure
+- nu officieel onder de GPL licentie
+
 tv_grab_nl_java-0.5.1 (2012-03-21)
 - haal versienummer uit projectconfiguratie
 

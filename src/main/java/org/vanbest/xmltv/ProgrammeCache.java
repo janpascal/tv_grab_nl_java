@@ -41,11 +41,9 @@ public class ProgrammeCache {
 				cache = (Map<String,TvGidsProgrammeDetails>) new ObjectInputStream( new FileInputStream( cacheFile ) ).readObject();
 			} catch (InvalidClassException e) {
 				// TODO Auto-generated catch block
-				
 				cache = new HashMap<String,TvGidsProgrammeDetails>();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
 				cache = new HashMap<String,TvGidsProgrammeDetails>();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
