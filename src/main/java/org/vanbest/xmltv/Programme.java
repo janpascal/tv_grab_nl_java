@@ -15,6 +15,10 @@ public class Programme {
 	class Title {
 		String title;
 		String lang;
+	    public Title(String title, String lang) {
+	    	this.title = title;
+	    	this.lang = lang;
+	    }
 	}
 	class Actor {
 		String name;
@@ -55,6 +59,10 @@ public class Programme {
 		boolean present;
 		String stereo; // 'mono','stereo','dolby','dolby digital','bilingual' or 'surround'. 
 	}
+	class Subtitle {
+		String type; // teletext | onscreen | deaf-signed
+		Title language;
+	}
 	public Date startTime; // required
 	public Date endTime;
     public Date pdcStart;
@@ -65,7 +73,7 @@ public class Programme {
     public String clumpidx;	
     
     public List<Title> titles; // at least one
-    public List<Title> subtitles; 
+    public List<Title> secondaryTitles; 
     public List<Title> descriptions; 
     public Credits credits;
     public Date date; // copyright date, original date
@@ -74,37 +82,88 @@ public class Programme {
     Title origLanguage;
     Length length;
     public List<Icon> icons;
-    public List<URL> urls;
+    public List<String> urls;
     public List<Title> countries;
     public List<Episode> episodes;
     public Video video;
     public Audio audio;
     /*
     previously-shown?, premiere?, last-chance?, new?,
-    subtitles*, rating*, star-rating*, review* 
     */
-    
+    public List<Subtitle> subtitles; 
+    /*rating*, star-rating*, review* 
+    */
+
     public void addTitle(String title) {
     	addTitle(title, null);
     }
     public void addTitle(String title, String lang) {
     	if(titles==null) titles = new ArrayList<Title>();
-    	Title t = new Title();
-    	t.title = title;
-    	t.lang = lang;
-    	titles.add(t);
+    	titles.add(new Title(title,lang));
     }
+	public void addSecondaryTitle(String title) {
+		addSecondaryTitle(title,null);
+	}
+    public void addSecondaryTitle(String title, String lang) {
+    	if(secondaryTitles==null) secondaryTitles = new ArrayList<Title>();
+    	secondaryTitles.add(new Title(title,lang));
+    }
+    
 	public void addCategory(String category) {
     	addCategory(category, null);
     }
     public void addCategory(String category, String lang) {
     	if(categories==null) categories = new ArrayList<Title>();
-    	Title t = new Title();
-    	t.title = category;
-    	t.lang = lang;
-    	categories.add(t);
+    	categories.add(new Title(category,lang));
     }
+	public void addSubtitle(String type) {
+    	addCategory(type, null);
+    }
+    public void addSubtitle(String type, String language, String language_lang) {
+    	if(subtitles==null) subtitles = new ArrayList<Subtitle>();
+    	Subtitle s = new Subtitle();
+    	s.type = type;
+    	if (language != null) {
+    		s.language = new Title(language,language_lang);
+    	}
+    	subtitles.add(s);
+    }
+	public void addPresenter(String pres) {
+		if (credits == null) credits = new Credits();
+		if (credits.presenters==null) {
+			credits.presenters=new ArrayList<String>();
+		}
+		credits.presenters.add(pres);
+	}
+	public void addUrl(String url) {
+		if(urls==null) urls=new ArrayList<String>();
+		urls.add(url);
+	}
 
+	private void writeTitle(Title title, String tag,
+			XMLStreamWriter writer) throws XMLStreamException {
+		if(title==null) return;
+		writer.writeStartElement(tag);
+		if (title.lang != null) writer.writeAttribute("lang", title.lang);
+		if (title.title != null) writer.writeCharacters(title.title);
+		writer.writeEndElement();
+	}
+	private void writeTitleList(List<Title> titles, String tag,
+			XMLStreamWriter writer) throws XMLStreamException {
+		if(titles==null) return;
+		for(Title title: titles) {
+			writeTitle(title,tag,writer);
+		}
+	}
+	private void writeStringList(List<String> strings, String tag,
+			XMLStreamWriter writer) throws XMLStreamException {
+		if(strings==null) return;
+		for(String s:strings) {
+			writer.writeStartElement(tag);
+			writer.writeCharacters(s);
+			writer.writeEndElement();
+		}
+	}
     public void serialize(XMLStreamWriter writer) throws XMLStreamException {
 		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
 
@@ -112,19 +171,20 @@ public class Programme {
 		if(startTime != null) writer.writeAttribute("start", df.format(startTime));
 		if(endTime != null) writer.writeAttribute("stop", df.format(endTime));
 		if(channel != null) writer.writeAttribute("channel", ""+channel.id);
-		if(titles != null) {
-			for(Title title: titles) {
-				writer.writeStartElement("title");
-				if (title.lang != null) writer.writeAttribute("lang", title.lang);
-				if (title.title != null) writer.writeCharacters(title.title);
-				writer.writeEndElement();
-			}
+		writeTitleList(titles,"title",writer);
+		writeTitleList(secondaryTitles,"sub-title", writer); 
+		if(credits != null) {
+			writer.writeStartElement("credits");
+			writeStringList(credits.presenters,"presenter",writer);
+			writer.writeEndElement();
 		}
-		if(categories != null) {
-			for(Title category: categories) {
-				writer.writeStartElement("category");
-				if (category.lang != null) writer.writeAttribute("lang", category.lang);
-				if (category.title != null) writer.writeCharacters(category.title);
+		writeTitleList(categories, "category", writer);
+		writeStringList(urls,"url",writer);
+		if(subtitles != null) {
+			for(Subtitle s: subtitles) {
+				writer.writeStartElement("subtitles");
+				if (s.type != null) writer.writeAttribute("type", s.type);
+				if (s.language != null) writeTitle(s.language,"language",writer);
 				writer.writeEndElement();
 			}
 		}
@@ -140,5 +200,4 @@ public class Programme {
 		writer.writeEndElement();
 		writer.writeCharacters(System.getProperty("line.separator"));
 	}
-    
 }

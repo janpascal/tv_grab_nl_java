@@ -1,8 +1,11 @@
 package org.vanbest.xmltv;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,6 +43,7 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.io.FileUtils;
 import org.vanbest.xmltv.EPGSource.Stats;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -53,7 +58,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	private static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	private static final String xmltv_channel_suffix = ".rtl.nl";
-	private static final int MAX_PROGRAMMES_PER_DAY = 99999;
+	private static final int MAX_PROGRAMMES_PER_DAY = 200000;
 	
 	private Connection db;
 	
@@ -68,25 +73,36 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		}
 	}
 	
-	public RTL(Config config) {
+	public RTL(Config config, boolean useDB) {
 		super(config);
 		try {
-			db = DriverManager.getConnection("jdbc:hsqldb:file:testdb", "SA", "");
-			Statement stat = db.createStatement();
-			StringBuilder s = new StringBuilder();
-			s.append("CREATE TABLE IF NOT EXISTS prog (id VARCHAR(32) primary key, ");
-			int i=0;
-			for( String key: xmlKeys) {
-				if(i>0) s.append(", ");
-				xmlKeyMap.put(key, i+1);
-				s.append(key);
-				s.append(" VARCHAR(4096)");
-				i++;
+			if (useDB) {
+				Properties dbProp = new Properties();
+		        try {
+			        InputStream in = new FileInputStream("tv_grab_nl_java.db.properties");
+		            dbProp.load(in);
+		        } catch (IOException e) {
+		            e.printStackTrace();
+		        }
+		        db = DriverManager.getConnection(dbProp.getProperty("db_url"), dbProp.getProperty("db_user"), dbProp.getProperty("db_passwd"));
+				Statement stat = db.createStatement();
+				StringBuilder s = new StringBuilder();
+				s.append("CREATE TABLE IF NOT EXISTS prog (id VARCHAR(32) primary key, ");
+				int i=0;
+				for( String key: xmlKeys) {
+					if(i>0) s.append(", ");
+					xmlKeyMap.put(key, i+1);
+					s.append(key);
+					s.append(" TEXT");
+					i++;
+				}
+				s.append(");");
+				System.out.println(s);
+				stat.execute(s.toString());
+				stat.execute("TRUNCATE TABLE prog");
+			} else {
+				db = null;
 			}
-			s.append(");");
-			System.out.println(s);
-			stat.execute(s.toString());
-			stat.execute("TRUNCATE TABLE prog");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -165,21 +181,24 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		if (root.hasAttributes()) {
 			System.out.println("Unknown attributes for RTL detail root node");
 		}
-		StringBuilder sql = new StringBuilder("INSERT INTO prog (id");
-		StringBuilder sql2= new StringBuilder(") values (?");
-		for(String key:xmlKeys) {
-			sql.append(",");
-			sql.append(key);
-			sql2.append(",");
-			sql2.append("?");
-		}
-		sql.append(sql2);
-		sql.append(");");
-		// System.out.println(sql.toString());
-		PreparedStatement stat = db.prepareStatement(sql.toString());
-		stat.setString(1, id);
-		for(String key:xmlKeys) {
-			
+		PreparedStatement stat = null;
+		if (db != null) {
+			StringBuilder sql = new StringBuilder("INSERT INTO prog (id");
+			StringBuilder sql2= new StringBuilder(") values (?");
+			for(String key:xmlKeys) {
+				sql.append(",");
+				sql.append(key);
+				sql2.append(",");
+				sql2.append("?");
+			}
+			sql.append(sql2);
+			sql.append(");");
+			// System.out.println(sql.toString());
+			stat = db.prepareStatement(sql.toString());
+			stat.setString(1, id);
+			for(String key:xmlKeys) {
+				
+			}
 		}
 		NodeList nodes = root.getChildNodes();
 		for( int i=0; i<nodes.getLength(); i++) {
@@ -204,8 +223,10 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 					continue;
 				}
 			}
-			System.out.println(stat.toString());
-			stat.execute();
+			//System.out.println(stat.toString());
+			if (db != null) {
+				stat.execute();
+			}
 		}
 	}
 
@@ -226,8 +247,13 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			}
 		}
 		Element e = (Element)n;
-		stat.setString(xmlKeyMap.get(e.getTagName())+1, e.getTextContent());
+		if (db != null) {
+			stat.setString(xmlKeyMap.get(e.getTagName())+1, e.getTextContent());
+		}
 		String tag = e.getTagName();
+		if (e.getTextContent().isEmpty()) {
+			return;
+		}
 		if (tag.equals("genre")) {
 			prog.addCategory(config.translateCategory(e.getTextContent()));
 		} else if (tag.equals("eindtijd")) {
@@ -235,16 +261,31 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		} else if (tag.equals("omroep")) {
 		} else if (tag.equals("kijkwijzer")) {
 		} else if (tag.equals("presentatie")) {
+			// A
+			// A en B
+			// A, B, C en D
+			String[] presentatoren = e.getTextContent().split(", | en ");
+			for(String pres:presentatoren) {
+				prog.addPresenter(pres);
+			}
 		} else if (tag.equals("wwwadres")) {
+			prog.addUrl(e.getTextContent());
 		} else if (tag.equals("alginhoud")) {
 		} else if (tag.equals("inhoud")) {
 		} else if (tag.equals("tt_inhoud")) {
+			// ignore, is summary of other fields
 		} else if (tag.equals("zendernr")) {
 		} else if (tag.equals("titel")) {
 		} else if (tag.equals("bijvnwlanden")) {
 		} else if (tag.equals("afl_titel")) {
+			prog.addSecondaryTitle(e.getTextContent());
 		} else if (tag.equals("site_path")) {
 		} else if (tag.equals("ondertiteling")) {
+			if(e.getTextContent().equals("J")) {
+				prog.addSubtitle("teletext");
+			} else {
+				throw new RTLException("Ignoring unknown value \"" + n.getTextContent() + "\" for tag ondertiteling");
+			}
 		} else if (tag.equals("begintijd")) {
 		} else if (tag.equals("pgmsoort")) {
 		} else {
@@ -274,7 +315,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		for( Object k: o.keySet()) {
 			String id = genericChannelId(k.toString());
 			if(!channelMap.containsKey(id)) {
-				System.out.println("Skipping programmes for channel " + id);
+				if (!config.quiet) System.out.println("Skipping programmes for channel " + id);
 				continue;
 			}
 			JSONArray j = (JSONArray) o.get(k);
@@ -328,20 +369,19 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
-		System.exit(0);
-		RTL rtl = new RTL(config);
+		RTL rtl = new RTL(config, false);
 		try {
 			List<Channel> channels = rtl.getChannels();
 			System.out.println("Channels: " + channels);
-			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(System.out);
-			
+			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(new FileWriter("rtl.xml"));
 			writer.writeStartDocument();
 			writer.writeCharacters("\n");
 			writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
-			//List<Programme> programmes = rtl.getProgrammes1(channels.subList(0, 13), 0, true);
+			writer.flush();
+			//List<Programme> programmes = rtl.getProgrammes1(channels.subList(6, 9), 0, true);
 			List<Programme> programmes = rtl.getProgrammes1(channels, 0, true);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
