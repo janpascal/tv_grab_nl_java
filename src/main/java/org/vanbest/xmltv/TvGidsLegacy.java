@@ -195,12 +195,6 @@ public class TvGidsLegacy extends AbstractEPGSource implements EPGSource {
 	}
 	
 	private TvGidsProgramme programmeFromJSON(JSONObject programme, boolean fetchDetails) throws Exception {
-		Programme result = new Programme();
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("nl"));
-		result.startTime = df.parse(programme.getString("datum_start"));
-		result.endTime =  df.parse(programme.getString("datum_end"));
-		result.addTitle(programme.getString("titel"));
-		
 		TvGidsProgramme p = (TvGidsProgramme) JSONObject.toBean(programme, TvGidsProgramme.class);
 		p.fixup(config);
 		if (fetchDetails) {
