@@ -153,7 +153,7 @@ public class XmlTvWriter {
 					 	}
 					 	if (p.details.breedbeeld) {
 							writer.writeStartElement("aspect");
-							writer.writeCharacters("16x9"); 
+							writer.writeCharacters("16:9"); 
 							writer.writeEndElement();
 					 	}
 					 	if (p.details.quality != null) {
