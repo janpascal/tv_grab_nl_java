@@ -1,5 +1,6 @@
 package org.vanbest.xmltv;
 
+import java.io.Serializable;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -11,8 +12,8 @@ import java.util.concurrent.TimeUnit;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-public class Programme {
-	class Title {
+public class Programme implements Serializable {
+	class Title implements Serializable {
 		String title;
 		String lang;
 	    public Title(String title, String lang) {
@@ -20,11 +21,11 @@ public class Programme {
 	    	this.lang = lang;
 	    }
 	}
-	class Actor {
+	class Actor implements Serializable {
 		String name;
 		String role;
 	}
-	class Credits {
+	class Credits implements Serializable {
 		List<String> directors;
 		List<Actor> actors;
 		List<String> writers;
@@ -36,30 +37,30 @@ public class Programme {
 		List<String> commentators;
 		List<String> guests;
 	}
-	class Length {
+	class Length implements Serializable {
 		TimeUnit unit; 
 		int count;
 	}
-	class Icon {
+	class Icon implements Serializable {
 		URL url;
 		int width;
 		int height;
 	}
-	class Episode {
+	class Episode implements Serializable {
 	    String episode;
 	    String system; // onscreen or xmltv_ns
 	}
-	class Video {
+	class Video implements Serializable {
 		boolean present;
 		boolean colour;
 		String aspect; // eg. 16:9, 4:3
 		String quality; // eg. 'HDTV', '800x600'.
 	}
-	class Audio {
+	class Audio implements Serializable {
 		boolean present;
 		String stereo; // 'mono','stereo','dolby','dolby digital','bilingual' or 'surround'. 
 	}
-	class Subtitle {
+	class Subtitle implements Serializable {
 		String type; // teletext | onscreen | deaf-signed
 		Title language;
 	}
@@ -69,7 +70,7 @@ public class Programme {
     public Date vpsStart;
     public String showview;
     public String videoplus;
-	public Channel channel; // required
+	public String channel; // required xmltvid of the associated channel
     public String clumpidx;	
     
     public List<Title> titles; // at least one
@@ -170,7 +171,7 @@ public class Programme {
 		writer.writeStartElement("programme");
 		if(startTime != null) writer.writeAttribute("start", df.format(startTime));
 		if(endTime != null) writer.writeAttribute("stop", df.format(endTime));
-		if(channel != null) writer.writeAttribute("channel", ""+channel.id);
+		if(channel != null) writer.writeAttribute("channel", ""+channel);
 		writeTitleList(titles,"title",writer);
 		writeTitleList(secondaryTitles,"sub-title", writer); 
 		if(credits != null) {

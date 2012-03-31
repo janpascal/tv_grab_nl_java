@@ -40,6 +40,9 @@ public class Config {
 	public List<Channel> channels;
 	public Map<String, String> cattrans;
 	protected File cacheFile;
+	public String cacheDbHandle;
+	public String cacheDbUser;
+	public String cacheDbPassword;
 	boolean quiet = false;
 	public int logLevel = LOG_DEFAULT;
 	
@@ -49,7 +52,7 @@ public class Config {
 	
 	public static int LOG_DEFAULT = LOG_INFO;
 	
-	private final static int CURRENT_FILE_FORMAT=2;
+	private final static int CURRENT_FILE_FORMAT=3;
 
 	String project_version;
 	
@@ -70,6 +73,9 @@ public class Config {
 		result.cattrans = getDefaultCattrans();
 		result.cacheFile = defaultCacheFile();
 		result.niceMilliseconds = 500;
+		result.cacheDbHandle = "jdbc:hsqldb:file:cachedb"; // FIXME in userdir
+		result.cacheDbUser = "SA";
+		result.cacheDbPassword = "";
 		return result;
 	}
 		
@@ -125,8 +131,8 @@ public class Config {
 		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for(Channel c: channels) {
 			// FIXME: handle multiple channels names, icons and urls
-			out.print("channel: " + c.source + 
-					":" + c.id +
+			out.print("channel: " + c.getSourceName() + 
+					": " + c.id +
 					": " + (c.enabled?"enabled":"disabled") +
 					": " + escape(c.defaultName()));
 			if (!c.icons.isEmpty()) {
@@ -219,7 +225,14 @@ public class Config {
 						}
 						break;
 					case 2:
-						c = Channel.getChannel(Integer.parseInt(parts.get(1)), parts.get(2), parts.get(4));
+					case 3:
+						int source;
+						if (fileformat==2) {
+							source = Integer.parseInt(parts.get(1));
+						} else {
+							source = Channel.getChannelSourceId(parts.get(1));
+						}
+						c = Channel.getChannel(source, parts.get(2), parts.get(4));
 						if (parts.size()>5) {
 							c.addIcon(parts.get(5));
 						}

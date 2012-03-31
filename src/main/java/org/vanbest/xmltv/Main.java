@@ -112,7 +112,9 @@ public class Main {
 		
 		Set<String> oldChannels = new HashSet<String>();
 		for (Channel c: config.channels) {
-			oldChannels.add(c.id);
+			if (c.enabled) { 
+				oldChannels.add(c.source+"::"+c.id); 
+			}
 		}
 		List<Channel> channels = gids.getChannels();
 		
@@ -121,7 +123,7 @@ public class Main {
 		boolean none = false;
 		boolean keep = false;
 		for (Channel c: channels) {
-			boolean selected = oldChannels.contains(c.id);
+			boolean selected = oldChannels.contains(c.source+"::"+c.id);
 			System.out.print("add channel " + c.id + " (" + c.defaultName() + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
 			if (keep) {
 				c.enabled = selected;

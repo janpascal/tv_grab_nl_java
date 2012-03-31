@@ -1,8 +1,10 @@
 package org.vanbest.xmltv;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
@@ -18,6 +20,9 @@ public class Channel {
 	
 	public final static int CHANNEL_SOURCE_TVGIDS=1;
 	public final static int CHANNEL_SOURCE_RTL=2;
+	private final static String[] CHANNEL_SOURCE_NAMES={"tvgids.nl", "rtl.nl"};
+	private static Map<String,Integer> channelSourceNameMap = new HashMap<String,Integer>();
+
 	
 	protected Channel(int source, String id) {
 		this.id = id;
@@ -47,12 +52,30 @@ public class Channel {
 	public String getXmltvChannelId() {
 		switch (source) {
 		case CHANNEL_SOURCE_TVGIDS:
-			return id+".tvgids.nl";
 		case CHANNEL_SOURCE_RTL:
-			return id;
 		default:
-			return id;
+			return id+"."+getSourceName();
 		}
+	}
+	
+	public static String getChannelSourceName(int id) {
+		return CHANNEL_SOURCE_NAMES[id-1];
+	}
+
+	public String getSourceName() {
+		return getChannelSourceName(source);
+	}
+	
+	public static int getChannelSourceId(String name) {
+		if (channelSourceNameMap.isEmpty()) {
+			int i=1;
+			for (String s: CHANNEL_SOURCE_NAMES) {
+				channelSourceNameMap.put(s,  i);
+				i++;
+			}
+		}
+		return channelSourceNameMap.get(name);
+		
 	}
 	 
 	public void serialize(XMLStreamWriter writer) throws XMLStreamException {

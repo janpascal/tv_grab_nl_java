@@ -59,7 +59,6 @@ public class XmlTvWriter {
 		for(Channel c: channels) {
 			if (!c.enabled) continue;
 			c.serialize(writer);
-			writeln();		
 		}
 	}
 

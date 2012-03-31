@@ -58,7 +58,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	private static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	private static final String xmltv_channel_suffix = ".rtl.nl";
-	private static final int MAX_PROGRAMMES_PER_DAY = 200000;
+	private static final int MAX_PROGRAMMES_PER_DAY = 20;
 	
 	private Connection db;
 	
@@ -66,6 +66,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			"site_path", "wwwadres", "presentatie", "omroep", "eindtijd", "inhoud", "tt_inhoud", "alginhoud", "afl_titel", "kijkwijzer" };
 		
 	Map<String,Integer> xmlKeyMap = new HashMap<String,Integer>();
+	private ProgrammeCache cache;
 	
 	class RTLException extends Exception {
 		public RTLException(String s) {
@@ -75,6 +76,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	
 	public RTL(Config config, boolean useDB) {
 		super(config);
+		cache = new ProgrammeCache(config);
 		try {
 			if (useDB) {
 				Properties dbProp = new Properties();
@@ -261,9 +263,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		} else if (tag.equals("omroep")) {
 		} else if (tag.equals("kijkwijzer")) {
 		} else if (tag.equals("presentatie")) {
-			// A
-			// A en B
-			// A, B, C en D
+			// A; A en B; A, B, C en D
 			String[] presentatoren = e.getTextContent().split(", | en ");
 			for(String pres:presentatoren) {
 				prog.addPresenter(pres);
@@ -299,7 +299,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		List<Programme> result = new LinkedList<Programme>();
 		Map<String,Channel> channelMap = new HashMap<String,Channel>();
 		for(Channel c: channels) {
-			if (c.enabled) channelMap.put(c.id, c);
+			if (c.enabled && c.source==Channel.CHANNEL_SOURCE_RTL) channelMap.put(c.id, c);
 		}
 		URL url = programmeUrl(day);
 		//String xmltext = fetchURL(url);
@@ -328,18 +328,30 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				String programme_id = p.getString(2);
 				String quark1 = p.getString(3);
 				String quark2 = p.getString(4);
-				Programme prog = new Programme();
-				prog.addTitle(title);
-				Date start = parseTime(date, starttime);
-				prog.startTime = start;
-				prog.channel = channelMap.get(id);
-				fetchDetail(prog, date, programme_id);
+				Programme prog = cache.get(programme_id);
+				if (prog == null) {
+					stats.cacheMisses++;
+					prog = new Programme();
+					prog.addTitle(title);
+					prog.startTime = parseTime(date, starttime);
+					prog.channel = channelMap.get(id).getXmltvChannelId();
+					if (fetchDetails) {
+						fetchDetail(prog, date, programme_id);
+					}
+					cache.put(programme_id, prog);
+				} else {
+					stats.cacheHits++;
+				}
 				result.add(prog);
 			}
 		}
 		return result;
 	}
 
+	public void close() throws FileNotFoundException, IOException {
+		super.close();
+		cache.close();
+	}
 	private Date parseTime(Date date, String time) {
 		Calendar result = Calendar.getInstance();
 		result.setTime(date);
@@ -381,12 +393,18 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
 			writer.flush();
-			//List<Programme> programmes = rtl.getProgrammes1(channels.subList(6, 9), 0, true);
-			List<Programme> programmes = rtl.getProgrammes1(channels, 0, true);
+			List<Programme> programmes = rtl.getProgrammes1(channels.subList(6, 9), 0, true);
+			//List<Programme> programmes = rtl.getProgrammes1(channels, 0, true);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
 			writer.writeEndDocument();
 			writer.flush();
+			if (!config.quiet) {
+				EPGSource.Stats stats = rtl.getStats();
+				System.out.println("Number of programmes from cache: " + stats.cacheHits);
+				System.out.println("Number of programmes fetched: " + stats.cacheMisses);
+				System.out.println("Number of fetch errors: " + stats.fetchErrors);
+			}
 			rtl.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

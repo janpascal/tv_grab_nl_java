@@ -13,14 +13,14 @@ import org.vanbest.xmltv.EPGSource.Stats;
 public abstract class AbstractEPGSource implements EPGSource {
 
 	protected Config config;
-	protected ProgrammeCache cache;
+	protected TvGidsProgrammeCache cache;
 	protected Stats stats = new Stats();
 	
 	public static final int MAX_FETCH_TRIES=5;
 
 	public AbstractEPGSource(Config config) {
 		this.config = config;
-		cache = new ProgrammeCache(config.cacheFile);
+		cache = new TvGidsProgrammeCache(config.cacheFile);
 	}
 
 	public Set<TvGidsProgramme> getProgrammes(Channel channel, int day, boolean fetchDetails)
