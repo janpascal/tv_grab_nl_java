@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,7 +42,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.util.JSONUtils;
 
-public class TvGids extends AbstractEPGSource implements EPGSource {
+public class TvGidsLegacy extends AbstractEPGSource implements EPGSource {
 
 	static String channels_url="http://www.tvgids.nl/json/lists/channels.php";
 	static String programme_base_url="http://www.tvgids.nl/json/lists/programs.php";
@@ -50,7 +51,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 
 	static boolean initialised = false;
 	
-	public TvGids(Config config) {
+	public TvGidsLegacy(Config config) {
 		super(config);
 		this.config = config;
 		if ( ! initialised ) {
@@ -194,6 +195,12 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	}
 	
 	private TvGidsProgramme programmeFromJSON(JSONObject programme, boolean fetchDetails) throws Exception {
+		Programme result = new Programme();
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("nl"));
+		result.startTime = df.parse(programme.getString("datum_start"));
+		result.endTime =  df.parse(programme.getString("datum_end"));
+		result.addTitle(programme.getString("titel"));
+		
 		TvGidsProgramme p = (TvGidsProgramme) JSONObject.toBean(programme, TvGidsProgramme.class);
 		p.fixup(config);
 		if (fetchDetails) {

@@ -73,7 +73,7 @@ public class Main {
 		XmlTvWriter writer = new XmlTvWriter(outputWriter, config);
 		writer.writeChannels(config.channels);
 
-		EPGSource gids = new TvGids(config);
+		EPGSource gids = new TvGidsLegacy(config);
 
 		for (int day=offset; day<offset+days; day++) {
 			if (!config.quiet) System.out.print("Fetching information for day " + day);
@@ -108,7 +108,7 @@ public class Main {
 	}
 	
 	public void configure() throws IOException {
-		EPGSource gids = new TvGids(config);
+		EPGSource gids = new TvGidsLegacy(config);
 		
 		Set<String> oldChannels = new HashSet<String>();
 		for (Channel c: config.channels) {
