@@ -18,6 +18,7 @@ package org.vanbest.xmltv;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -34,6 +35,11 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
+
+import org.apache.commons.lang.StringEscapeUtils;
+
 import net.sf.ezmorph.MorpherRegistry;
 import net.sf.ezmorph.ObjectMorpher;
 import net.sf.ezmorph.object.DateMorpher;
@@ -48,9 +54,11 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	static String programme_base_url="http://www.tvgids.nl/json/lists/programs.php";
 	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
 	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
-
-	static boolean initialised = false;
 	
+	static boolean initialised = false;
+
+	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
+
 	private ProgrammeCache cache;
 
 	public TvGids(Config config) {
@@ -115,6 +123,30 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		return new URL(s.toString());
 	}
 
+	List<String> parseKijkwijzer(String s) {
+		List<String> result = new ArrayList<String>();
+		for (int i=0; i<s.length(); i++) {
+			char c = s.charAt(i);
+			switch(c) {
+			case 'a':result.add("Angst"); break;
+			case 'd':result.add("Discriminatie"); break;
+			case 's':result.add("Seks"); break;
+			case 'h':result.add("Drugs/Alcohol"); break;
+			case 'g':result.add("Geweld"); break;
+			case 't':result.add("Grof taalgebruik"); break;
+			case '1':result.add("Voor alle leeftijden"); break;
+			case '2':result.add("Afgeraden voor kinderen jonger dan 6 jaar"); break;
+			case '9':result.add("Afgeraden voor kinderen jonger dan 9 jaar"); break;
+			case '3':result.add("Afgeraden voor kinderen jonger dan 12 jaar"); break;
+			case '4':result.add("Afgeraden voor kinderen jonger dan 16 jaar"); break;
+			default: if (!config.quiet) {
+				System.out.println("Unknown kijkwijzer character: " + c + " in string " + s);
+				}
+			}
+		}
+		return result;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.vanbest.xmltv.EPGSource#getChannels()
 	 */
@@ -171,8 +203,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 * @see org.vanbest.xmltv.EPGSource#getProgrammes(java.util.List, int, boolean)
 	 */
 	//@Override
-	public Set<Programme> getProgrammes1(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
-		Set<Programme> result = new HashSet<Programme>();
+	public List<Programme> getProgrammes1(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
+		List<Programme> result = new ArrayList<Programme>();
 		URL url = programmeUrl(channels, day);
 
 		JSONObject jsonObject = fetchJSON(url);  
@@ -182,19 +214,22 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			JSON ps = (JSON) jsonObject.get(c.id);
 			if ( ps.isArray() ) {
 				JSONArray programs = (JSONArray) ps;
-				for( int i=0; i<programs.size(); i++ ) {
+				for( int i=0; i<programs.size() && i<MAX_PROGRAMMES_PER_DAY; i++ ) {
 					JSONObject programme = programs.getJSONObject(i);
 					Programme p = programmeFromJSON(programme, fetchDetails);
 					p.channel = c.getXmltvChannelId();
-					result.add( p );
+					result.add(p);
 				}
 			} else { 
 				JSONObject programs = (JSONObject) ps;
+				int count = 0;
 				for( Object o: programs.keySet() ) {
+					if (count>MAX_PROGRAMMES_PER_DAY) break;
 					JSONObject programme = programs.getJSONObject(o.toString());
 					Programme p = programmeFromJSON(programme, fetchDetails);
 					p.channel = c.getXmltvChannelId();
-					result.add( p );
+					result.add(p);
+					count++;
 				}
 			}
 		}
@@ -224,16 +259,29 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		if (result == null) {
 			stats.cacheMisses++;
 			result = new Programme();
-			// TODO other fields
-			result.addTitle(programme.getString("title"));
 		} else {
 			stats.cacheHits++;
 		}
+		System.out.println("      titel:" + programme.getString("titel"));
+		//System.out.println("datum_start:" + programme.getString("datum_start"));
+		//System.out.println("  datum_end:" + programme.getString("datum_end"));
+		//System.out.println("      genre:" + programme.getString("genre"));
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("nl"));
 		result.startTime = df.parse(programme.getString("datum_start"));
 		result.endTime =  df.parse(programme.getString("datum_end"));
-		
-		// p.fixup(config);
+		result.addTitle(programme.getString("titel"));
+		String genre = programme.getString("genre");
+		if (genre != null && !genre.isEmpty()) result.addCategory(config.translateCategory(genre));
+		String kijkwijzer = programme.getString("kijkwijzer");
+		if (kijkwijzer!=null && !kijkwijzer.isEmpty()) {
+			List<String> list = parseKijkwijzer(kijkwijzer);
+			for(String s: list) {
+				result.addRating("kijkwijzer", s);
+				// TODO add icon from HTML detail page
+			}
+			
+		}
+		// TODO other fields
 	
 		if (fetchDetails && !cached) {
 			fillDetails(id, result);
@@ -246,6 +294,25 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			System.out.println(result.toString());
 		}
 		return result;
+	}
+
+	private void fillDetails(String id, Programme result) throws Exception {
+		fillJSONDetails(id, result);
+		fillScraperDetails(id, result);
+		
+		if ((result.secondaryTitles==null || result.secondaryTitles.isEmpty()) && 
+				  (!result.hasCategory("movies") && !result.hasCategory("film"))) {
+			for(Programme.Title t: result.titles) {
+				String[] parts = t.title.split("\\s*:\\s*", 2);
+				if (parts.length >= 2 ) {
+					if (!config.quiet) {
+						System.out.println("Splitting title from \"" + t.title + "\" to: \"" + parts[0].trim() + "\"; sub-title: \"" + parts[1].trim() + "\"");
+					}
+					t.title = parts[0].trim();
+					result.addSecondaryTitle(parts[1].trim());
+				}
+			}
+		}
 	}
 
 	/*
@@ -262,20 +329,71 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 * "regisseur":"",
 	 * "zender_id":"4"}
 	 */
-	private void fillDetails(String id, Programme result) throws Exception {
+	private void fillJSONDetails(String id, Programme result) throws Exception {
+		URL url = JSONDetailUrl(id);
+		JSONObject json = fetchJSON(url);
+		Set<String> keys = json.keySet();
+		for(String key: keys) {
+			String value = StringEscapeUtils.unescapeHtml(json.getString(key));
+			if (value.isEmpty()) continue;
+			if(key.equals("synop")) {
+				value = value.replaceAll("<br>", " ").
+						replaceAll("<br />", " ").
+						replaceAll("<p>", " ").
+						replaceAll("</p>", " ").
+						replaceAll("<strong>", " ").
+						replaceAll("</strong>", " ").
+						replaceAll("<em>", " ").
+						replaceAll("</em>", " ").
+						trim();
+				result.addDescription(value);
+			} else if (key.equals("presentatie")) {
+				String[] parts = value.split(",");
+				for (String s: parts) {
+					result.addPresenter(s.trim());
+				}
+			} else if (key.equals("acteursnamen_rolverdeling")) {
+				// TODO hoe zouden rollen kunnen worden aangegeven? Geen voorbeelden van gezien.
+				String[] parts = value.split(",");
+				for (String s: parts) {
+					result.addActor(s.trim());
+				}
+			} else if (key.equals("regisseur")) {
+				String[] parts = value.split(",");
+				for (String s: parts) {
+					result.addDirector(s.trim());
+				}
+			} else if (key.equals("kijkwijzer")) {
+				// TODO
+			} else if (key.equals("db_id")) {
+				// ignore
+			} else if (key.equals("titel")) {
+				// ignore
+			} else if (key.equals("datum")) {
+				// ignore
+			} else if (key.equals("btijd")) {
+				// ignore
+			} else if (key.equals("etijd")) {
+				// ignore
+			} else if (key.equals("genre")) {
+				// ignore
+			} else if (key.equals("zender_id")) {
+				// ignore
+			} else {
+				if (!config.quiet) {
+					System.out.println("Unknown key in tvgids.nl json details: \"" + key + "\"");
+				}
+			}
+		}
+	}
+
+	private void fillScraperDetails(String id, Programme result) throws Exception {
 		Pattern progInfoPattern = Pattern.compile("prog-info-content.*prog-info-footer", Pattern.DOTALL);
 		Pattern infoLinePattern = Pattern.compile("<li><strong>(.*?):</strong>(.*?)</li>");
 		Pattern HDPattern = Pattern.compile("HD \\d+[ip]?");
 		Pattern kijkwijzerPattern = Pattern.compile("<img src=\"http://tvgidsassets.nl/img/kijkwijzer/.*?\" alt=\"(.*?)\" />");
 
-			
-		URL url = JSONDetailUrl(id);
-		JSONObject json = fetchJSON(url);
-		//result.details = (TvGidsProgrammeDetails) JSONObject.toBean(json, TvGidsProgrammeDetails.class);
-		
-		//TODO fill result objecy from json object
-		
-		url = HTMLDetailUrl(id);
+		URL url = HTMLDetailUrl(id);
 		String clob=fetchURL(url);
 		//System.out.println("clob:");
 		//System.out.println(clob);
@@ -297,17 +415,17 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 						if (item.toLowerCase().contains("teletekst")) {
 							result.addSubtitle("teletext");
 						} else if (item.toLowerCase().contains("breedbeeld")) {
-							//result.details.breedbeeld = true;
+							result.setVideoAspect("16:9");
 						} else if (value.toLowerCase().contains("zwart")) {
-							//result.details.blacknwhite = true;
+							result.setVideoColour(false);
 						} else if (value.toLowerCase().contains("stereo")) {
-							//result.details.stereo = true;
+							result.setAudioStereo("stereo");
 						} else if (value.toLowerCase().contains("herhaling")) {
-							//result.details.herhaling = true;
+							result.setPreviouslyShown();
 						} else {
 							Matcher m3 = HDPattern.matcher(value);
 							if (m3.find()) {
-								//result.details.quality = m3.group();
+								result.setVideoQuality(m3.group());
 							} else {
 								if (!config.quiet) System.out.println("  Unknown value in 'bijzonderheden': " + item);
 							}
@@ -327,12 +445,9 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 					// System.out.println("    kijkwijzer: " + kijkwijzer);
 				}
 			}
+		}
 			
 //			result.details.fixup(result, config.quiet);
-//			cache.add(result.db_id, result.details);
-		} else {
-			stats.cacheHits++;
-		}
 	}
 
 	@Override
@@ -342,4 +457,43 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		// dummy, wait for superclass and interface to be generalised
 		return null;
 	}
+	
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		Config config = Config.getDefaultConfig();
+		TvGids gids = new TvGids(config);
+		try {
+			List<Channel> channels = gids.getChannels();
+			System.out.println("Channels: " + channels);
+			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(new FileWriter("tvgids.xml"));
+			writer.writeStartDocument();
+			writer.writeCharacters("\n");
+			writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
+			writer.writeCharacters("\n");
+			writer.writeStartElement("tv");
+			//List<Channel> my_channels = channels;
+			List<Channel> my_channels = channels.subList(0,15);
+			for(Channel c: my_channels) {c.serialize(writer);}
+			writer.flush();
+			List<Programme> programmes = gids.getProgrammes1(my_channels, 2, true);
+			for(Programme p: programmes) {p.serialize(writer);}
+			writer.writeEndElement();
+			writer.writeEndDocument();
+			writer.flush();
+			if (!config.quiet) {
+				EPGSource.Stats stats = gids.getStats();
+				System.out.println("Number of programmes from cache: " + stats.cacheHits);
+				System.out.println("Number of programmes fetched: " + stats.cacheMisses);
+				System.out.println("Number of fetch errors: " + stats.fetchErrors);
+			}
+			gids.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 }

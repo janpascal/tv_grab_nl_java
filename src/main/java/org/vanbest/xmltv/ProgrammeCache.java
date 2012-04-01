@@ -43,6 +43,7 @@ public class ProgrammeCache {
 	private Config config;
 	private PreparedStatement getStatement;
 	private PreparedStatement putStatement;
+	private PreparedStatement removeStatement;
 	
 	public ProgrammeCache(Config config) {
 		this.config = config;
@@ -54,6 +55,7 @@ public class ProgrammeCache {
 			
 			getStatement = db.prepareStatement("SELECT programme FROM cache WHERE id=?");
 			putStatement = db.prepareStatement("INSERT INTO cache VALUES (?,?,?)");
+			removeStatement = db.prepareStatement("DELETE FROM cache WHERE id=?");
 		} catch (SQLException e) {
 			db = null;
 			if (!config.quiet) {
@@ -69,7 +71,13 @@ public class ProgrammeCache {
 			getStatement.setString(1, id);
 			ResultSet r = getStatement.executeQuery();
 			if (!r.next()) return null; // not found
-			return (Programme) r.getObject("programme");
+			try {
+				Programme result = (Programme) r.getObject("programme");
+				return result;
+			} catch (java.sql.SQLDataException e) {
+				removeCacheEntry(id);
+				return null;
+			}
 		} catch (SQLException e) {
 			if (!config.quiet) {
 				e.printStackTrace();
@@ -78,6 +86,16 @@ public class ProgrammeCache {
 		}
 	}
 	
+	private void removeCacheEntry(String id) {
+		try {
+			removeStatement.setString(1, id);
+			removeStatement.execute();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public void put(String id, Programme prog) {
 		if (db == null) return;
 		try {

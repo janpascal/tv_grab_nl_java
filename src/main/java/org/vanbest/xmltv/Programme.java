@@ -1,5 +1,9 @@
 package org.vanbest.xmltv;
 
+/* TODO 
+ * Only partially implemented. Some fields are not implemented at all; some miss easy functions for adding; 
+ * some aren't written to xmltv format
+ */
 import java.io.Serializable;
 import java.net.URL;
 import java.text.DateFormat;
@@ -41,18 +45,20 @@ public class Programme implements Serializable {
 		TimeUnit unit; 
 		int count;
 	}
+	/* See separate java source file for the Icon class
 	class Icon implements Serializable {
 		URL url;
 		int width;
 		int height;
 	}
+	*/
 	class Episode implements Serializable {
 	    String episode;
 	    String system; // onscreen or xmltv_ns
 	}
 	class Video implements Serializable {
-		boolean present;
-		boolean colour;
+		boolean present = true; // FIXME should be default null
+		boolean colour = true; // FIXME should be default null
 		String aspect; // eg. 16:9, 4:3
 		String quality; // eg. 'HDTV', '800x600'.
 	}
@@ -60,9 +66,18 @@ public class Programme implements Serializable {
 		boolean present;
 		String stereo; // 'mono','stereo','dolby','dolby digital','bilingual' or 'surround'. 
 	}
+	class PreviouslyShown implements Serializable {
+		String start;
+		String channel;
+	}
 	class Subtitle implements Serializable {
 		String type; // teletext | onscreen | deaf-signed
 		Title language;
+	}
+	class Rating implements Serializable {
+		String system;
+		String value;
+		List<Icon> icons;
 	}
 	public Date startTime; // required
 	public Date endTime;
@@ -88,11 +103,13 @@ public class Programme implements Serializable {
     public List<Episode> episodes;
     public Video video;
     public Audio audio;
+    public PreviouslyShown previouslyShown;
     /*
-    previously-shown?, premiere?, last-chance?, new?,
+    premiere?, last-chance?, new?,
     */
     public List<Subtitle> subtitles; 
-    /*rating*, star-rating*, review* 
+    public List<Rating> ratings; 
+    /*star-rating*, review* 
     */
 
     public void addTitle(String title) {
@@ -109,6 +126,13 @@ public class Programme implements Serializable {
     	if(secondaryTitles==null) secondaryTitles = new ArrayList<Title>();
     	secondaryTitles.add(new Title(title,lang));
     }
+	public void addDescription(String title) {
+		addDescription(title,null);
+	}
+    public void addDescription(String title, String lang) {
+    	if(descriptions==null) descriptions = new ArrayList<Title>();
+    	descriptions.add(new Title(title,lang));
+    }
     
 	public void addCategory(String category) {
     	addCategory(category, null);
@@ -118,7 +142,7 @@ public class Programme implements Serializable {
     	categories.add(new Title(category,lang));
     }
 	public void addSubtitle(String type) {
-    	addCategory(type, null);
+    	addSubtitle(type, null, null);
     }
     public void addSubtitle(String type, String language, String language_lang) {
     	if(subtitles==null) subtitles = new ArrayList<Subtitle>();
@@ -136,11 +160,65 @@ public class Programme implements Serializable {
 		}
 		credits.presenters.add(pres);
 	}
+    public void addDirector(String director) {
+		if (credits == null) credits = new Credits();
+    	if (credits.directors==null) credits.directors = new ArrayList<String>();
+    	credits.directors.add(director);
+    }
+    public void addActor(String name) {
+    	addActor(name, null);
+    }
+    public void addActor(String name, String role) {
+		if (credits == null) credits = new Credits();
+    	if (credits.actors==null) credits.actors = new ArrayList<Actor>();
+    	Actor actor = new Actor();
+    	actor.name = name;
+    	actor.role = role;
+    	credits.actors.add(actor);
+    }
+	public void setVideoAspect(String aspect) {
+		if (video==null) video = new Video();
+		video.aspect = aspect;
+	}
+	public void setVideoQuality(String quality) {
+		if (video==null) video = new Video();
+		video.quality = quality;
+	}
+	public void setVideoColour(boolean colour) {
+		if (video==null) video = new Video();
+		video.colour = colour;
+	}
+	public void setAudioStereo(String stereo) {
+		if (audio==null) audio = new Audio();
+		audio.stereo = stereo;
+	}
 	public void addUrl(String url) {
 		if(urls==null) urls=new ArrayList<String>();
 		urls.add(url);
 	}
+	// Convenience method, set "rerun" flag without any additional information
+	public void setPreviouslyShown() {
+		setPreviouslyShown(null, null);
+	}
+	public void setPreviouslyShown(String startTime, String channel) {
+		if (previouslyShown == null) previouslyShown = new PreviouslyShown();
+		previouslyShown.start = startTime;
+		previouslyShown.channel = channel;
+	}
+	public boolean hasCategory(String category) {
+		for(Title t: categories) {
+			if (t.title.toLowerCase().equals(category)) return true;
+		}
+		return false;
+	}
+	public void addRating(String system, String value) {
+		if (ratings==null) ratings = new ArrayList<Rating>();
+		Rating r = new Rating();
+		r.system = system;
+		r.value = value;
+	}
 
+	
 	private void writeTitle(Title title, String tag,
 			XMLStreamWriter writer) throws XMLStreamException {
 		if(title==null) return;
@@ -156,16 +234,37 @@ public class Programme implements Serializable {
 			writeTitle(title,tag,writer);
 		}
 	}
+	private void writeString(String s, String tag,
+			XMLStreamWriter writer) throws XMLStreamException {
+		if(s==null) return;
+		writer.writeStartElement(tag);
+		writer.writeCharacters(s);
+		writer.writeEndElement();
+	}
 	private void writeStringList(List<String> strings, String tag,
 			XMLStreamWriter writer) throws XMLStreamException {
 		if(strings==null) return;
 		for(String s:strings) {
-			writer.writeStartElement(tag);
-			writer.writeCharacters(s);
+			writeString(s, tag, writer);
+		}
+	}
+	private void writeActorList(List<Actor> actors,XMLStreamWriter writer) throws XMLStreamException {
+		if(actors==null) return;
+		for(Actor actor: actors) {
+			writer.writeStartElement("actor");
+			if (actor.role!=null) writer.writeAttribute("role", actor.role);
+			if (actor.name!=null) writer.writeCharacters(actor.name);
 			writer.writeEndElement();
 		}
 	}
-    public void serialize(XMLStreamWriter writer) throws XMLStreamException {
+	private void writeIconList(List<Icon> icons, XMLStreamWriter writer) throws XMLStreamException {
+		if(icons==null) return;
+		for(Icon i: icons) {
+			i.serialize(writer);
+		}
+	}
+
+	public void serialize(XMLStreamWriter writer) throws XMLStreamException {
 		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
 
 		writer.writeStartElement("programme");
@@ -174,13 +273,56 @@ public class Programme implements Serializable {
 		if(channel != null) writer.writeAttribute("channel", ""+channel);
 		writeTitleList(titles,"title",writer);
 		writeTitleList(secondaryTitles,"sub-title", writer); 
+		writeTitleList(descriptions, "desc", writer);
 		if(credits != null) {
 			writer.writeStartElement("credits");
+			writeStringList(credits.directors, "director", writer);
+			writeActorList(credits.actors, writer);
 			writeStringList(credits.presenters,"presenter",writer);
 			writer.writeEndElement();
 		}
 		writeTitleList(categories, "category", writer);
+		writeIconList(icons, writer);
 		writeStringList(urls,"url",writer);
+		if (video!=null) {
+			writer.writeStartElement("video");
+			if(!video.present) {
+				writer.writeStartElement("present");
+				writer.writeCharacters("no");
+				writer.writeEndElement();
+			}
+			if (!video.colour) {
+				writer.writeStartElement("colour");
+				writer.writeCharacters("no");
+				writer.writeEndElement();
+			}
+			if (video.aspect!=null) {
+				writer.writeStartElement("aspect");
+				writer.writeCharacters(video.aspect);
+				writer.writeEndElement();
+			}
+			if (video.quality!=null) {
+				writer.writeStartElement("quality");
+				writer.writeCharacters(video.quality);
+				writer.writeEndElement();
+			}
+			writer.writeEndElement();
+		}
+		if (audio!=null) {
+			writer.writeStartElement("audio");
+			if (audio.stereo!=null) {
+				writer.writeStartElement("stereo");
+				writer.writeCharacters(audio.stereo);
+				writer.writeEndElement();
+			}
+			writer.writeEndElement();
+		}
+		if(previouslyShown!=null) {
+			writer.writeStartElement("previously-shown");
+			if (previouslyShown.start!=null) writer.writeAttribute("start", previouslyShown.start);
+			if (previouslyShown.channel!=null) writer.writeAttribute("channel", previouslyShown.channel);
+			writer.writeEndElement();
+		}
 		if(subtitles != null) {
 			for(Subtitle s: subtitles) {
 				writer.writeStartElement("subtitles");
@@ -189,15 +331,16 @@ public class Programme implements Serializable {
 				writer.writeEndElement();
 			}
 		}
-/*		for(Icon i: icons) {
-			i.serialize(writer);
+		if(ratings != null) {
+			for(Rating r: ratings) {
+				writer.writeStartElement("rating");
+				if (r.system != null) writer.writeAttribute("system", r.system);
+				if (r.value != null) writeString(r.value, "value", writer);
+				writeIconList(icons, writer);
+				writer.writeEndElement();
+			}
+			
 		}
-		for(String url: urls) {
-			writer.writeStartElement("url");
-			writer.writeCharacters(url);
-			writer.writeEndElement();
-		}
-*/		
 		writer.writeEndElement();
 		writer.writeCharacters(System.getProperty("line.separator"));
 	}
