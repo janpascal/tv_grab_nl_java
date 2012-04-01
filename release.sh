@@ -2,9 +2,11 @@
 
 VERSION=$( xsltproc pom_version.xsl pom.xml )
 
-if ! head Changelog | grep -q "tv_grab_nl_java-$VERSION"; then
-  echo "Release $VERSION not found in changelog, please update Changelog first";
-  exit 1;
+if [ "$1" != "--testing" ]; then
+  if ! head Changelog | grep -q "tv_grab_nl_java-$VERSION"; then
+    echo "Release $VERSION not found in changelog, please update Changelog first";
+    exit 1;
+  fi
 fi
 
 tmpdir=$( mktemp -d ) || exit 1
