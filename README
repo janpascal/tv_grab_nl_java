@@ -29,7 +29,8 @@ Installatie
    https://github.com/janpascal/tv_grab_nl_java/downloads
 
 2. Voor Linux-gebruikers: plaats de tv_grab_nl_java.jar file uit de zipfile 
-   in /usr/local/share/java/ en plaats tv_grab_nl_java in /usr/local/bin:
+   in /usr/local/share/java/ en plaats tv_grab_nl_java in /usr/local/bin.
+   Gebruik hiervoor het meegeleverde script install.sh, of doe:
    $ mv tv_grab_nl_java.jar /usr/local/share/java/
    $ mv tv_grab_nl_java /usr/local/bin
    $ chmod a+x /usr/local/bin/tv_grab_nl_java
