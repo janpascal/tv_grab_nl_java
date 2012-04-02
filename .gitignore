@@ -1,5 +1,7 @@
 /test.xml
 /rtl.xml
+/tvgids.xml
 /target
 /testdb.*
+/cachedb.*
 /tv_grab_nl_java.db.properties
