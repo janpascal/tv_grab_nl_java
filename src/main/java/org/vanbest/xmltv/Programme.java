@@ -206,6 +206,7 @@ public class Programme implements Serializable {
 		previouslyShown.channel = channel;
 	}
 	public boolean hasCategory(String category) {
+		if(categories==null) return false;
 		for(Title t: categories) {
 			if (t.title.toLowerCase().equals(category)) return true;
 		}
@@ -216,6 +217,7 @@ public class Programme implements Serializable {
 		Rating r = new Rating();
 		r.system = system;
 		r.value = value;
+		ratings.add(r);
 	}
 
 	

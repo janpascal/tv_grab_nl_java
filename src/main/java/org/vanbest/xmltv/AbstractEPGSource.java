@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.vanbest.xmltv.EPGSource.Stats;
@@ -13,17 +14,17 @@ import org.vanbest.xmltv.EPGSource.Stats;
 public abstract class AbstractEPGSource implements EPGSource {
 
 	protected Config config;
-	protected TvGidsProgrammeCache cache;
+	protected ProgrammeCache cache;
 	protected Stats stats = new Stats();
 	
 	public static final int MAX_FETCH_TRIES=5;
 
 	public AbstractEPGSource(Config config) {
 		this.config = config;
-		cache = new TvGidsProgrammeCache(config.cacheFile);
+		cache = new ProgrammeCache(config);
 	}
 
-	public Set<TvGidsProgramme> getProgrammes(Channel channel, int day, boolean fetchDetails)
+	public List<Programme> getProgrammes(Channel channel, int day, boolean fetchDetails)
 			throws Exception {
 				ArrayList<Channel> list = new ArrayList<Channel>(2);
 				list.add(channel);
@@ -64,6 +65,10 @@ public abstract class AbstractEPGSource implements EPGSource {
 		}
 		return buf.toString();  
 	}
-
-
+	
+	public void clearCache() {
+		ProgrammeCache cache = new ProgrammeCache(config);
+		cache.clear();
+		cache.close();
+	}
 }

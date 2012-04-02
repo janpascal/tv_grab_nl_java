@@ -36,25 +36,30 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 
 public class Config {
+	//constants
+	public static final int LOG_INFO = 0x0001;
+	public static final int LOG_JSON = 0x0100;
+	private final static int LOG_PROGRAMME_INFO = 0x0200;
+	private final static int CURRENT_FILE_FORMAT=4;
+	public final static int LOG_DEFAULT = LOG_INFO;
+
+	// in config file
 	public int niceMilliseconds;
 	public List<Channel> channels;
 	public Map<String, String> cattrans;
-	protected File cacheFile;
 	public String cacheDbHandle;
 	public String cacheDbUser;
 	public String cacheDbPassword;
+	
+	// not stored (yet)
+	public boolean joinKijkwijzerRatings = true;
+	
+	// command-line options
 	boolean quiet = false;
 	public int logLevel = LOG_DEFAULT;
 	
-	public static final int LOG_INFO = 0x0001;
-	public static final int LOG_JSON = 0x0100;
-	private static final int LOG_PROGRAMME_INFO = 0x0200;
-	
-	public static int LOG_DEFAULT = LOG_INFO;
-	
-	private final static int CURRENT_FILE_FORMAT=3;
-
 	String project_version;
+	String build_time;
 	
 	private Config() {
 		Properties configProp = new Properties();
@@ -65,15 +70,16 @@ public class Config {
             e.printStackTrace();
         }
         project_version=configProp.getProperty("project.version");
+        build_time=configProp.getProperty("build.time");
 	}
 	
 	public static Config getDefaultConfig() {
 		Config result = new Config();
 		result.channels = new ArrayList<Channel>();
 		result.cattrans = getDefaultCattrans();
-		result.cacheFile = defaultCacheFile();
 		result.niceMilliseconds = 500;
-		result.cacheDbHandle = "jdbc:hsqldb:file:cachedb"; // FIXME in userdir
+		String cachefile = FileUtils.getFile(FileUtils.getUserDirectory(), ".xmltv", "tv_grab_nl_java.cache").getPath();
+		result.setCacheFile(cachefile);
 		result.cacheDbUser = "SA";
 		result.cacheDbPassword = "";
 		return result;
@@ -127,7 +133,9 @@ public class Config {
 		FileUtils.forceMkdir(configFile.getParentFile());
 		PrintWriter out = new PrintWriter(new OutputStreamWriter( new FileOutputStream( configFile )));
 		out.println("config-file-format: " + CURRENT_FILE_FORMAT);
-		out.println("cache-file: " + escape(cacheFile.getPath()));
+		out.println("cache-db-handle: " + escape(cacheDbHandle));
+		out.println("cache-db-user: " + escape(cacheDbUser));
+		out.println("cache-db-password: " + escape(cacheDbPassword));
 		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for(Channel c: channels) {
 			// FIXME: handle multiple channels names, icons and urls
@@ -226,6 +234,7 @@ public class Config {
 						break;
 					case 2:
 					case 3:
+					case 4:
 						int source;
 						if (fileformat==2) {
 							source = Integer.parseInt(parts.get(1));
@@ -260,7 +269,20 @@ public class Config {
 						fileformat = CURRENT_FILE_FORMAT;
 					}
 				} else if (key.equals("cache-file")) {
-					result.cacheFile = new File(parts.get(1));
+					if (fileformat<4) {
+						String cacheFile = parts.get(1);
+						result.cacheDbHandle = "jdbc:hsqldb:file:"+cacheFile;
+						result.cacheDbUser = "SA";
+						result.cacheDbPassword = "";
+					} else {
+						System.out.println("Illegal key cache-file in config file!");
+					}
+				} else if (key.equals("cache-db-handle")) {
+					result.cacheDbHandle = parts.get(1);
+				} else if (key.equals("cache-db-user")) {
+					result.cacheDbUser = parts.get(1);
+				} else if (key.equals("cache-db-password")) {
+					result.cacheDbPassword = parts.get(1);
 				} else if (key.equals("nice-time-milliseconds")) {
 					result.niceMilliseconds = Integer.parseInt(parts.get(1));
 				} else {
@@ -281,6 +303,10 @@ public class Config {
 
 	public boolean logProgrammes() {
 		return (logLevel & LOG_PROGRAMME_INFO) != 0;
+	}
+
+	public void setCacheFile(String cacheFile) {
+		cacheDbHandle = "jdbc:hsqldb:file:"+cacheFile;
 	}
 
 }

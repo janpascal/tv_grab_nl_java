@@ -39,6 +39,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 
 import net.sf.ezmorph.MorpherRegistry;
 import net.sf.ezmorph.ObjectMorpher;
@@ -55,37 +56,10 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
 	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
 	
-	static boolean initialised = false;
-
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
-
-	private ProgrammeCache cache;
 
 	public TvGids(Config config) {
 		super(config);
-		cache = new ProgrammeCache(config);
-		if ( ! initialised ) {
-			init();
-			initialised = true;
-		}
-	}
-	
-	public static void init() {
-		String[] formats = {"yyyy-MM-dd HH:mm:ss"};
-		MorpherRegistry registry = JSONUtils.getMorpherRegistry();
-		registry.registerMorpher( new DateMorpher(formats, new Locale("nl")));
-		registry.registerMorpher( new ObjectMorpher() {
-			 public Object morph(Object value) {
-				 String s = (String) value;
-				 return org.apache.commons.lang.StringEscapeUtils.unescapeHtml(s);
-			 }
-			 public Class morphsTo() {
-				 return String.class;
-			 }
-			 public boolean supports(Class clazz) {
-				 return clazz == String.class;
-			 }
-		}, true);
 	}
 	
 	public static URL programmeUrl(List<Channel> channels, int day) throws Exception {
@@ -181,8 +155,6 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			JSONObject zender = jsonArray.getJSONObject(i);
 			//System.out.println( "id: " + zender.getString("id"));
 			//System.out.println( "name: " + zender.getString("name"));
-			//TvGidsChannel c = new TvGidsChannel(zender.getInt("id"), zender.getString("name"), zender.getString("name_short"));
-			//c.setIconUrl("http://tvgidsassets.nl/img/channels/53x27/" + c.id + ".png");
 			int id = zender.getInt("id");
 			String name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(zender.getString("name"));
 			String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id + ".png"; 
@@ -202,8 +174,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	/* (non-Javadoc)
 	 * @see org.vanbest.xmltv.EPGSource#getProgrammes(java.util.List, int, boolean)
 	 */
-	//@Override
-	public List<Programme> getProgrammes1(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
+	@Override
+	public List<Programme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
 		List<Programme> result = new ArrayList<Programme>();
 		URL url = programmeUrl(channels, day);
 
@@ -259,31 +231,38 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		if (result == null) {
 			stats.cacheMisses++;
 			result = new Programme();
+			// Do this here, because we can only add to these fields. Pity if they're updated
+			result.addTitle(programme.getString("titel"));
+			String genre = programme.getString("genre");
+			if (genre != null && !genre.isEmpty()) result.addCategory(config.translateCategory(genre));
+			String kijkwijzer = programme.getString("kijkwijzer");
+			if (kijkwijzer!=null && !kijkwijzer.isEmpty()) {
+				List<String> list = parseKijkwijzer(kijkwijzer);
+				if (config.joinKijkwijzerRatings) {
+					// mythtv doesn't understand multiple <rating> tags
+					result.addRating("kijkwijzer", StringUtils.join(list, ","));
+				} else {
+					for(String rating: list) {
+						result.addRating("kijkwijzer", rating);
+					}
+				}
+				// TODO add icon from HTML detail page
+			}
 		} else {
+			//System.out.println("From cache: " + programme.getString("titel"));
 			stats.cacheHits++;
 		}
-		System.out.println("      titel:" + programme.getString("titel"));
+		//System.out.println("      titel:" + programme.getString("titel"));
 		//System.out.println("datum_start:" + programme.getString("datum_start"));
 		//System.out.println("  datum_end:" + programme.getString("datum_end"));
 		//System.out.println("      genre:" + programme.getString("genre"));
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("nl"));
 		result.startTime = df.parse(programme.getString("datum_start"));
 		result.endTime =  df.parse(programme.getString("datum_end"));
-		result.addTitle(programme.getString("titel"));
-		String genre = programme.getString("genre");
-		if (genre != null && !genre.isEmpty()) result.addCategory(config.translateCategory(genre));
-		String kijkwijzer = programme.getString("kijkwijzer");
-		if (kijkwijzer!=null && !kijkwijzer.isEmpty()) {
-			List<String> list = parseKijkwijzer(kijkwijzer);
-			for(String s: list) {
-				result.addRating("kijkwijzer", s);
-				// TODO add icon from HTML detail page
-			}
-			
-		}
 		// TODO other fields
 	
 		if (fetchDetails && !cached) {
+			// TODO also read details if those have not been cached
 			fillDetails(id, result);
 		}
 		if (!cached) {
@@ -346,6 +325,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 						replaceAll("<em>", " ").
 						replaceAll("</em>", " ").
 						trim();
+				if (value.isEmpty()) continue	;
 				result.addDescription(value);
 			} else if (key.equals("presentatie")) {
 				String[] parts = value.split(",");
@@ -450,15 +430,6 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 //			result.details.fixup(result, config.quiet);
 	}
 
-	@Override
-	public Set<TvGidsProgramme> getProgrammes(List<Channel> channels, int day,
-			boolean fetchDetails) throws Exception {
-		// TODO Auto-generated method stub
-		// dummy, wait for superclass and interface to be generalised
-		return null;
-	}
-	
-
 	/**
 	 * @param args
 	 */
@@ -478,7 +449,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			List<Channel> my_channels = channels.subList(0,15);
 			for(Channel c: my_channels) {c.serialize(writer);}
 			writer.flush();
-			List<Programme> programmes = gids.getProgrammes1(my_channels, 2, true);
+			List<Programme> programmes = gids.getProgrammes(my_channels, 2, true);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
 			writer.writeEndDocument();

@@ -34,6 +34,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.vanbest.xmltv.EPGSource.Stats;
+
+
 import net.sf.ezmorph.MorpherRegistry;
 import net.sf.ezmorph.ObjectMorpher;
 import net.sf.ezmorph.object.DateMorpher;
@@ -42,18 +45,24 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.util.JSONUtils;
 
-public class TvGidsLegacy extends AbstractEPGSource implements EPGSource {
+public class TvGidsLegacy {
 
 	static String channels_url="http://www.tvgids.nl/json/lists/channels.php";
 	static String programme_base_url="http://www.tvgids.nl/json/lists/programs.php";
 	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
 	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
 
+	public static final int MAX_FETCH_TRIES=5;
+
 	static boolean initialised = false;
-	
+	private Config config;
+	protected Stats stats = new Stats();
+	private TvGidsProgrammeCache cache;
+
 	public TvGidsLegacy(Config config) {
-		super(config);
 		this.config = config;
+		//this.cache = new TvGidsProgrammeCache(config.cacheFile);
+		this.cache = new TvGidsProgrammeCache(new File("tv_grab_nl_java.cache"));
 		if ( ! initialised ) {
 			init();
 			initialised = true;
@@ -81,7 +90,6 @@ public class TvGidsLegacy extends AbstractEPGSource implements EPGSource {
 	/* (non-Javadoc)
 	 * @see org.vanbest.xmltv.EPGSource#getChannels()
 	 */
-	@Override
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
 		URL url = null;
@@ -162,8 +170,7 @@ public class TvGidsLegacy extends AbstractEPGSource implements EPGSource {
 	/* (non-Javadoc)
 	 * @see org.vanbest.xmltv.EPGSource#getProgrammes(java.util.List, int, boolean)
 	 */
-	@Override
-	public Set<TvGidsProgramme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
+	public Set<TvGidsProgramme> getProgrammes1(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
 		Set<TvGidsProgramme> result = new HashSet<TvGidsProgramme>();
 		URL url = programmeUrl(channels, day);
 
@@ -204,6 +211,31 @@ public class TvGidsLegacy extends AbstractEPGSource implements EPGSource {
 			System.out.println(p.toString());
 		}
 		return p;
+	}
+
+	protected String fetchURL(URL url) throws Exception {
+		Thread.sleep(config.niceMilliseconds);
+		StringBuffer buf = new StringBuffer();
+		boolean done = false;
+		IOException finalException = null;
+		for(int count = 0; count<MAX_FETCH_TRIES && !done; count++) {
+			try {
+				BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
+				String s;
+				while ((s = reader.readLine()) != null) buf.append(s);
+				done = true;
+			} catch (IOException e) {
+				if (!config.quiet) {
+					System.out.println("Error fetching from url " + url + ", count="+count);
+				}
+				finalException = e;
+			}
+		}
+		if (!done) {
+			stats.fetchErrors++;
+			throw new Exception("Error getting program data from url " + url, finalException);
+		}
+		return buf.toString();  
 	}
 
 	private JSONObject fetchJSON(URL url) throws Exception {

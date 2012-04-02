@@ -294,7 +294,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		//prog.endTime = parseTime(date, root.)
 	}
 
-	public List<Programme> getProgrammes1(List<Channel> channels, int day,
+	@Override
+	public List<Programme> getProgrammes(List<Channel> channels, int day,
 			boolean fetchDetails) throws Exception {
 		List<Programme> result = new LinkedList<Programme>();
 		Map<String,Channel> channelMap = new HashMap<String,Channel>();
@@ -393,8 +394,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
 			writer.flush();
-			List<Programme> programmes = rtl.getProgrammes1(channels.subList(6, 9), 0, true);
-			//List<Programme> programmes = rtl.getProgrammes1(channels, 0, true);
+			List<Programme> programmes = rtl.getProgrammes(channels.subList(6, 9), 0, true);
+			//List<Programme> programmes = rtl.getProgrammes(channels, 0, true);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
 			writer.writeEndDocument();
@@ -411,13 +412,5 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	public Set<TvGidsProgramme> getProgrammes(List<Channel> channels, int day,
-			boolean fetchDetails) throws Exception {
-		// TODO Refactor EPGSource to return Programme instead of TvGidsProgramme
-		return null;
-	}
-
 
 }

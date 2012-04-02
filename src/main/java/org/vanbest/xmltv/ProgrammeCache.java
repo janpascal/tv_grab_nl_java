@@ -44,6 +44,7 @@ public class ProgrammeCache {
 	private PreparedStatement getStatement;
 	private PreparedStatement putStatement;
 	private PreparedStatement removeStatement;
+	private PreparedStatement clearStatement;
 	
 	public ProgrammeCache(Config config) {
 		this.config = config;
@@ -56,6 +57,7 @@ public class ProgrammeCache {
 			getStatement = db.prepareStatement("SELECT programme FROM cache WHERE id=?");
 			putStatement = db.prepareStatement("INSERT INTO cache VALUES (?,?,?)");
 			removeStatement = db.prepareStatement("DELETE FROM cache WHERE id=?");
+			clearStatement = db.prepareStatement("DELETE FROM cache");
 		} catch (SQLException e) {
 			db = null;
 			if (!config.quiet) {
@@ -117,7 +119,7 @@ public class ProgrammeCache {
 		try {
 			stat = db.createStatement();
 			int count = stat.executeUpdate("DELETE FROM cache WHERE date<CURRENT_DATE - 3 DAY");
-			if (!config.quiet) {
+			if (!config.quiet && count>0) {
 				System.out.println("Purged " + count + " old entries from cache");
 			}
 			stat.close();
@@ -127,7 +129,19 @@ public class ProgrammeCache {
 		}
 	}
 
-	public void close() throws FileNotFoundException, IOException {
+	public void clear() {
+		try {
+			int count = clearStatement.executeUpdate();
+			if (!config.quiet && count>0) {
+				System.out.println("Cleared " + count + " entries from cache");
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void close() {
 		cleanup();
 		if (db != null) {
 			try {

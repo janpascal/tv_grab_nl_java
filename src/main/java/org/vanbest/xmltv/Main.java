@@ -28,10 +28,14 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLEventFactory;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -48,6 +52,7 @@ public class Main {
 	private PrintStream outputWriter;
 	private int days = 5;
 	private int offset = 0;
+	private boolean clearCache = false;
 	/**
 	 * @param args
 	 */
@@ -56,37 +61,55 @@ public class Main {
 		this.configFile = defaultConfigFile();
 		this.outputWriter = System.out;
 	}
-	
+
+	public void showHeader() {
+		System.out.println("tv_grab_nl_java version "+config.project_version + " (built "+config.build_time+")");
+		System.out.println("Copyright (C) 2012 Jan-Pascal van Best <janpascal@vanbest.org>");
+		System.out.println("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
+		System.out.println("under certain conditions; `tv_grab_nl_java --license' for details.");
+	}
 	public void run() throws FactoryConfigurationError, Exception {
 		if (!config.quiet) {
-			System.out.println("tv_grab_nl_java version "+config.project_version + ", Copyright (C) 2012 Jan-Pascal van Best <janpascal@vanbest.org>");
- 			System.out.println("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
- 			System.out.println("under certain conditions; `tv_grab_nl_java --license' for details.");
-
+			showHeader();
 			System.out.println("Fetching programme data for " + this.days + " starting from day " + this.offset);
 			int enabledCount = 0;
 			for(Channel c: config.channels) { if (c.enabled) enabledCount++; } 
 			System.out.println("... from " + enabledCount + " channels");
-			System.out.println("... using cache file " + config.cacheFile.getCanonicalPath());
+			System.out.println("... using cache at " + config.cacheDbHandle);
 		}
 		
-		XmlTvWriter writer = new XmlTvWriter(outputWriter, config);
-		writer.writeChannels(config.channels);
+		EPGSource gids = new TvGids(config);
+		if (clearCache) gids.clearCache();
 
-		EPGSource gids = new TvGidsLegacy(config);
+		XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(outputWriter);
+		writer.writeStartDocument();
+		writer.writeCharacters("\n");
+		writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
+		writer.writeCharacters("\n");
+		writer.writeStartElement("tv");
+		writer.writeAttribute("generator-info-url","http://github.com/janpascal/tv_grab_nl_java");
+		writer.writeAttribute("source-info-url", "http://tvgids.nl/");
+		writer.writeAttribute("source-info-name", "TvGids.nl");
+		writer.writeAttribute("generator-info-name", "tv_grab_nl_java release "+config.project_version + ", built " + config.build_time);
+
+		for(Channel c: config.channels) if (c.enabled) c.serialize(writer);
 
 		for (int day=offset; day<offset+days; day++) {
 			if (!config.quiet) System.out.print("Fetching information for day " + day);
-			Set<TvGidsProgramme> programmes = new HashSet<TvGidsProgramme>();
 			for(Channel c: config.channels) {
 				if (!c.enabled) continue;
 				if (!config.quiet) System.out.print(".");
-				Set<TvGidsProgramme> p = gids.getProgrammes(c, day, true);
-				writer.writePrograms(p);
+				List<Programme> programmes = gids.getProgrammes(c, day, true);
+				for (Programme p: programmes) p.serialize(writer);
 				writer.flush();
 			}
 			if (!config.quiet) System.out.println();
 		}
+
+		writer.writeEndElement();
+		writer.writeEndDocument();
+		writer.flush();
+		writer.close();
 		
 		try {
 			gids.close();
@@ -98,7 +121,6 @@ public class Main {
 			e.printStackTrace();
 		}
 
-		writer.close();
 		if (!config.quiet) {
 			EPGSource.Stats stats = gids.getStats();
 			System.out.println("Number of programmes from cache: " + stats.cacheHits);
@@ -108,7 +130,9 @@ public class Main {
 	}
 	
 	public void configure() throws IOException {
-		EPGSource gids = new TvGidsLegacy(config);
+		showHeader();
+
+		EPGSource gids = new TvGids(config);
 		
 		Set<String> oldChannels = new HashSet<String>();
 		for (Channel c: config.channels) {
@@ -119,6 +143,27 @@ public class Main {
 		List<Channel> channels = gids.getChannels();
 		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		
+		System.out.print("Delay between each request to the server (in milliseconds, default="+config.niceMilliseconds+"):");
+		while(true) {
+			String s = reader.readLine().toLowerCase();
+			if (s.isEmpty()) {
+				break;
+			}
+			try {
+				config.niceMilliseconds = Integer.parseInt(s);
+				break;
+			} catch (NumberFormatException e) {
+				System.out.println("\""+s+"\" is not a valid number, please try again");
+				continue;
+			}
+		}
+
+		// TODO configure cache location 
+		// public String cacheDbHandle;
+		// public String cacheDbUser;
+		// public String cacheDbPassword;
+		
 		boolean all = false;
 		boolean none = false;
 		boolean keep = false;
@@ -244,6 +289,10 @@ public class Main {
 						.withDescription("Cache file location")
 						.create())
 				.addOption(OptionBuilder
+						.withLongOpt("clear-cache")
+						.withDescription("Clear cache, remove all cached info")
+						.create())
+				.addOption(OptionBuilder
 						.withLongOpt("help")
 						.withDescription("Show this help")
 						.create())
@@ -266,9 +315,10 @@ public class Main {
 			e.printStackTrace();
 		}
 
-		if(line.hasOption("license")) { 
-                        showLicense();
-                        System.exit(0);
+		if(line.hasOption("license")) {
+			showHeader();
+            showLicense();
+            System.exit(0);
 		}
 		if(line.hasOption("config-file")) { 
 			configFile = new File(line.getOptionValue("config-file"));	
@@ -278,7 +328,8 @@ public class Main {
 			config.quiet = true;
 		}
 		if (line.hasOption("description")) {
-			System.out.println("tv_grab_nl_java version " + config.project_version);
+			showHeader();
+			System.out.println();
 			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
 			System.exit(0);
 		}
@@ -295,7 +346,10 @@ public class Main {
 			config.logLevel = Integer.parseInt(line.getOptionValue("log-level"));
 		}
 		if (line.hasOption("cache")) {
-			config.cacheFile = new File(line.getOptionValue("cache"));
+			config.setCacheFile(line.getOptionValue("cache"));
+		}
+		if (line.hasOption("clear-cache")) {
+			clearCache = true;
 		}
 		if (line.hasOption("days")) {
 			this.days = Integer.parseInt(line.getOptionValue("days"));
