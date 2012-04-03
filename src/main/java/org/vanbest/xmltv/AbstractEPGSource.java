@@ -24,11 +24,11 @@ public abstract class AbstractEPGSource implements EPGSource {
 		cache = new ProgrammeCache(config);
 	}
 
-	public List<Programme> getProgrammes(Channel channel, int day, boolean fetchDetails)
+	public List<Programme> getProgrammes(Channel channel, int day)
 			throws Exception {
 				ArrayList<Channel> list = new ArrayList<Channel>(2);
 				list.add(channel);
-				return getProgrammes(list, day, fetchDetails);
+				return getProgrammes(list, day);
 			}
 
 	@Override

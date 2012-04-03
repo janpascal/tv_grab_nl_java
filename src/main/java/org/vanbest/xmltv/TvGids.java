@@ -62,6 +62,14 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		super(config);
 	}
 	
+	public int getId() {
+        return EPGSourceFactory.CHANNEL_SOURCE_TVGIDS;
+    }
+	
+    public String getName() {
+       return EPGSourceFactory.getChannelSourceName(getId());
+    }
+ 
 	public static URL programmeUrl(List<Channel> channels, int day) throws Exception {
 		StringBuilder s = new StringBuilder(programme_base_url);
 		if (channels.size() < 1) {
@@ -158,7 +166,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			int id = zender.getInt("id");
 			String name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(zender.getString("name"));
 			String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id + ".png"; 
-			Channel c = Channel.getChannel(Channel.CHANNEL_SOURCE_TVGIDS, Integer.toString(id), name, icon); 
+			Channel c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_TVGIDS, Integer.toString(id), name, icon); 
 			result.add(c);
 		}
 
@@ -175,7 +183,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 * @see org.vanbest.xmltv.EPGSource#getProgrammes(java.util.List, int, boolean)
 	 */
 	@Override
-	public List<Programme> getProgrammes(List<Channel> channels, int day, boolean fetchDetails) throws Exception {
+	public List<Programme> getProgrammes(List<Channel> channels, int day) throws Exception {
 		List<Programme> result = new ArrayList<Programme>();
 		URL url = programmeUrl(channels, day);
 
@@ -188,7 +196,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 				JSONArray programs = (JSONArray) ps;
 				for( int i=0; i<programs.size() && i<MAX_PROGRAMMES_PER_DAY; i++ ) {
 					JSONObject programme = programs.getJSONObject(i);
-					Programme p = programmeFromJSON(programme, fetchDetails);
+					Programme p = programmeFromJSON(programme, config.fetchDetails);
 					p.channel = c.getXmltvChannelId();
 					result.add(p);
 				}
@@ -198,7 +206,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 				for( Object o: programs.keySet() ) {
 					if (count>MAX_PROGRAMMES_PER_DAY) break;
 					JSONObject programme = programs.getJSONObject(o.toString());
-					Programme p = programmeFromJSON(programme, fetchDetails);
+					Programme p = programmeFromJSON(programme, config.fetchDetails);
 					p.channel = c.getXmltvChannelId();
 					result.add(p);
 					count++;
@@ -226,7 +234,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 */
 	private Programme programmeFromJSON(JSONObject programme, boolean fetchDetails) throws Exception {
 		String id = programme.getString("db_id");
-		Programme result = cache.get(id);
+		Programme result = cache.get(getId(), id);
 		boolean cached = (result != null);
 		if (result == null) {
 			stats.cacheMisses++;
@@ -267,7 +275,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		}
 		if (!cached) {
 			// FIXME where to do this?
-			cache.put(id, result);
+			cache.put(getId(), id, result);
 		}
 		if(config.logProgrammes()) {
 			System.out.println(result.toString());
@@ -449,7 +457,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			List<Channel> my_channels = channels.subList(0,15);
 			for(Channel c: my_channels) {c.serialize(writer);}
 			writer.flush();
-			List<Programme> programmes = gids.getProgrammes(my_channels, 2, true);
+			List<Programme> programmes = gids.getProgrammes(my_channels, 2);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
 			writer.writeEndDocument();

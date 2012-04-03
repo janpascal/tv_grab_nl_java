@@ -6,25 +6,22 @@ import java.util.List;
 import java.util.Set;
 
 public interface EPGSource {
-	
 	public class Stats {
 		int fetchErrors = 0;
 		int cacheHits = 0;
 		int cacheMisses = 0;
 	}
 
-	public abstract void close() throws FileNotFoundException, IOException;
+	public int getId();
+    public String getName();
 
-	public abstract List<Channel> getChannels();
-
+	public List<Channel> getChannels();
 	// Convenience method
-	public abstract List<Programme> getProgrammes(Channel channel, int day,
-			boolean fetchDetails) throws Exception;
-
-	public abstract List<Programme> getProgrammes(List<Channel> channels,
-			int day, boolean fetchDetails) throws Exception;
+	public List<Programme> getProgrammes(Channel channel, int day) throws Exception;
+	public List<Programme> getProgrammes(List<Channel> channels, int day) throws Exception;
 	
-	public abstract Stats getStats();
+	public Stats getStats();
 	
 	public void clearCache();
+	public void close() throws FileNotFoundException, IOException;
 }

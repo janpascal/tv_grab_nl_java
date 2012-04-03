@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,18 +69,21 @@ public class Main {
 		System.out.println("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
 		System.out.println("under certain conditions; `tv_grab_nl_java --license' for details.");
 	}
+	
 	public void run() throws FactoryConfigurationError, Exception {
 		if (!config.quiet) {
 			showHeader();
-			System.out.println("Fetching programme data for " + this.days + " starting from day " + this.offset);
+			System.out.println("Fetching programme data for " + this.days + " days starting from day " + this.offset);
 			int enabledCount = 0;
 			for(Channel c: config.channels) { if (c.enabled) enabledCount++; } 
 			System.out.println("... from " + enabledCount + " channels");
 			System.out.println("... using cache at " + config.cacheDbHandle);
 		}
 		
-		EPGSource gids = new TvGids(config);
-		if (clearCache) gids.clearCache();
+		Map<Integer,EPGSource> guides = new HashMap<Integer,EPGSource>();
+		EPGSourceFactory factory = EPGSourceFactory.newInstance();
+		//EPGSource gids = new TvGids(config);
+		//if (clearCache) gids.clearCache();
 
 		XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(outputWriter);
 		writer.writeStartDocument();
@@ -91,6 +95,7 @@ public class Main {
 		writer.writeAttribute("source-info-url", "http://tvgids.nl/");
 		writer.writeAttribute("source-info-name", "TvGids.nl");
 		writer.writeAttribute("generator-info-name", "tv_grab_nl_java release "+config.project_version + ", built " + config.build_time);
+		writer.writeCharacters(System.getProperty("line.separator"));
 
 		for(Channel c: config.channels) if (c.enabled) c.serialize(writer);
 
@@ -99,7 +104,11 @@ public class Main {
 			for(Channel c: config.channels) {
 				if (!c.enabled) continue;
 				if (!config.quiet) System.out.print(".");
-				List<Programme> programmes = gids.getProgrammes(c, day, true);
+				if(!guides.containsKey(c.source)) {
+					guides.put(c.source, factory.createEPGSource(c.source, config));
+					if (clearCache) guides.get(c.source).clearCache();
+				}
+				List<Programme> programmes = guides.get(c.source).getProgrammes(c, day);
 				for (Programme p: programmes) p.serialize(writer);
 				writer.flush();
 			}
@@ -112,7 +121,9 @@ public class Main {
 		writer.close();
 		
 		try {
-			gids.close();
+			for(int source: guides.keySet()) {
+				guides.get(source).close();
+			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -122,7 +133,13 @@ public class Main {
 		}
 
 		if (!config.quiet) {
-			EPGSource.Stats stats = gids.getStats();
+			EPGSource.Stats stats = new EPGSource.Stats();
+			for(int source: guides.keySet()) {
+				EPGSource.Stats part = guides.get(source).getStats();
+				stats.cacheHits += part.cacheHits;
+				stats.cacheMisses += part.cacheMisses;
+				stats.fetchErrors += part.fetchErrors;
+			}
 			System.out.println("Number of programmes from cache: " + stats.cacheHits);
 			System.out.println("Number of programmes fetched: " + stats.cacheMisses);
 			System.out.println("Number of fetch errors: " + stats.fetchErrors);
@@ -132,16 +149,6 @@ public class Main {
 	public void configure() throws IOException {
 		showHeader();
 
-		EPGSource gids = new TvGids(config);
-		
-		Set<String> oldChannels = new HashSet<String>();
-		for (Channel c: config.channels) {
-			if (c.enabled) { 
-				oldChannels.add(c.source+"::"+c.id); 
-			}
-		}
-		List<Channel> channels = gids.getChannels();
-		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		
 		System.out.print("Delay between each request to the server (in milliseconds, default="+config.niceMilliseconds+"):");
@@ -163,6 +170,40 @@ public class Main {
 		// public String cacheDbHandle;
 		// public String cacheDbUser;
 		// public String cacheDbPassword;
+
+		
+		EPGSourceFactory factory = EPGSourceFactory.newInstance();
+		int[] sources = factory.getAll();
+		
+		System.out.println("Please select the TV programme information sources to use");
+		List<EPGSource> guides = new ArrayList<EPGSource>();
+		for(int source: sources) {
+			EPGSource guide = factory.createEPGSource(source, config);
+			System.out.print("    Use \"" + guide.getName() + "\" (Y/N):");
+			while(true) {
+				String s = reader.readLine().toLowerCase();
+				if ( s.startsWith("y")) {
+					guides.add(guide);
+					break;
+				} else if (s.startsWith("n")) {
+					break;
+				}
+			}
+		}
+		
+		//EPGSource gids = new TvGids(config);
+		
+		Set<String> oldChannels = new HashSet<String>();
+		for (Channel c: config.channels) {
+			if (c.enabled) { 
+				oldChannels.add(c.source+"::"+c.id); 
+			}
+		}
+		
+		List<Channel> channels = new ArrayList<Channel>();
+		for(EPGSource guide: guides) {
+			channels.addAll(guide.getChannels());
+		}
 		
 		boolean all = false;
 		boolean none = false;

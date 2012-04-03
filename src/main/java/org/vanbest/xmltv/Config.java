@@ -57,6 +57,7 @@ public class Config {
 	// command-line options
 	boolean quiet = false;
 	public int logLevel = LOG_DEFAULT;
+	boolean fetchDetails = true;
 	
 	String project_version;
 	String build_time;
@@ -213,13 +214,13 @@ public class Config {
 					// System.out.println("Adding channel " + parts + " in file format " + fileformat);
 					switch(fileformat) {
 					case 0:
-						c = Channel.getChannel(Channel.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(2));
+						c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(2));
 						if (parts.size()>3) {
 							c.addIcon(parts.get(3));
 						}
 						break;
 					case 1:
-						c = Channel.getChannel(Channel.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(3));
+						c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(3));
 						if (parts.size()>4) {
 							c.addIcon(parts.get(4));
 						}
@@ -239,7 +240,7 @@ public class Config {
 						if (fileformat==2) {
 							source = Integer.parseInt(parts.get(1));
 						} else {
-							source = Channel.getChannelSourceId(parts.get(1));
+							source = EPGSourceFactory.getChannelSourceId(parts.get(1));
 						}
 						c = Channel.getChannel(source, parts.get(2), parts.get(4));
 						if (parts.size()>5) {

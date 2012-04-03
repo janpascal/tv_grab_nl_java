@@ -51,12 +51,12 @@ public class ProgrammeCache {
         try {
 			db = DriverManager.getConnection(config.cacheDbHandle, config.cacheDbUser, config.cacheDbPassword);
 			Statement stat = db.createStatement();
-			stat.execute("CREATE TABLE IF NOT EXISTS cache (id VARCHAR(64) PRIMARY KEY, date DATE, programme OTHER)");
+			stat.execute("CREATE TABLE IF NOT EXISTS cache (source INTEGER, id VARCHAR(64), date DATE, programme OTHER, PRIMARY KEY (source,id))");
 			stat.close();
 			
-			getStatement = db.prepareStatement("SELECT programme FROM cache WHERE id=?");
-			putStatement = db.prepareStatement("INSERT INTO cache VALUES (?,?,?)");
-			removeStatement = db.prepareStatement("DELETE FROM cache WHERE id=?");
+			getStatement = db.prepareStatement("SELECT programme FROM cache WHERE source=? AND id=?");
+			putStatement = db.prepareStatement("INSERT INTO cache VALUES (?,?,?,?)");
+			removeStatement = db.prepareStatement("DELETE FROM cache WHERE source=? AND id=?");
 			clearStatement = db.prepareStatement("DELETE FROM cache");
 		} catch (SQLException e) {
 			db = null;
@@ -67,17 +67,18 @@ public class ProgrammeCache {
 		}
 	}
 	
-	public Programme get(String id) {
+	public Programme get(int source, String id) {
 		if (db==null) return null;
 		try {
-			getStatement.setString(1, id);
+			getStatement.setInt(1, source);
+			getStatement.setString(2, id);
 			ResultSet r = getStatement.executeQuery();
 			if (!r.next()) return null; // not found
 			try {
 				Programme result = (Programme) r.getObject("programme");
 				return result;
 			} catch (java.sql.SQLDataException e) {
-				removeCacheEntry(id);
+				removeCacheEntry(source, id);
 				return null;
 			}
 		} catch (SQLException e) {
@@ -88,9 +89,10 @@ public class ProgrammeCache {
 		}
 	}
 	
-	private void removeCacheEntry(String id) {
+	private void removeCacheEntry(int source, String id) {
 		try {
-			removeStatement.setString(1, id);
+			removeStatement.setInt(1, source);
+			removeStatement.setString(2, id);
 			removeStatement.execute();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -98,12 +100,14 @@ public class ProgrammeCache {
 		}
 	}
 
-	public void put(String id, Programme prog) {
+	public void put(int source, String id, Programme prog) {
 		if (db == null) return;
 		try {
-			putStatement.setString(1, id);
-			putStatement.setDate(2, new java.sql.Date(prog.startTime.getTime()));
-			putStatement.setObject(3, prog);
+			putStatement.setInt(1, source);
+			putStatement.setString(2, id);
+			putStatement.setDate(3, new java.sql.Date(prog.startTime.getTime()));
+			putStatement.setObject(4, prog);
+			//System.out.println(putStatement.toString());
 			int count = putStatement.executeUpdate();
 			if (count!=1 && !config.quiet) {
 				System.out.println("Weird, cache database update statement affected " + count + " rows");

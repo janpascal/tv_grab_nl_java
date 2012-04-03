@@ -18,6 +18,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -113,6 +115,14 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		}
 	}
 
+	public int getId() {
+         return EPGSourceFactory.CHANNEL_SOURCE_RTL;
+    }
+	
+    public String getName() {
+        return EPGSourceFactory.getChannelSourceName(getId());
+    }
+    
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
 
@@ -139,10 +149,21 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			String name = (String) j.get(0);
 			String icon = icon_url+id+".gif";
 			
-			Channel c = Channel.getChannel(Channel.CHANNEL_SOURCE_RTL, id, name, icon);
+			Channel c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_RTL, id, name, icon);
 			result.add(c);
 		}
 
+		Collections.sort(result, new Comparator<Channel>() {
+			public int compare(Channel o1, Channel o2) {
+				if (o1.source==o2.source) {
+					int c1=Integer.parseInt(o1.id);
+					int c2=Integer.parseInt(o2.id);
+					return (c1==c2 ? 0 : ((c1<c2)?-1:1) );
+				} else  {
+					return o1.source<o2.source?-1:1;
+				}
+			}
+		});
 		return result;
 	}
 	
@@ -295,12 +316,11 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	}
 
 	@Override
-	public List<Programme> getProgrammes(List<Channel> channels, int day,
-			boolean fetchDetails) throws Exception {
+	public List<Programme> getProgrammes(List<Channel> channels, int day) throws Exception {
 		List<Programme> result = new LinkedList<Programme>();
 		Map<String,Channel> channelMap = new HashMap<String,Channel>();
 		for(Channel c: channels) {
-			if (c.enabled && c.source==Channel.CHANNEL_SOURCE_RTL) channelMap.put(c.id, c);
+			if (c.enabled && c.source==EPGSourceFactory.CHANNEL_SOURCE_RTL) channelMap.put(c.id, c);
 		}
 		URL url = programmeUrl(day);
 		//String xmltext = fetchURL(url);
@@ -309,18 +329,18 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
 		Element root = xml.getDocumentElement();
 		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(root.getAttribute("date"));
-		System.out.println("date: " + date);
+		//System.out.println("date: " + date);
 		String json = root.getTextContent();
-		System.out.println("json: " + json);
+		//System.out.println("json: " + json);
 		JSONObject o = JSONObject.fromObject( json );
 		for( Object k: o.keySet()) {
 			String id = genericChannelId(k.toString());
 			if(!channelMap.containsKey(id)) {
-				if (!config.quiet) System.out.println("Skipping programmes for channel " + id);
+				//if (!config.quiet) System.out.println("Skipping programmes for channel " + id);
 				continue;
 			}
 			JSONArray j = (JSONArray) o.get(k);
-			System.out.println(k.toString()+": "+j.toString());
+			//System.out.println(k.toString()+": "+j.toString());
 			//System.out.println("Channel name:" + j.get(0));
 			for (int i=1; i<j.size() && i<MAX_PROGRAMMES_PER_DAY; i++) {
 				JSONArray p = (JSONArray) j.get(i);
@@ -329,17 +349,17 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				String programme_id = p.getString(2);
 				String quark1 = p.getString(3);
 				String quark2 = p.getString(4);
-				Programme prog = cache.get(programme_id);
+				Programme prog = cache.get(getId(), programme_id);
 				if (prog == null) {
 					stats.cacheMisses++;
 					prog = new Programme();
 					prog.addTitle(title);
 					prog.startTime = parseTime(date, starttime);
 					prog.channel = channelMap.get(id).getXmltvChannelId();
-					if (fetchDetails) {
+					if (config.fetchDetails) {
 						fetchDetail(prog, date, programme_id);
 					}
-					cache.put(programme_id, prog);
+					cache.put(getId(), programme_id, prog);
 				} else {
 					stats.cacheHits++;
 				}
@@ -394,7 +414,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
 			writer.flush();
-			List<Programme> programmes = rtl.getProgrammes(channels.subList(6, 9), 0, true);
+			List<Programme> programmes = rtl.getProgrammes(channels.subList(6, 9), 0);
 			//List<Programme> programmes = rtl.getProgrammes(channels, 0, true);
 			for(Programme p: programmes) {p.serialize(writer);}
 			writer.writeEndElement();
