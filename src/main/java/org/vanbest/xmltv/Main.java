@@ -172,31 +172,35 @@ public class Main {
 		// public String cacheDbPassword;
 
 		
+		Set<String> oldChannels = new HashSet<String>();
+		Set<Integer> oldGuides = new HashSet<Integer>();
+		for (Channel c: config.channels) {
+			if (c.enabled) { 
+				oldChannels.add(c.source+"::"+c.id); 
+				oldGuides.add(c.source);
+			}
+		}
+		
 		EPGSourceFactory factory = EPGSourceFactory.newInstance();
 		int[] sources = factory.getAll();
 		
 		System.out.println("Please select the TV programme information sources to use");
 		List<EPGSource> guides = new ArrayList<EPGSource>();
 		for(int source: sources) {
+			boolean selected = oldGuides.contains(source);
 			EPGSource guide = factory.createEPGSource(source, config);
-			System.out.print("    Use \"" + guide.getName() + "\" (Y/N):");
+			System.out.print("    Use \"" + guide.getName() + "\" (Y/N, default=" + (selected?"Y":"N")+"):");
 			while(true) {
 				String s = reader.readLine().toLowerCase();
-				if ( s.startsWith("y")) {
+				if (s.isEmpty()) {
+					if(selected) guides.add(guide);
+					break;
+				} else if (s.startsWith("y")) {
 					guides.add(guide);
 					break;
 				} else if (s.startsWith("n")) {
 					break;
 				}
-			}
-		}
-		
-		//EPGSource gids = new TvGids(config);
-		
-		Set<String> oldChannels = new HashSet<String>();
-		for (Channel c: config.channels) {
-			if (c.enabled) { 
-				oldChannels.add(c.source+"::"+c.id); 
 			}
 		}
 		
@@ -210,7 +214,7 @@ public class Main {
 		boolean keep = false;
 		for (Channel c: channels) {
 			boolean selected = oldChannels.contains(c.source+"::"+c.id);
-			System.out.print("add channel " + c.id + " (" + c.defaultName() + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
+			System.out.print("add channel " + c.getXmltvChannelId() + " (" + c.defaultName() + ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default=" + (selected?"yes":"no") + ")] ");
 			if (keep) {
 				c.enabled = selected;
 				System.out.println(selected?"Y":"N");
