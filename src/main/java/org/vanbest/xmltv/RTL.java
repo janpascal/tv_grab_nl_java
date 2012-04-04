@@ -60,7 +60,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	private static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	private static final String xmltv_channel_suffix = ".rtl.nl";
-	private static final int MAX_PROGRAMMES_PER_DAY = 20;
+	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
 	
 	private Connection db;
 	
@@ -292,7 +292,9 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		} else if (tag.equals("wwwadres")) {
 			prog.addUrl(e.getTextContent());
 		} else if (tag.equals("alginhoud")) {
+			prog.addDescription(e.getTextContent());
 		} else if (tag.equals("inhoud")) {
+			prog.addDescription(e.getTextContent());
 		} else if (tag.equals("tt_inhoud")) {
 			// ignore, is summary of other fields
 		} else if (tag.equals("zendernr")) {
