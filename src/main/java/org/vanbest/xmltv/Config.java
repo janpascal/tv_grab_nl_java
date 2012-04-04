@@ -64,7 +64,8 @@ public class Config {
 	
 	private Config() {
 		Properties configProp = new Properties();
-        InputStream in = this.getClass().getResourceAsStream("/tv_grab_nl_java.properties");
+        InputStream in = ClassLoader.getSystemResourceAsStream("/tv_grab_nl_java.properties");
+        System.out.println(in);
         try {
             configProp.load(in);
         } catch (IOException e) {
@@ -214,13 +215,13 @@ public class Config {
 					// System.out.println("Adding channel " + parts + " in file format " + fileformat);
 					switch(fileformat) {
 					case 0:
-						c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(2));
+						c = Channel.getChannel(EPGSourceFactory.newInstance().getChannelSourceId("tvgids.nl"), parts.get(1), parts.get(2));
 						if (parts.size()>3) {
 							c.addIcon(parts.get(3));
 						}
 						break;
 					case 1:
-						c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_TVGIDS, parts.get(1), parts.get(3));
+						c = Channel.getChannel(EPGSourceFactory.newInstance().getChannelSourceId("tvgids.nl"), parts.get(1), parts.get(3));
 						if (parts.size()>4) {
 							c.addIcon(parts.get(4));
 						}
@@ -240,7 +241,7 @@ public class Config {
 						if (fileformat==2) {
 							source = Integer.parseInt(parts.get(1));
 						} else {
-							source = EPGSourceFactory.getChannelSourceId(parts.get(1));
+							source = EPGSourceFactory.newInstance().getChannelSourceId(parts.get(1));
 						}
 						c = Channel.getChannel(source, parts.get(2), parts.get(4));
 						if (parts.size()>5) {

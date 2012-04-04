@@ -59,16 +59,12 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String programme_url="http://www.rtl.nl/active/epg_data/dag_data/";
 	private static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	private static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
-	private static final String xmltv_channel_suffix = ".rtl.nl";
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
-	
-	private Connection db;
 	
 	String[] xmlKeys = {"zendernr", "pgmsoort", "genre", "bijvnwlanden", "ondertiteling", "begintijd", "titel", 
 			"site_path", "wwwadres", "presentatie", "omroep", "eindtijd", "inhoud", "tt_inhoud", "alginhoud", "afl_titel", "kijkwijzer" };
 		
-	Map<String,Integer> xmlKeyMap = new HashMap<String,Integer>();
-	private ProgrammeCache cache;
+	//Map<String,Integer> xmlKeyMap = new HashMap<String,Integer>();
 	
 	class RTLException extends Exception {
 		public RTLException(String s) {
@@ -76,53 +72,14 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		}
 	}
 	
-	public RTL(Config config, boolean useDB) {
+	public RTL(Config config) {
 		super(config);
-		cache = new ProgrammeCache(config);
-		try {
-			if (useDB) {
-				Properties dbProp = new Properties();
-		        try {
-			        InputStream in = new FileInputStream("tv_grab_nl_java.db.properties");
-		            dbProp.load(in);
-		        } catch (IOException e) {
-		            e.printStackTrace();
-		        }
-		        db = DriverManager.getConnection(dbProp.getProperty("db_url"), dbProp.getProperty("db_user"), dbProp.getProperty("db_passwd"));
-				Statement stat = db.createStatement();
-				StringBuilder s = new StringBuilder();
-				s.append("CREATE TABLE IF NOT EXISTS prog (id VARCHAR(32) primary key, ");
-				int i=0;
-				for( String key: xmlKeys) {
-					if(i>0) s.append(", ");
-					xmlKeyMap.put(key, i+1);
-					s.append(key);
-					s.append(" TEXT");
-					i++;
-				}
-				s.append(");");
-				System.out.println(s);
-				stat.execute(s.toString());
-				stat.execute("TRUNCATE TABLE prog");
-			} else {
-				db = null;
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.exit(1);
-			db = null;
-		}
 	}
-
-	public int getId() {
-         return EPGSourceFactory.CHANNEL_SOURCE_RTL;
-    }
 	
-    public String getName() {
-        return EPGSourceFactory.getChannelSourceName(getId());
-    }
-    
+	public String getName() {
+		return "rtl.nl";
+	}
+	
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
 
@@ -149,7 +106,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			String name = (String) j.get(0);
 			String icon = icon_url+id+".gif";
 			
-			Channel c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_RTL, id, name, icon);
+			Channel c = Channel.getChannel(getId(), id, name, icon);
 			result.add(c);
 		}
 
@@ -204,25 +161,6 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		if (root.hasAttributes()) {
 			System.out.println("Unknown attributes for RTL detail root node");
 		}
-		PreparedStatement stat = null;
-		if (db != null) {
-			StringBuilder sql = new StringBuilder("INSERT INTO prog (id");
-			StringBuilder sql2= new StringBuilder(") values (?");
-			for(String key:xmlKeys) {
-				sql.append(",");
-				sql.append(key);
-				sql2.append(",");
-				sql2.append("?");
-			}
-			sql.append(sql2);
-			sql.append(");");
-			// System.out.println(sql.toString());
-			stat = db.prepareStatement(sql.toString());
-			stat.setString(1, id);
-			for(String key:xmlKeys) {
-				
-			}
-		}
 		NodeList nodes = root.getChildNodes();
 		for( int i=0; i<nodes.getLength(); i++) {
 			Node n = nodes.item(i);
@@ -237,7 +175,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			NodeList subnodes = n.getChildNodes();
 			for( int j=0; j<subnodes.getLength(); j++) {
 				try {
-					handleNode(prog, date, stat, subnodes.item(j));
+					handleNode(prog, date, subnodes.item(j));
 				} catch (RTLException e) {
 					System.out.println(e.getMessage());
 					Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -246,15 +184,11 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 					continue;
 				}
 			}
-			//System.out.println(stat.toString());
-			if (db != null) {
-				stat.execute();
-			}
 		}
 	}
 
 	
-	private void handleNode(Programme prog, Date date, PreparedStatement stat, Node n) throws RTLException, DOMException, SQLException {
+	private void handleNode(Programme prog, Date date, Node n) throws RTLException, DOMException, SQLException {
 		if (n.getNodeType() != Node.ELEMENT_NODE) {
 			throw new RTLException("Ignoring non-element node " + n.getNodeName());
 		}
@@ -270,9 +204,6 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			}
 		}
 		Element e = (Element)n;
-		if (db != null) {
-			stat.setString(xmlKeyMap.get(e.getTagName())+1, e.getTextContent());
-		}
 		String tag = e.getTagName();
 		if (e.getTextContent().isEmpty()) {
 			return;
@@ -322,7 +253,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		List<Programme> result = new LinkedList<Programme>();
 		Map<String,Channel> channelMap = new HashMap<String,Channel>();
 		for(Channel c: channels) {
-			if (c.enabled && c.source==EPGSourceFactory.CHANNEL_SOURCE_RTL) channelMap.put(c.id, c);
+			if (c.enabled && c.source==getId()) channelMap.put(c.id, c);
 		}
 		URL url = programmeUrl(day);
 		//String xmltext = fetchURL(url);
@@ -373,8 +304,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 
 	public void close() throws FileNotFoundException, IOException {
 		super.close();
-		cache.close();
 	}
+
 	private Date parseTime(Date date, String time) {
 		Calendar result = Calendar.getInstance();
 		result.setTime(date);
@@ -404,7 +335,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
-		RTL rtl = new RTL(config, false);
+		RTL rtl = new RTL(config);
 		try {
 			List<Channel> channels = rtl.getChannels();
 			System.out.println("Channels: " + channels);

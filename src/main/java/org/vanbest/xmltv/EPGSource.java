@@ -13,6 +13,7 @@ public interface EPGSource {
 	}
 
 	public int getId();
+	public void setId(int id);
     public String getName();
 
 	public List<Channel> getChannels();

@@ -46,7 +46,7 @@ public class Channel {
 	}
 	
 	public String getSourceName() {
-		return EPGSourceFactory.getChannelSourceName(source);
+		return EPGSourceFactory.newInstance().getChannelSourceName(source);
 	}
 	
 	public void serialize(XMLStreamWriter writer) throws XMLStreamException {

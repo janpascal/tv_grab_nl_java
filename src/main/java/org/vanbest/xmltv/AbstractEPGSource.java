@@ -13,6 +13,7 @@ import org.vanbest.xmltv.EPGSource.Stats;
 
 public abstract class AbstractEPGSource implements EPGSource {
 
+	private int sourceId;
 	protected Config config;
 	protected ProgrammeCache cache;
 	protected Stats stats = new Stats();
@@ -22,6 +23,14 @@ public abstract class AbstractEPGSource implements EPGSource {
 	public AbstractEPGSource(Config config) {
 		this.config = config;
 		cache = new ProgrammeCache(config);
+	}
+
+	public int getId() {
+         return sourceId;
+    }
+	
+	public void setId(int id) {
+		sourceId = id;
 	}
 
 	public List<Programme> getProgrammes(Channel channel, int day)

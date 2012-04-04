@@ -62,14 +62,10 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		super(config);
 	}
 	
-	public int getId() {
-        return EPGSourceFactory.CHANNEL_SOURCE_TVGIDS;
-    }
+	public String getName() {
+		return "tvgids.nl";
+	}
 	
-    public String getName() {
-       return EPGSourceFactory.getChannelSourceName(getId());
-    }
- 
 	public static URL programmeUrl(List<Channel> channels, int day) throws Exception {
 		StringBuilder s = new StringBuilder(programme_base_url);
 		if (channels.size() < 1) {
@@ -166,7 +162,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			int id = zender.getInt("id");
 			String name = org.apache.commons.lang.StringEscapeUtils.unescapeHtml(zender.getString("name"));
 			String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id + ".png"; 
-			Channel c = Channel.getChannel(EPGSourceFactory.CHANNEL_SOURCE_TVGIDS, Integer.toString(id), name, icon); 
+			Channel c = Channel.getChannel(getId(), Integer.toString(id), name, icon); 
 			result.add(c);
 		}
 
