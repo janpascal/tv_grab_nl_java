@@ -46,25 +46,104 @@ public class ProgrammeCache {
 	private PreparedStatement removeStatement;
 	private PreparedStatement clearStatement;
 	
+	private final static Integer SCHEMA_VERSION=1;
+	private final static String SCHEMA_KEY="TV_GRAB_NL_JAVA_SCHEMA_VERSION";
+	
 	public ProgrammeCache(Config config) {
 		this.config = config;
         try {
 			db = DriverManager.getConnection(config.cacheDbHandle, config.cacheDbUser, config.cacheDbPassword);
+			/* Test for upgrade path from legacy database
 			Statement stat = db.createStatement();
-			stat.execute("CREATE TABLE IF NOT EXISTS cache (source INTEGER, id VARCHAR(64), date DATE, programme OTHER, PRIMARY KEY (source,id))");
-			stat.close();
-			
-			getStatement = db.prepareStatement("SELECT programme FROM cache WHERE source=? AND id=?");
-			putStatement = db.prepareStatement("INSERT INTO cache VALUES (?,?,?,?)");
-			removeStatement = db.prepareStatement("DELETE FROM cache WHERE source=? AND id=?");
-			clearStatement = db.prepareStatement("DELETE FROM cache");
+			System.out.println("Dropping old table");
+			stat.execute("DROP TABLE IF EXISTS cache");
+			System.out.println("Creating new table");
+			stat.execute("CREATE CACHED TABLE IF NOT EXISTS cache (id VARCHAR(64) PRIMARY KEY, date DATE, programme OTHER)");
+			*/
 		} catch (SQLException e) {
 			db = null;
 			if (!config.quiet) {
 				System.out.println("Unable to open cache database, proceeding without cache");
 				e.printStackTrace();
 			}
-		}
+        }
+        boolean recreateTable = false;
+        if (db != null) {
+	        try {
+				PreparedStatement stat = db.prepareStatement("SELECT programme FROM cache WHERE source=? AND id=?");
+				stat.setInt(1, 1);
+				stat.setString(2, SCHEMA_KEY);
+				ResultSet result = stat.executeQuery();
+				if (!result.next()) {
+					if (!config.quiet) System.out.println("No schema version found in database");
+					recreateTable=true;
+				} else {
+					Integer currentSchema = (Integer) result.getObject("programme");
+					if (currentSchema<SCHEMA_VERSION) {
+						if (!config.quiet) System.out.println("Current cache database schema version " + currentSchema + " is lower than my version " + SCHEMA_VERSION);
+						recreateTable = true;
+					} else if (currentSchema>SCHEMA_VERSION) {
+						if (!config.quiet) System.out.println("Got a database schema from the future, since my version is " + SCHEMA_VERSION+ " and yours is " + currentSchema);
+						recreateTable = true;
+					}
+					
+				}
+				stat.close();
+			} catch (SQLException e) {
+				if (!config.quiet) {
+					System.out.println("Got SQL exception when trying to find current database schema");
+					System.out.flush();
+					e.printStackTrace();
+					System.out.flush();
+				}
+				recreateTable = true;
+			}
+	        if (recreateTable) {
+	        	if (!config.quiet) System.out.println("Unknown cache schema, removing and recreating cache");
+		        try {
+					Statement stat = db.createStatement();
+					// System.out.println("Dropping old table");
+					stat.execute("DROP TABLE IF EXISTS cache");
+					// System.out.println("Creating new table");
+					stat.execute("CREATE CACHED TABLE IF NOT EXISTS cache (source INTEGER, id VARCHAR(64), date DATE, programme OTHER, PRIMARY KEY (source,id))");
+					stat.close();
+
+					// System.out.println("Writing new schema version to database");
+					PreparedStatement stat2 = db.prepareStatement("INSERT INTO cache VALUES (?,?,?,?)");
+
+					stat2.setInt(1, 1);
+					stat2.setString(2, SCHEMA_KEY);
+					stat2.setDate(3, new java.sql.Date(new java.util.Date(2100,11,31).getTime()));
+					stat2.setObject(4, SCHEMA_VERSION);
+					// System.out.println(stat2.toString());
+					stat2.executeUpdate();
+				} catch (SQLException e) {
+					if (!config.quiet) {
+						System.out.println("Unable to create cache database, proceeding without cache");
+						System.out.flush();
+						e.printStackTrace();
+						System.out.flush();
+					}
+					db = null;
+				}
+			}
+	        try {
+				//System.out.println("Preparing statements");
+				getStatement = db.prepareStatement("SELECT programme FROM cache WHERE source=? AND id=?");
+				putStatement = db.prepareStatement("INSERT INTO cache VALUES (?,?,?,?)");
+				removeStatement = db.prepareStatement("DELETE FROM cache WHERE source=? AND id=?");
+				clearStatement = db.prepareStatement("DELETE FROM cache");
+			} catch (SQLException e) {
+				if (!config.quiet) {
+					System.out.println("Unable to prepare statements, proceeding without cache");
+					System.out.flush();
+					e.printStackTrace();
+					System.out.flush();
+				}
+				db = null;
+	        }
+
+        }
 	}
 	
 	public Programme get(int source, String id) {
@@ -119,6 +198,7 @@ public class ProgrammeCache {
 	}
 
 	public void cleanup() {
+		if (db==null) return;
 		Statement stat;
 		try {
 			stat = db.createStatement();
@@ -134,6 +214,7 @@ public class ProgrammeCache {
 	}
 
 	public void clear() {
+		if (db==null) return;
 		try {
 			int count = clearStatement.executeUpdate();
 			if (!config.quiet && count>0) {
@@ -151,6 +232,8 @@ public class ProgrammeCache {
 			try {
 				getStatement.close();
 				putStatement.close();
+				removeStatement.close();
+				clearStatement.close();
 				db.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block

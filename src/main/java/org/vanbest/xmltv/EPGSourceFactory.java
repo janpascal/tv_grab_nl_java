@@ -36,9 +36,9 @@ public class EPGSourceFactory {
 			try {
 				Class<EPGSource> clazz = (Class<EPGSource>) loader.loadClass(name);
 				classes.put(source,  clazz);
-				System.out.println("clazz: " + clazz.toString());
+				// System.out.println("clazz: " + clazz.toString());
 				Field NAME=clazz.getField("NAME");
-				System.out.println("NAME: " + NAME.toString());
+				// System.out.println("NAME: " + NAME.toString());
 				String sourceName=(String)NAME.get(null);
 				names.put(source,sourceName);
 				ids.put(sourceName,source);
@@ -68,7 +68,7 @@ public class EPGSourceFactory {
 	public EPGSource createEPGSource(int source, Config config) {
 		Constructor<EPGSource> constructor;
 		try {
-			constructor = classes.get(source).getConstructor(Integer.class,Config.class);
+			constructor = classes.get(source).getConstructor(Integer.TYPE,Config.class);
 			return constructor.newInstance(source, config);
 		} catch (NoSuchMethodException e) {
 			// TODO Auto-generated catch block
