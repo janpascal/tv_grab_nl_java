@@ -64,8 +64,7 @@ public class Config {
 	
 	private Config() {
 		Properties configProp = new Properties();
-        InputStream in = ClassLoader.getSystemResourceAsStream("/tv_grab_nl_java.properties");
-        System.out.println(in);
+        InputStream in = ClassLoader.getSystemResourceAsStream("tv_grab_nl_java.properties");
         try {
             configProp.load(in);
         } catch (IOException e) {

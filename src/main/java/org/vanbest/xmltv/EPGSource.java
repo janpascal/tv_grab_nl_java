@@ -14,7 +14,7 @@ public interface EPGSource {
 
 	public int getId();
 	public void setId(int id);
-    public String getName();
+    public String getName(); // must be static
 
 	public List<Channel> getChannels();
 	// Convenience method

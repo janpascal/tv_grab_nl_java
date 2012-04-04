@@ -3,11 +3,13 @@ package org.vanbest.xmltv;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -16,12 +18,13 @@ public class EPGSourceFactory {
 	private static Map<Integer,Class<EPGSource>> classes = new HashMap<Integer,Class<EPGSource>>();
 	private static Map<Integer,String> names = new HashMap<Integer,String>();
 	private static boolean initialised=false;
+	private static List<Integer> sources=new ArrayList<Integer>();
 
 	static void init() {
 		if(initialised) return;
 		Properties configProp = new Properties();
         ClassLoader loader = ClassLoader.getSystemClassLoader();
-        InputStream in = loader.getResourceAsStream("/org/vanbest/xmltv/tv_grab_nl_java.properties");
+        InputStream in = loader.getResourceAsStream("tv_grab_nl_java.properties");
         try {
             configProp.load(in);
         } catch (IOException e) {
@@ -33,10 +36,13 @@ public class EPGSourceFactory {
 			try {
 				Class<EPGSource> clazz = (Class<EPGSource>) loader.loadClass(name);
 				classes.put(source,  clazz);
-				Method getName=clazz.getMethod("getName");
-				String sourceName=(String)getName.invoke(null);
+				System.out.println("clazz: " + clazz.toString());
+				Field NAME=clazz.getField("NAME");
+				System.out.println("NAME: " + NAME.toString());
+				String sourceName=(String)NAME.get(null);
 				names.put(source,sourceName);
 				ids.put(sourceName,source);
+				sources.add(source);
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -62,7 +68,7 @@ public class EPGSourceFactory {
 	public EPGSource createEPGSource(int source, Config config) {
 		Constructor<EPGSource> constructor;
 		try {
-			constructor = classes.get(source).getConstructor(Config.class);
+			constructor = classes.get(source).getConstructor(Integer.class,Config.class);
 			return constructor.newInstance(source, config);
 		} catch (NoSuchMethodException e) {
 			// TODO Auto-generated catch block
@@ -100,11 +106,9 @@ public class EPGSourceFactory {
 	}
 
 	public int[] getAll() {
-		Integer[] list = (Integer[]) classes.keySet().toArray();
-		Arrays.sort(list);
-		int[] result = new int[list.length];
+		int[] result = new int[sources.size()];
 		for(int i=0; i<result.length; i++) {
-			result[i]=list[i];
+			result[i]=sources.get(i);
 		}
 		return result;
 	}

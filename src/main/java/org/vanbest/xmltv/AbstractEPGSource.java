@@ -20,8 +20,9 @@ public abstract class AbstractEPGSource implements EPGSource {
 	
 	public static final int MAX_FETCH_TRIES=5;
 
-	public AbstractEPGSource(Config config) {
+	public AbstractEPGSource(int sourceId, Config config) {
 		this.config = config;
+		this.sourceId = sourceId;
 		cache = new ProgrammeCache(config);
 	}
 

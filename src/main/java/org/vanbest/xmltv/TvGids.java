@@ -57,13 +57,14 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
 	
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
+	public static String NAME="tvgids.nl";
 
-	public TvGids(Config config) {
-		super(config);
+	public TvGids(int sourceId, Config config) {
+		super(sourceId, config);
 	}
 	
 	public String getName() {
-		return "tvgids.nl";
+		return NAME;
 	}
 	
 	public static URL programmeUrl(List<Channel> channels, int day) throws Exception {
@@ -439,7 +440,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
-		TvGids gids = new TvGids(config);
+		TvGids gids = new TvGids(1, config);
 		try {
 			List<Channel> channels = gids.getChannels();
 			System.out.println("Channels: " + channels);

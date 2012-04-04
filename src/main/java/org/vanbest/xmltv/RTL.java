@@ -60,6 +60,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String detail_url="http://www.rtl.nl/active/epg_data/uitzending_data/";
 	private static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
+	public static final String NAME="rtl.nl";
 	
 	String[] xmlKeys = {"zendernr", "pgmsoort", "genre", "bijvnwlanden", "ondertiteling", "begintijd", "titel", 
 			"site_path", "wwwadres", "presentatie", "omroep", "eindtijd", "inhoud", "tt_inhoud", "alginhoud", "afl_titel", "kijkwijzer" };
@@ -72,12 +73,12 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		}
 	}
 	
-	public RTL(Config config) {
-		super(config);
+	public RTL(int sourceId, Config config) {
+		super(sourceId, config);
 	}
 	
 	public String getName() {
-		return "rtl.nl";
+		return NAME;
 	}
 	
 	public List<Channel> getChannels() {
@@ -335,7 +336,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
-		RTL rtl = new RTL(config);
+		RTL rtl = new RTL(2, config);
 		try {
 			List<Channel> channels = rtl.getChannels();
 			System.out.println("Channels: " + channels);
