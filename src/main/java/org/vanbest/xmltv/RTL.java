@@ -65,8 +65,6 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	String[] xmlKeys = {"zendernr", "pgmsoort", "genre", "bijvnwlanden", "ondertiteling", "begintijd", "titel", 
 			"site_path", "wwwadres", "presentatie", "omroep", "eindtijd", "inhoud", "tt_inhoud", "alginhoud", "afl_titel", "kijkwijzer" };
 		
-	//Map<String,Integer> xmlKeyMap = new HashMap<String,Integer>();
-	
 	class RTLException extends Exception {
 		public RTLException(String s) {
 			super(s);
@@ -215,6 +213,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			prog.endTime = parseTime(date, e.getTextContent());
 		} else if (tag.equals("omroep")) {
 		} else if (tag.equals("kijkwijzer")) {
+			System.out.println("Kijkwijzer: \"" + e.getTextContent() + "\"");
 		} else if (tag.equals("presentatie")) {
 			// A; A en B; A, B, C en D
 			String[] presentatoren = e.getTextContent().split(", | en ");
@@ -228,6 +227,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		} else if (tag.equals("inhoud")) {
 			prog.addDescription(e.getTextContent());
 		} else if (tag.equals("tt_inhoud")) {
+			prog.addDescription(e.getTextContent());
 			// ignore, is summary of other fields
 		} else if (tag.equals("zendernr")) {
 		} else if (tag.equals("titel")) {
@@ -307,6 +307,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		super.close();
 	}
 
+	// FIXME probably not correct in all cases, maybe make use 
+	// of the order of the programmes?
 	private Date parseTime(Date date, String time) {
 		Calendar result = Calendar.getInstance();
 		result.setTime(date);

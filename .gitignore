@@ -5,3 +5,4 @@
 /testdb.*
 /cachedb.*
 /tv_grab_nl_java.db.properties
+*.orig

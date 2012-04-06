@@ -14,7 +14,9 @@ public interface EPGSource {
 
 	public int getId();
 	public void setId(int id);
-    public String getName(); // must be static
+    public String getName(); 
+	// All implementing class must declare a
+    // public static final String NAME (e.g tvgids.nl or rtl.nl)
 
 	public List<Channel> getChannels();
 	// Convenience method
