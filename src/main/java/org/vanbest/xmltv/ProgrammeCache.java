@@ -64,7 +64,7 @@ public class ProgrammeCache {
 			db = null;
 			if (!config.quiet) {
 				System.out.println("Unable to open cache database, proceeding without cache");
-				e.printStackTrace();
+				if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 			}
         }
         boolean recreateTable = false;
@@ -93,7 +93,7 @@ public class ProgrammeCache {
 				if (!config.quiet) {
 					System.out.println("Got SQL exception when trying to find current database schema");
 					System.out.flush();
-					e.printStackTrace();
+					if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 					System.out.flush();
 				}
 				recreateTable = true;
@@ -121,7 +121,7 @@ public class ProgrammeCache {
 					if (!config.quiet) {
 						System.out.println("Unable to create cache database, proceeding without cache");
 						System.out.flush();
-						e.printStackTrace();
+						if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 						System.out.flush();
 					}
 					db = null;
@@ -137,7 +137,7 @@ public class ProgrammeCache {
 				if (!config.quiet) {
 					System.out.println("Unable to prepare statements, proceeding without cache");
 					System.out.flush();
-					e.printStackTrace();
+					if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 					System.out.flush();
 				}
 				db = null;
@@ -162,7 +162,8 @@ public class ProgrammeCache {
 			}
 		} catch (SQLException e) {
 			if (!config.quiet) {
-				e.printStackTrace();
+				System.out.println("Error fetching programme ("+source+","+id+") from cache");
+				if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 			}
 			return null;
 		}
@@ -192,8 +193,8 @@ public class ProgrammeCache {
 				System.out.println("Weird, cache database update statement affected " + count + " rows");
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error writing programme ("+source+","+id+") to cache");
+			if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 		}
 	}
 
@@ -221,8 +222,7 @@ public class ProgrammeCache {
 				System.out.println("Cleared " + count + " entries from cache");
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 		}
 	}
 
@@ -237,7 +237,7 @@ public class ProgrammeCache {
 				db.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
 			}
 		}
 	}

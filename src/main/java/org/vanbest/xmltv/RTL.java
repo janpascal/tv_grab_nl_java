@@ -1,12 +1,15 @@
 package org.vanbest.xmltv;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
@@ -64,6 +67,10 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	
 	String[] xmlKeys = {"zendernr", "pgmsoort", "genre", "bijvnwlanden", "ondertiteling", "begintijd", "titel", 
 			"site_path", "wwwadres", "presentatie", "omroep", "eindtijd", "inhoud", "tt_inhoud", "alginhoud", "afl_titel", "kijkwijzer" };
+	Map<String,Integer> xmlKeyMap = new HashMap<String,Integer>();
+	
+	static boolean debug = false;
+	PrintWriter debugWriter;
 		
 	class RTLException extends Exception {
 		public RTLException(String s) {
@@ -73,6 +80,11 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	
 	public RTL(int sourceId, Config config) {
 		super(sourceId, config);
+		if(debug) {
+			for(int i=0; i<xmlKeys.length; i++) {
+				xmlKeyMap.put(xmlKeys[i], i);
+			}
+		}
 	}
 	
 	public String getName() {
@@ -172,8 +184,16 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			}
 			// we have a uitzending_data_item node
 			NodeList subnodes = n.getChildNodes();
+			String[] result = new String[xmlKeys.length];
 			for( int j=0; j<subnodes.getLength(); j++) {
 				try {
+					if (debug) {
+						Node sub = subnodes.item(j);
+						String key = ((Element)sub).getTagName();
+						int index = xmlKeyMap.get(key);
+						String value = "\"" + sub.getTextContent().replaceAll("\\s", " ") + "\"";
+						result[index] = value;
+					}
 					handleNode(prog, date, subnodes.item(j));
 				} catch (RTLException e) {
 					System.out.println(e.getMessage());
@@ -182,6 +202,13 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 					System.out.println();
 					continue;
 				}
+			}
+			if (debug) {
+				for(int k=0; k<result.length; k++) {
+					debugWriter.print(result[k]);
+					debugWriter.print(",");
+				}
+				debugWriter.println();
 			}
 		}
 	}
@@ -204,6 +231,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		}
 		Element e = (Element)n;
 		String tag = e.getTagName();
+
 		if (e.getTextContent().isEmpty()) {
 			return;
 		}
@@ -213,7 +241,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			prog.endTime = parseTime(date, e.getTextContent());
 		} else if (tag.equals("omroep")) {
 		} else if (tag.equals("kijkwijzer")) {
-			System.out.println("Kijkwijzer: \"" + e.getTextContent() + "\"");
+			//System.out.println("Kijkwijzer: \"" + e.getTextContent() + "\"");
 		} else if (tag.equals("presentatie")) {
 			// A; A en B; A, B, C en D
 			String[] presentatoren = e.getTextContent().split(", | en ");
@@ -281,8 +309,9 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				String starttime = p.getString(0);
 				String title = p.getString(1);
 				String programme_id = p.getString(2);
-				String quark1 = p.getString(3);
-				String quark2 = p.getString(4);
+				String genre_id = p.getString(3); // 1 = amusement, etc
+				String quark2 = p.getString(4); // 0 of 1, movie flag?
+				debugWriter.print("\""+id+"\",\""+starttime+"\",\""+title+"\",\""+genre_id+"\",\""+quark2+"\",");
 				Programme prog = cache.get(getId(), programme_id);
 				if (prog == null) {
 					stats.cacheMisses++;
@@ -335,10 +364,25 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 
 	/**
 	 * @param args
+	 * @throws FileNotFoundException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
+		debug = true;
 		Config config = Config.getDefaultConfig();
+		config.niceMilliseconds = 50;
 		RTL rtl = new RTL(2, config);
+		if (debug) {
+			rtl.cache.clear();
+			System.out.println("Writing CSV to rtl.csv");
+			rtl.debugWriter = new PrintWriter( new BufferedOutputStream(new FileOutputStream("rtl.csv")));
+			rtl.debugWriter.print("\"zender\",\"starttime\",\"title\",\"quark1\",\"quark2\",");
+			for(int k=0; k<rtl.xmlKeys.length; k++) {
+				rtl.debugWriter.print(rtl.xmlKeys[k]);
+				rtl.debugWriter.print(",");
+			}
+			rtl.debugWriter.println();
+		}
+
 		try {
 			List<Channel> channels = rtl.getChannels();
 			System.out.println("Channels: " + channels);
@@ -350,9 +394,11 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			writer.writeStartElement("tv");
 			for(Channel c: channels) {c.serialize(writer);}
 			writer.flush();
-			List<Programme> programmes = rtl.getProgrammes(channels.subList(6, 9), 0);
-			//List<Programme> programmes = rtl.getProgrammes(channels, 0, true);
-			for(Programme p: programmes) {p.serialize(writer);}
+			//List<Programme> programmes = rtl.getProgrammes(channels.subList(6, 9), 0);
+			for(int day=0; day<10; day++) {
+				List<Programme> programmes = rtl.getProgrammes(channels, day);
+				for(Programme p: programmes) {p.serialize(writer);}
+			}
 			writer.writeEndElement();
 			writer.writeEndDocument();
 			writer.flush();
@@ -362,6 +408,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				System.out.println("Number of programmes fetched: " + stats.cacheMisses);
 				System.out.println("Number of fetch errors: " + stats.fetchErrors);
 			}
+			rtl.debugWriter.flush();
+			rtl.debugWriter.close();
 			rtl.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

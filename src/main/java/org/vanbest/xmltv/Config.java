@@ -38,6 +38,7 @@ import org.apache.commons.io.FileUtils;
 public class Config {
 	//constants
 	public static final int LOG_INFO = 0x0001;
+	public static final int LOG_DEBUG = 0x0005;
 	public static final int LOG_JSON = 0x0100;
 	private final static int LOG_PROGRAMME_INFO = 0x0200;
 	private final static int CURRENT_FILE_FORMAT=4;
