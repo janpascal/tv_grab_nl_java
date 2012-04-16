@@ -55,8 +55,7 @@ public abstract class AbstractEPGSource implements EPGSource {
 		Thread.sleep(config.niceMilliseconds);
 		StringBuffer buf = new StringBuffer();
 		boolean done = false;
-		IOException finalException = null;
-		for(int count = 0; count<MAX_FETCH_TRIES && !done; count++) {
+		for(int count = 0; !done; count++) {
 			try {
 				BufferedReader reader = new BufferedReader( new InputStreamReader( url.openStream()));
 				String s;
@@ -66,12 +65,12 @@ public abstract class AbstractEPGSource implements EPGSource {
 				if (!config.quiet) {
 					System.out.println("Error fetching from url " + url + ", count="+count);
 				}
-				finalException = e;
+				if (count>=MAX_FETCH_TRIES) { 
+					stats.fetchErrors++;
+					if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+					throw new Exception("Error getting program data from url " + url, e);
+				}
 			}
-		}
-		if (!done) {
-			stats.fetchErrors++;
-			throw new Exception("Error getting program data from url " + url, finalException);
 		}
 		return buf.toString();  
 	}

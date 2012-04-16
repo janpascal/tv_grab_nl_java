@@ -346,4 +346,17 @@ public class Programme implements Serializable {
 		writer.writeEndElement();
 		writer.writeCharacters(System.getProperty("line.separator"));
 	}
+	
+	public String getFirstTitle() {
+		if (titles==null || titles.isEmpty()) return null;
+		return titles.get(0).title;
+	}
+	
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		s.append("[Programme ").append(getFirstTitle());
+		s.append("@ ").append(startTime.toString());
+		s.append("(").append(channel).append(")]");
+		return s.toString();
+	}
 }

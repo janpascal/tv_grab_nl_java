@@ -389,6 +389,7 @@ public class Main {
 		}
 		if (line.hasOption("log-level")) {
 			config.logLevel = Integer.parseInt(line.getOptionValue("log-level"));
+			if (config.quiet) config.logLevel = 0;
 		}
 		if (line.hasOption("cache")) {
 			config.setCacheFile(line.getOptionValue("cache"));

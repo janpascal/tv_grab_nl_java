@@ -311,7 +311,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				String programme_id = p.getString(2);
 				String genre_id = p.getString(3); // 1 = amusement, etc
 				String quark2 = p.getString(4); // 0 of 1, movie flag?
-				debugWriter.print("\""+id+"\",\""+starttime+"\",\""+title+"\",\""+genre_id+"\",\""+quark2+"\",");
+				if(debug) debugWriter.print("\""+id+"\",\""+starttime+"\",\""+title+"\",\""+genre_id+"\",\""+quark2+"\",");
 				Programme prog = cache.get(getId(), programme_id);
 				if (prog == null) {
 					stats.cacheMisses++;
@@ -367,6 +367,25 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 * @throws FileNotFoundException 
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
+		Calendar result = Calendar.getInstance();
+		Calendar d = Calendar.getInstance();
+		try {
+			d.setTime(new SimpleDateFormat("yyyy-MM-dd").parse("2012-04-16"));
+		} catch (ParseException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
+		SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+		try {
+			result.setTime(df.parse("04:50"));
+			result.set(d.get(Calendar.YEAR), d.get(Calendar.MONTH), d.get(Calendar.DAY_OF_MONTH));
+			System.out.println(result.getTime());
+			System.exit(1);
+		} catch (ParseException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		debug = true;
 		Config config = Config.getDefaultConfig();
 		config.niceMilliseconds = 50;
@@ -408,8 +427,10 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				System.out.println("Number of programmes fetched: " + stats.cacheMisses);
 				System.out.println("Number of fetch errors: " + stats.fetchErrors);
 			}
-			rtl.debugWriter.flush();
-			rtl.debugWriter.close();
+			if (debug) {
+				rtl.debugWriter.flush();
+				rtl.debugWriter.close();
+			}
 			rtl.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

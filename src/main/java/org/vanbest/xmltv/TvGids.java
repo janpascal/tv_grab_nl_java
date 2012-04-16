@@ -281,15 +281,23 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	}
 
 	private void fillDetails(String id, Programme result) throws Exception {
-		fillJSONDetails(id, result);
-		fillScraperDetails(id, result);
+		try {
+			fillJSONDetails(id, result);
+		} catch (Exception e) {
+			if (!config.quiet) System.out.println("Error fetching details for programme " + result.toString() );
+		}
+		try {
+			fillScraperDetails(id, result);
+		} catch (Exception e) {
+			if (!config.quiet) System.out.println("Error fetching details for programme " + result.toString() );
+		}
 		
 		if ((result.secondaryTitles==null || result.secondaryTitles.isEmpty()) && 
 				  (!result.hasCategory("movies") && !result.hasCategory("film"))) {
 			for(Programme.Title t: result.titles) {
 				String[] parts = t.title.split("\\s*:\\s*", 2);
-				if (parts.length >= 2 ) {
-					if (!config.quiet) {
+				if (parts.length >= 2 && parts[0].length()>=5) {
+					if (config.logLevel >= Config.LOG_DEBUG) {
 						System.out.println("Splitting title from \"" + t.title + "\" to: \"" + parts[0].trim() + "\"; sub-title: \"" + parts[1].trim() + "\"");
 					}
 					t.title = parts[0].trim();
@@ -323,7 +331,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			if(key.equals("synop")) {
 				value = value.replaceAll("<br>", " ").
 						replaceAll("<br />", " ").
-						replaceAll("<p>", " ").
+						replaceAll("<p[^>]*>", " ").
 						replaceAll("</p>", " ").
 						replaceAll("<strong>", " ").
 						replaceAll("</strong>", " ").
