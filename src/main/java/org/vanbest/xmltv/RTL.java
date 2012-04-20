@@ -78,6 +78,20 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		}
 	}
 	
+	class DateStatus {
+		Date programDate;
+		Calendar prevStartTime = null;
+		final static int START_TIME=1;
+		final static int END_TIME=2;
+		public DateStatus(Date date) {
+			reset(date);
+		}
+		public void reset(Date date) {
+			this.programDate = date;
+			this.prevStartTime = null;
+		}
+	}
+    
 	public RTL(int sourceId, Config config) {
 		super(sourceId, config);
 		if(debug) {
@@ -164,7 +178,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 * </uitzending_data>
 
 	 */
-	private void fetchDetail(Programme prog, Date date, String id) throws Exception {
+	private void fetchDetail(Programme prog, DateStatus dateStatus, String id) throws Exception {
 		URL url = detailUrl(id);
 		Thread.sleep(config.niceMilliseconds);
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
@@ -194,7 +208,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 						String value = "\"" + sub.getTextContent().replaceAll("\\s", " ") + "\"";
 						result[index] = value;
 					}
-					handleNode(prog, date, subnodes.item(j));
+					handleNode(prog, dateStatus, subnodes.item(j));
 				} catch (RTLException e) {
 					System.out.println(e.getMessage());
 					Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -214,7 +228,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	}
 
 	
-	private void handleNode(Programme prog, Date date, Node n) throws RTLException, DOMException, SQLException {
+	private void handleNode(Programme prog, DateStatus dateStatus, Node n) throws RTLException, DOMException, SQLException {
 		if (n.getNodeType() != Node.ELEMENT_NODE) {
 			throw new RTLException("Ignoring non-element node " + n.getNodeName());
 		}
@@ -238,7 +252,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		if (tag.equals("genre")) {
 			prog.addCategory(config.translateCategory(e.getTextContent()));
 		} else if (tag.equals("eindtijd")) {
-			prog.endTime = parseTime(date, e.getTextContent());
+			prog.endTime = parseTime(e.getTextContent(), dateStatus, DateStatus.END_TIME);
 		} else if (tag.equals("omroep")) {
 		} else if (tag.equals("kijkwijzer")) {
 			//System.out.println("Kijkwijzer: \"" + e.getTextContent() + "\"");
@@ -291,15 +305,21 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
 		Element root = xml.getDocumentElement();
 		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(root.getAttribute("date"));
+		DateStatus dateStatus = new DateStatus(date);
 		//System.out.println("date: " + date);
 		String json = root.getTextContent();
 		//System.out.println("json: " + json);
 		JSONObject o = JSONObject.fromObject( json );
+		String prevChannel = null;
 		for( Object k: o.keySet()) {
 			String id = genericChannelId(k.toString());
 			if(!channelMap.containsKey(id)) {
 				//if (!config.quiet) System.out.println("Skipping programmes for channel " + id);
 				continue;
+			}
+			if (!id.equals(prevChannel)) {
+				dateStatus.reset(date);
+				prevChannel = id;
 			}
 			JSONArray j = (JSONArray) o.get(k);
 			//System.out.println(k.toString()+": "+j.toString());
@@ -317,10 +337,10 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 					stats.cacheMisses++;
 					prog = new Programme();
 					prog.addTitle(title);
-					prog.startTime = parseTime(date, starttime);
+					prog.startTime = parseTime(starttime, dateStatus, DateStatus.START_TIME);
 					prog.channel = channelMap.get(id).getXmltvChannelId();
 					if (config.fetchDetails) {
-						fetchDetail(prog, date, programme_id);
+						fetchDetail(prog, dateStatus, programme_id);
 					}
 					cache.put(getId(), programme_id, prog);
 				} else {
@@ -336,21 +356,32 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		super.close();
 	}
 
-	// FIXME probably not correct in all cases, maybe make use 
-	// of the order of the programmes?
-	private Date parseTime(Date date, String time) {
+	// Assumption: programmes are more-or-less in ascending order by start time
+	private Date parseTime(String time, DateStatus status, int mode) {
 		Calendar result = Calendar.getInstance();
-		result.setTime(date);
+		result.setTime(status.programDate);
 		String[] parts = time.split(":");
 		if(parts.length != 2) {
-			
+			if (!config.quiet)System.out.println("Wrong time format " + time); 
+			// ignore
 		}
-		int hour = Integer.parseInt(parts[0]);
-		if (hour<5) {
-			result.add(Calendar.DAY_OF_MONTH, 1); // early tomorrow morning
-		}
-		result.set(Calendar.HOUR_OF_DAY, hour);
+		result.set(Calendar.HOUR_OF_DAY, Integer.parseInt(parts[0]));
 		result.set(Calendar.MINUTE, Integer.parseInt(parts[1]));
+		Calendar prev = status.prevStartTime;
+		// Check if the start time of a new program is at most one hour before the start time of 
+		// the previous one. End time of a program should be at or after the start time of the 
+		// program. Else, assume it's on the next day.
+		if (prev != null) {
+			if (mode == DateStatus.START_TIME){ 
+				prev.add(Calendar.HOUR_OF_DAY, -1);
+			}
+			if (result.before(prev)) {
+				result.add(Calendar.DAY_OF_MONTH, 1); 
+			}
+		}
+		if (mode==DateStatus.START_TIME) {
+			status.prevStartTime = result;
+		}
 		return result.getTime();
 	}
 
@@ -367,6 +398,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 * @throws FileNotFoundException 
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
+		/*
 		Calendar result = Calendar.getInstance();
 		Calendar d = Calendar.getInstance();
 		try {
@@ -386,6 +418,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		*/
 		debug = true;
 		Config config = Config.getDefaultConfig();
 		config.niceMilliseconds = 50;
