@@ -1,6 +1,13 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-0.9.1 (2012-04-20)
+- rtl.nl support. Nog niet volledig getest en nog geen 
+  kijkwijzer support
+- keuze bij --configure welke kanalen van welke bron te gebruiken.
+- bij update met een gewijzigd cache-systeem wordt de cache
+  automatisch geconverteerd en geleegd
+
 tv_grab_nl_java-0.9.0 (2012-04-02)
 - ondersteunt nu ook Java6
 - aantal bugfixes, met dank aan Rick Mud
