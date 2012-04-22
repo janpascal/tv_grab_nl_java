@@ -25,4 +25,6 @@ pushd "$tmpdir"
 zip -r "$ZIPFILE" *
 popd
 
+makensis -DVERSION=$VERSION tv_grab_nl_java.nsi
+
 rm -rf $tmpdir
