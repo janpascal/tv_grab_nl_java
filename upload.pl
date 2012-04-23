@@ -6,11 +6,8 @@ use Pithub::Repos::Downloads;
 my $version = shift();
 
 open(TOKENFILE,'github-token');
-my $token;
-while(<TOKENFILE>){
-  chomp;
-  $token=$_;
-}
+my $token=<TOKENFILE>;
+chomp($token);
 
 my $download = Pithub::Repos::Downloads->new(
     user  => 'janpascal',
