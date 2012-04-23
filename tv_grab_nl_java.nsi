@@ -75,6 +75,7 @@ Delete $INSTDIR\changelog.txt
 RMDir $INSTDIR
 
 ; now remove all the startmenu links
+Delete "$SMPROGRAMS\tv_grab_nl_java\Configure tv_grab_nl_java.lnk"
 Delete "$SMPROGRAMS\tv_grab_nl_java\Run tv_grab_nl_java.lnk"
 Delete "$SMPROGRAMS\tv_grab_nl_java\Uninstall tv_grab_nl_java.lnk"
 RMDIR "$SMPROGRAMS\tv_grab_nl_java"
