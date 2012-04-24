@@ -8,15 +8,16 @@ TVGids.nl and rtl.nl as sources.
 
 Algemeen
 --------
-tv_grab_nl_java is een XMLTV-compatibele grabber voor Nederlandse televisie die TVGids.nl 
-en rtl.nl als bron kan gebruiken. tv_grab_nl_java is geschreven in Java en
-gebruikt o.a. de JSON-interface van TVGids.nl.
+tv_grab_nl_java is een XMLTV-compatibele grabber voor Nederlandse televisie 
+die TVGids.nl en rtl.nl als bron kan gebruiken. tv_grab_nl_java is geschreven 
+in Java en gebruikt o.a. de JSON-interface van TVGids.nl.
 
 Kenmerken van tv_grab_nl_java:
 - detailinformatie wordt gecached
 - links naar zenderlogo's worden automatisch toegevoegd 
 - kijkwijzeraanbevelingen worden toegevoegd (alleen tvgids)
-- --configure behoudt de zenderinstellingen van het oude configuratiebestand als default
+- --configure behoudt de zenderinstellingen van het oude configuratiebestand 
+  als default
 - geeft informatie over acteurs, presentatie, regisseur weer in xmltv
 - geschikt voor mythtv
 - rtl.nl als bron is nog vrij nieuw en kan nog onverwachte resultaten opleveren
@@ -28,7 +29,8 @@ Zie het bestand 'Changelog' voor de geschiedenis van deze grabber
 Installatie (Linux)
 -------------------
 
-1. Het programma vereist een Java runtime, versie 6 of hoger. Onder Debian te installeren met 
+1. Het programma vereist een Java runtime, versie 6 of hoger. Onder Debian te 
+   installeren met 
    $ apt-get install openjdk-6-jre
 
 2. Download de laatste .zip file van https://github.com/janpascal/tv_grab_nl_java/downloads
@@ -36,9 +38,9 @@ Installatie (Linux)
    $ unzip tv_grab_nl_java-<VERSIE>.zip
    $ cd tv_grab_nl_java-<VERSIE> 
 
-3. Voor Linux-gebruikers: plaats de tv_grab_nl_java.jar file uit de zipfile 
-   in /usr/local/share/java/ en plaats tv_grab_nl_java in /usr/local/bin.
-   Gebruik hiervoor het meegeleverde script install.sh, of:
+3. Plaats de tv_grab_nl_java.jar file uit de zipfile in /usr/local/share/java/
+   en plaats tv_grab_nl_java in /usr/local/bin. Gebruik hiervoor het 
+   meegeleverde script install.sh, of:
    $ sudo mkdir /usr/local/share/java
    $ sudo cp tv_grab_nl_java.jar /usr/local/share/java/
    $ sudo cp tv_grab_nl_java /usr/local/bin
@@ -63,15 +65,16 @@ Installatie (Windows)
    zien hoe de tool moet worden aangeroepen. Bij een standaardinstallatie is
    dit:
 
-   C:\windows\system32\java.exe -classpath "c:\Program Files\tv_grab_nl_java\tv_grab_nl_java.jar" org.vanbest.xmltv.Main
+   C:\windows\system32\java.exe -jar "c:\Program Files\tv_grab_nl_java\tv_grab_nl_java.jar" --output tv.xml
 
    Voeg je eigen opties aan deze command line toe. Zie verder onder 'Gebruik'.
 
 Configuratie
 ------------
 
-Je kunt tv_grab_nl_java configureren met de --configure optie. De tool haalt dan de beschikbare kanalen
-op van tvgids.nl en rtl.nl en vraagt je van welke kanalen je de programmagegevens op wilt halen. 
+Je kunt tv_grab_nl_java configureren met de --configure optie. De tool haalt 
+dan de beschikbare kanalen op van tvgids.nl en rtl.nl en vraagt je van welke 
+kanalen je de programmagegevens op wilt halen. 
 
 $ tv_grab_nl_java --configure
 
@@ -88,9 +91,9 @@ Je hebt telkens de keus uit:
 - none: gebruik kanaal en alle volgende kanalen niet
 - k (keep): gebruik voor dit en de volgende kanalen de keuzes van de vorige keer
 
-De configuratie wordt opgeslagen in het bestand $HOME/.xmltv/tv_grab_nl_java.conf. Je kunt dit bestand
-eventueel handmatig bewerken. Als je tv_grab_nl_java nogmaals aanroept met de --configure optie, dan
-worden je eerdere keuzes als default gebruikt. 
+De configuratie wordt opgeslagen in het bestand $HOME/.xmltv/tv_grab_nl_java.conf. 
+Je kunt dit bestand eventueel handmatig bewerken. Als je tv_grab_nl_java nogmaals 
+aanroept met de --configure optie, dan worden je eerdere keuzes als default gebruikt. 
 
 Gebruik
 -------
@@ -115,8 +118,8 @@ Beschikbare opties:
 
 Voorbeeld:
 $ tv_grab_nl_java --offset 1 --days 2 --output uitvoer.xml
-Dit commando haalt de programma-informatie van de geselecteerde kanalen op voor morgen en overmorgen 
-en schrijft de resultaten weg in het bestand 'uitvoer.xml'.
+Dit commando haalt de programma-informatie van de geselecteerde kanalen op voor 
+morgen en overmorgen en schrijft de resultaten weg in het bestand 'uitvoer.xml'.
 
 Compileren
 ----------
