@@ -3,47 +3,83 @@ README for tv_grab_nl_java
 
 English Summary
 ---------------
-tv_grab_nl_java is an XMLTV-compatible grabber for Dutch television that uses TVGids.nl as a source.
+tv_grab_nl_java is an XMLTV-compatible grabber for Dutch television that uses
+TVGids.nl and rtl.nl as sources.
 
 Algemeen
 --------
 tv_grab_nl_java is een XMLTV-compatibele grabber voor Nederlandse televisie die TVGids.nl 
-als bron gebruikt. tv_grab_nl_java is geschreven in Java en gebruikt de JSON-interface van 
-TVGids.nl.
+en rtl.nl als bron kan gebruiken. tv_grab_nl_java is geschreven in Java en
+gebruikt o.a. de JSON-interface van TVGids.nl.
 
 Kenmerken van tv_grab_nl_java:
 - detailinformatie wordt gecached
 - links naar zenderlogo's worden automatisch toegevoegd 
-- kijkwijzeraanbevelingen worden toegevoegd
+- kijkwijzeraanbevelingen worden toegevoegd (alleen tvgids)
 - --configure behoudt de zenderinstellingen van het oude configuratiebestand als default
 - geeft informatie over acteurs, presentatie, regisseur weer in xmltv
 - geschikt voor mythtv
+- rtl.nl als bron is nog vrij nieuw en kan nog onverwachte resultaten opleveren
 
-Installatie 
------------
+Geschiedenis
+------------
+Zie het bestand 'Changelog' voor de geschiedenis van deze grabber
 
-0. Het programma vereist een Java runtime, versie 6 of hoger. Onder Debian te installeren met 
+Installatie (Linux)
+-------------------
+
+1. Het programma vereist een Java runtime, versie 6 of hoger. Onder Debian te installeren met 
    $ apt-get install openjdk-6-jre
 
-1. Download de .zip file (tv_grab_nl_java-VERSIE.zip) en pak 'm uit. Op Github te vinden via de URL
-   https://github.com/janpascal/tv_grab_nl_java/downloads
+2. Download de laatste .zip file van https://github.com/janpascal/tv_grab_nl_java/downloads
+   en pak 'm uit.
+   $ unzip tv_grab_nl_java-<VERSIE>.zip
+   $ cd tv_grab_nl_java-<VERSIE> 
 
-2. Voor Linux-gebruikers: plaats de tv_grab_nl_java.jar file uit de zipfile 
+3. Voor Linux-gebruikers: plaats de tv_grab_nl_java.jar file uit de zipfile 
    in /usr/local/share/java/ en plaats tv_grab_nl_java in /usr/local/bin.
-   Gebruik hiervoor het meegeleverde script install.sh, of doe:
-   $ mv tv_grab_nl_java.jar /usr/local/share/java/
-   $ mv tv_grab_nl_java /usr/local/bin
+   Gebruik hiervoor het meegeleverde script install.sh, of:
+   $ sudo mkdir /usr/local/share/java
+   $ sudo cp tv_grab_nl_java.jar /usr/local/share/java/
+   $ sudo cp tv_grab_nl_java /usr/local/bin
    $ chmod a+x /usr/local/bin/tv_grab_nl_java
 
-3. Voor Windows-gebruikers: heb ik geen verstand van
+Installatie (Windows)
+-------------------
+
+1. Het programma vereist een Java runtime, versie 6 of hoger. Te downloaden van
+   de URL http://www.oracle.com/technetwork/java/javase/downloads/index.html
+   Kies de laatste versie van de Java JRE.
+
+2. Download het Windows installatiebestand (Setup-tv_grab_nl_java-<VERSIE>.exe)
+   van https://github.com/janpascal/tv_grab_nl_java/downloads
+   en draai de installer. 
+
+3. Na de installatie is er in een startmenu een link naar tv_grab_nl_java
+   gemaakt. Selecteer de 'Configure' optie in het startmenu om tv_grab_nl_java
+   te configureren. Zie verder onder 'Configuratie'.
+
+4. Start de tool vanuit je eigen script. Gebruik de link uit het startmenu om te
+   zien hoe de tool moet worden aangeroepen. Bij een standaardinstallatie is
+   dit:
+
+   C:\windows\system32\java.exe -classpath "c:\Program Files\tv_grab_nl_java\tv_grab_nl_java.jar" org.vanbest.xmltv.Main
+
+   Voeg je eigen opties aan deze command line toe. Zie verder onder 'Gebruik'.
 
 Configuratie
 ------------
 
 Je kunt tv_grab_nl_java configureren met de --configure optie. De tool haalt dan de beschikbare kanalen
-op van tvgid.nl en vraagt je van welke kanalen je de programmagegevens op wilt halen. 
+op van tvgids.nl en rtl.nl en vraagt je van welke kanalen je de programmagegevens op wilt halen. 
 
 $ tv_grab_nl_java --configure
+
+Er wordt eerst een aantal algemene vragen gesteld. Hiervoor is de defaultwaarde
+meestal prima. Vervolgens zoekt het programma uit voor welke kanalen er
+programma-informatie beschikbaar is uit de bronnen tvgids.nl en rtl.nl. Je wordt
+eerst gevraagd welke van deze bronnen je wilt gebruiken. Daarna volgt een lange
+reeks vragen over de kanalen van de bronnen die je hebt geselecteerd.
 
 Je hebt telkens de keus uit:
 - Y (yes): gebruik kanaal
@@ -64,12 +100,16 @@ Beschikbare opties:
 --capabilities        Show grabber capabilities
 --description         Display a description to identify this grabber
 --help                Show this help
+--license             Show software license information
 --config-file <arg>   Configuration file location
 --cache <arg>         Cache file location
---log-level <arg>     Set log level (0x0100=JSON, 0x0200=program info)
+--clear-cache         Verwijder gecachede programmagegevens
+--log-level <arg>     Set log level (0x0100=JSON)
 --configure           Interactive configuration
 --output <arg>        Set xlmtv output filename
 --quiet               Be quiet
+--log-level           Zet het logging-level. Defaultwaarde is 1; hogere waarde
+                      kan (veel) meer logging opleveren
 --offset <arg>        Start day for grabbing (0=today)
 --days <arg>          Number of days to grab
 
@@ -80,7 +120,7 @@ en schrijft de resultaten weg in het bestand 'uitvoer.xml'.
 
 Compileren
 ----------
-Als je de tool vanaf de source code wilt compileren, dan heb je een Java7 SDK
+Als je de tool vanaf de source code wilt compileren, dan heb je een Java6 SDK
 nodig en maven2. De source code staat in git.
 1. Code downloaden:
    $ git clone git://github.com/janpascal/tv_grab_nl_java.git
@@ -91,7 +131,7 @@ nodig en maven2. De source code staat in git.
    $ mvn assembly:single
    Deze stap levert de jar file in target/tv_grab_nl_java-<VERSION>-dep.jar
 4. Het release.sh script maakt een release zipfile, inclusief deze README en het
-   tv_grab_nl_java script.
+   tv_grab_nl_java script, en een Windows installerbestand.
 
 De git repository is ook meteen een Eclipse project. Hiervoor heb je Eclipse
 Indigo nodig, inclusief de git (www.eclipse.org/egit/) en maven
@@ -114,3 +154,8 @@ Copyright (c) 2012 Jan-Pascal van Best <janpascal@vanbest.org>
   GNU General Public License for more details.
 
 The full license text can be found in the LICENSE file.
+
+Laatste aanpassing
+------------------
+24/4/2012 (versie 0.9.2)
+

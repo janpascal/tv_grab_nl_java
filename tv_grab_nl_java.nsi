@@ -24,7 +24,6 @@ File /oname=tv_grab_nl_java.jar target/tv_grab_nl_java-${VERSION}-dep.jar
 File /oname=readme.txt README
 File /oname=changelog.txt Changelog
 File /oname=license.txt LICENSE
-; File createInstaller1.nsi
 
 WriteUninstaller $INSTDIR\Uninstall.exe
 
@@ -35,10 +34,13 @@ CreateDirectory "$SMPROGRAMS\tv_grab_nl_java"
 
 CreateShortCut "$SMPROGRAMS\tv_grab_nl_java\Configure tv_grab_nl_java.lnk" \
   "$SYSDIR\java.exe" \
-  '-classpath "$INSTDIR\tv_grab_nl_java.jar" org.vanbest.xmltv.Main --configure'
+  '-jar "$INSTDIR\tv_grab_nl_java.jar" --configure'
 CreateShortCut "$SMPROGRAMS\tv_grab_nl_java\Run tv_grab_nl_java.lnk" \
   "$SYSDIR\java.exe" \
-  '-classpath "$INSTDIR\tv_grab_nl_java.jar" org.vanbest.xmltv.Main'
+  '-jar "$INSTDIR\tv_grab_nl_java.jar" --output tv.xml'
+CreateShortCut "$SMPROGRAMS\tv_grab_nl_java\README.lnk" "$INSTDIR\readme.txt"
+CreateShortCut "$SMPROGRAMS\tv_grab_nl_java\Changelog.lnk" "$INSTDIR\changelog.txt"
+CreateShortCut "$SMPROGRAMS\tv_grab_nl_java\LICENSE.lnk" "$INSTDIR\license.txt"
 
 
 CreateShortCut "$SMPROGRAMS\tv_grab_nl_java\Uninstall tv_grab_nl_java.lnk" "$INSTDIR\Uninstall.exe"
@@ -78,6 +80,9 @@ RMDir $INSTDIR
 Delete "$SMPROGRAMS\tv_grab_nl_java\Configure tv_grab_nl_java.lnk"
 Delete "$SMPROGRAMS\tv_grab_nl_java\Run tv_grab_nl_java.lnk"
 Delete "$SMPROGRAMS\tv_grab_nl_java\Uninstall tv_grab_nl_java.lnk"
+Delete "$SMPROGRAMS\tv_grab_nl_java\README.lnk"
+Delete "$SMPROGRAMS\tv_grab_nl_java\Changelog.lnk"
+Delete "$SMPROGRAMS\tv_grab_nl_java\LICENSE.lnk"
 RMDIR "$SMPROGRAMS\tv_grab_nl_java"
 
 ; Now delete registry keys
