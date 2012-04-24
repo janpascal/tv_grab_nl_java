@@ -1,6 +1,10 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-0.9.2 (2012-04-24)
+- Windows installer beschikbaar gesteld
+- rtl.nl support in de README toegelicht
+
 tv_grab_nl_java-0.9.1 (2012-04-20)
 - rtl.nl support. Nog niet volledig getest en nog geen 
   kijkwijzer support
