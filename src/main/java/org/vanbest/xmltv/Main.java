@@ -79,7 +79,11 @@ public class Main {
 			System.out.println("... from " + enabledCount + " channels");
 			System.out.println("... using cache at " + config.cacheDbHandle);
 		}
-		
+		if (clearCache) {
+			ProgrammeCache cache = new ProgrammeCache(config);
+			cache.clear();
+			cache.close();
+		}
 		Map<Integer,EPGSource> guides = new HashMap<Integer,EPGSource>();
 		EPGSourceFactory factory = EPGSourceFactory.newInstance();
 		//EPGSource gids = new TvGids(config);
@@ -106,7 +110,6 @@ public class Main {
 				if (!config.quiet) System.out.print(".");
 				if(!guides.containsKey(c.source)) {
 					guides.put(c.source, factory.createEPGSource(c.source, config));
-					if (clearCache) guides.get(c.source).clearCache();
 				}
 				List<Programme> programmes = guides.get(c.source).getProgrammes(c, day);
 				for (Programme p: programmes) p.serialize(writer);

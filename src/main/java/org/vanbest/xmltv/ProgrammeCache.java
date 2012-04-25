@@ -45,6 +45,7 @@ public class ProgrammeCache {
 	private PreparedStatement putStatement;
 	private PreparedStatement removeStatement;
 	private PreparedStatement clearStatement;
+	private PreparedStatement clearSourceStatement;
 	
 	private final static Integer SCHEMA_VERSION=1;
 	private final static String SCHEMA_KEY="TV_GRAB_NL_JAVA_SCHEMA_VERSION";
@@ -133,6 +134,7 @@ public class ProgrammeCache {
 				putStatement = db.prepareStatement("INSERT INTO cache VALUES (?,?,?,?)");
 				removeStatement = db.prepareStatement("DELETE FROM cache WHERE source=? AND id=?");
 				clearStatement = db.prepareStatement("DELETE FROM cache");
+				clearSourceStatement = db.prepareStatement("DELETE FROM cache WHERE source=?");
 			} catch (SQLException e) {
 				if (!config.quiet) {
 					System.out.println("Unable to prepare statements, proceeding without cache");
@@ -226,6 +228,19 @@ public class ProgrammeCache {
 		}
 	}
 
+	public void clear(int source) {
+		if (db==null) return;
+		try {
+			clearSourceStatement.setInt(1, source);
+			int count = clearSourceStatement.executeUpdate();
+			if (!config.quiet && count>0) {
+				System.out.println("Cleared " + count + " entries from cache for source " + source);
+			}
+		} catch (SQLException e) {
+			if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+		}
+	}
+
 	public void close() {
 		cleanup();
 		if (db != null) {
@@ -234,6 +249,7 @@ public class ProgrammeCache {
 				putStatement.close();
 				removeStatement.close();
 				clearStatement.close();
+				clearSourceStatement.close();
 				db.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -241,4 +257,5 @@ public class ProgrammeCache {
 			}
 		}
 	}
+
 }

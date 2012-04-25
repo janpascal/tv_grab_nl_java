@@ -76,8 +76,6 @@ public abstract class AbstractEPGSource implements EPGSource {
 	}
 	
 	public void clearCache() {
-		ProgrammeCache cache = new ProgrammeCache(config);
-		cache.clear();
-		cache.close();
+		cache.clear(sourceId);
 	}
 }
