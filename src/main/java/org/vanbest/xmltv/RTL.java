@@ -91,6 +91,12 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			this.prevStartTime = null;
 		}
 	}
+	
+	class DescStatus {
+		String inhoud;
+		String alginhoud;
+		String tt_inhoud;
+	}
     
 	public RTL(int sourceId, Config config) {
 		super(sourceId, config);
@@ -187,7 +193,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			System.out.println("Unknown attributes for RTL detail root node");
 		}
 		NodeList nodes = root.getChildNodes();
-		for( int i=0; i<nodes.getLength(); i++) {
+		DescStatus descStatus = new DescStatus();
+		for(int i=0; i<nodes.getLength(); i++) {
 			Node n = nodes.item(i);
 			if (!n.getNodeName().equals("uitzending_data_item")) {
 				System.out.println("Ignoring RTL detail, tag " + n.getNodeName() +", full xml:");
@@ -208,7 +215,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 						String value = "\"" + sub.getTextContent().replaceAll("\\s", " ") + "\"";
 						result[index] = value;
 					}
-					handleNode(prog, dateStatus, subnodes.item(j));
+					handleNode(prog, dateStatus, descStatus, subnodes.item(j));
 				} catch (RTLException e) {
 					System.out.println(e.getMessage());
 					Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -225,10 +232,31 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 				debugWriter.println();
 			}
 		}
+		StringBuilder description = new StringBuilder();
+		if (descStatus.alginhoud!=null) {
+			description.append(descStatus.alginhoud);
+			//System.out.print("A");
+		}
+		if (descStatus.inhoud!=null) {
+			if (description.length()!=0) {
+				description.append("<p>");
+				//System.out.print("n");
+				//System.out.println("Date: "+prog.startTime + "; title: "+ prog.getFirstTitle());
+			}
+			description.append(descStatus.inhoud);
+			//System.out.print("B");
+		}
+		if (description.length()==0 && descStatus.tt_inhoud!=null) {
+			description.append(descStatus.tt_inhoud);
+			//System.out.print("C");
+			//System.out.println("Date: "+prog.startTime + "; title: "+ prog.getFirstTitle());
+		}
+		// ignore tt_inhoud since it is almost always a summary of the above and other fields
+		prog.addDescription(description.toString());
 	}
 
 	
-	private void handleNode(Programme prog, DateStatus dateStatus, Node n) throws RTLException, DOMException, SQLException {
+	private void handleNode(Programme prog, DateStatus dateStatus, DescStatus descStatus, Node n) throws RTLException, DOMException, SQLException {
 		if (n.getNodeType() != Node.ELEMENT_NODE) {
 			throw new RTLException("Ignoring non-element node " + n.getNodeName());
 		}
@@ -265,11 +293,11 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		} else if (tag.equals("wwwadres")) {
 			prog.addUrl(e.getTextContent());
 		} else if (tag.equals("alginhoud")) {
-			prog.addDescription(e.getTextContent());
+			descStatus.alginhoud = e.getTextContent();
 		} else if (tag.equals("inhoud")) {
-			prog.addDescription(e.getTextContent());
+			descStatus.inhoud = e.getTextContent();
 		} else if (tag.equals("tt_inhoud")) {
-			prog.addDescription(e.getTextContent());
+			descStatus.tt_inhoud = e.getTextContent();
 			// ignore, is summary of other fields
 		} else if (tag.equals("zendernr")) {
 		} else if (tag.equals("titel")) {
