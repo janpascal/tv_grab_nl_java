@@ -233,25 +233,18 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			}
 		}
 		StringBuilder description = new StringBuilder();
-		if (descStatus.alginhoud!=null) {
-			description.append(descStatus.alginhoud);
-			//System.out.print("A");
-		}
+		if (descStatus.alginhoud!=null)	description.append(descStatus.alginhoud);
 		if (descStatus.inhoud!=null) {
 			if (description.length()!=0) {
 				description.append("<p>");
-				//System.out.print("n");
-				//System.out.println("Date: "+prog.startTime + "; title: "+ prog.getFirstTitle());
 			}
 			description.append(descStatus.inhoud);
-			//System.out.print("B");
 		}
 		if (description.length()==0 && descStatus.tt_inhoud!=null) {
+			// only use tt_inhoud if the other two are both empty, since it is almost
+			// always a summary of those fields and others such as <presenter>
 			description.append(descStatus.tt_inhoud);
-			//System.out.print("C");
-			//System.out.println("Date: "+prog.startTime + "; title: "+ prog.getFirstTitle());
 		}
-		// ignore tt_inhoud since it is almost always a summary of the above and other fields
 		prog.addDescription(description.toString());
 	}
 
