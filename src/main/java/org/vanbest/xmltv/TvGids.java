@@ -40,6 +40,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import net.sf.ezmorph.MorpherRegistry;
 import net.sf.ezmorph.ObjectMorpher;
@@ -60,6 +61,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_TVGIDS = 3;
 	
 	public static String NAME="tvgids.nl";
+	
+	static Logger logger = Logger.getLogger(TvGids.class);
 
 	public TvGids(int sourceId, Config config) {
 		super(sourceId, config);
@@ -121,7 +124,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			case '3':result.add("Afgeraden voor kinderen jonger dan 12 jaar"); break;
 			case '4':result.add("Afgeraden voor kinderen jonger dan 16 jaar"); break;
 			default: if (!config.quiet) {
-				System.out.println("Unknown kijkwijzer character: " + c + " in string " + s);
+				logger.warn("Unknown kijkwijzer character: " + c + " in string " + s);
 				}
 			}
 		}
@@ -154,7 +157,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			e.printStackTrace();
 		}
 
-		if (config.logJSON()) System.out.println(json.toString());
+		logger.debug("tvgids channels json: " + json.toString());
 		JSONArray jsonArray = JSONArray.fromObject( json.toString() );  
 		// System.out.println( jsonArray );  
 		
@@ -174,7 +177,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	
 	private JSONObject fetchJSON(URL url) throws Exception {
 		String json = fetchURL(url);
-		if (config.logJSON()) System.out.println(json);
+		logger.debug(json);
 		return JSONObject.fromObject( json );  
 	}
 	
@@ -262,10 +265,10 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			//System.out.println("From cache: " + programme.getString("titel"));
 			stats.cacheHits++;
 		}
-		//System.out.println("      titel:" + programme.getString("titel"));
-		//System.out.println("datum_start:" + programme.getString("datum_start"));
-		//System.out.println("  datum_end:" + programme.getString("datum_end"));
-		//System.out.println("      genre:" + programme.getString("genre"));
+		logger.trace("      titel:" + programme.getString("titel"));
+		logger.trace("datum_start:" + programme.getString("datum_start"));
+		logger.trace("  datum_end:" + programme.getString("datum_end"));
+		logger.trace("      genre:" + programme.getString("genre"));
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("nl"));
 		result.startTime = df.parse(programme.getString("datum_start"));
 		result.endTime =  df.parse(programme.getString("datum_end"));
@@ -279,9 +282,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			// FIXME where to do this?
 			cache.put(getId(), id, result);
 		}
-		if(config.logProgrammes()) {
-			System.out.println(result.toString());
-		}
+		logger.debug(result);
 		return result;
 	}
 
@@ -289,12 +290,12 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		try {
 			fillJSONDetails(id, result);
 		} catch (Exception e) {
-			if (!config.quiet) System.out.println("Error fetching details for programme " + result.toString() );
+			logger.warn("Error fetching details for programme " + result.toString() );
 		}
 		try {
 			fillScraperDetails(id, result);
 		} catch (Exception e) {
-			if (!config.quiet) System.out.println("Error fetching details for programme " + result.toString() );
+			logger.warn("Error fetching details for programme " + result.toString() );
 		}
 		
 		if ((result.secondaryTitles==null || result.secondaryTitles.isEmpty()) && 
@@ -302,9 +303,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			for(Programme.Title t: result.titles) {
 				String[] parts = t.title.split("\\s*:\\s*", 2);
 				if (parts.length >= 2 && parts[0].length()>=5) {
-					if (config.logLevel >= Config.LOG_DEBUG) {
-						System.out.println("Splitting title from \"" + t.title + "\" to: \"" + parts[0].trim() + "\"; sub-title: \"" + parts[1].trim() + "\"");
-					}
+					logger.debug("Splitting title from \"" + t.title + "\" to: \"" + parts[0].trim() + "\"; sub-title: \"" + parts[1].trim() + "\"");
 					t.title = parts[0].trim();
 					result.addSecondaryTitle(parts[1].trim());
 				}
@@ -378,9 +377,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			} else if (key.equals("zender_id")) {
 				// ignore
 			} else {
-				if (!config.quiet) {
-					System.out.println("Unknown key in tvgids.nl json details: \"" + key + "\"");
-				}
+				logger.warn("Unknown key in tvgids.nl json details: \"" + key + "\"");
 			}
 		}
 	}
@@ -393,18 +390,14 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 
 		URL url = HTMLDetailUrl(id);
 		String clob=fetchURL(url);
-		//System.out.println("clob:");
-		//System.out.println(clob);
 		Matcher m = progInfoPattern.matcher(clob);
 		if (m.find()) {
 			String progInfo = m.group();
-			//System.out.println("progInfo");
-			//System.out.println(progInfo);
 			Matcher m2 = infoLinePattern.matcher(progInfo);
 			while (m2.find()) {
-				//System.out.println("    infoLine: " + m2.group());
-				//System.out.println("         key: " + m2.group(1));
-				//System.out.println("       value: " + m2.group(2));
+				logger.trace("    infoLine: " + m2.group());
+				logger.trace("         key: " + m2.group(1));
+				logger.trace("       value: " + m2.group(2));
 				String key = m2.group(1).toLowerCase();
 				String value = m2.group(2);
 				if (key.equals("bijzonderheden")) {
@@ -425,7 +418,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 							if (m3.find()) {
 								result.setVideoQuality(m3.group());
 							} else {
-								if (!config.quiet) System.out.println("  Unknown value in 'bijzonderheden': " + item);
+								logger.warn("  Unknown value in 'bijzonderheden': " + item);
 							}
 						}
 					}
@@ -438,14 +431,11 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 					kijkwijzer.add(m3.group(1));
 				}
 				if (!kijkwijzer.isEmpty()) {
-					// log.debug()
-					// System.out.println("  (kijkwijzer): " + p.details.kijkwijzer);
-					// System.out.println("    kijkwijzer: " + kijkwijzer);
+					logger.debug("  (kijkwijzer): " + p.details.kijkwijzer);
+					logger.debug("    kijkwijzer: " + kijkwijzer);
 				}
 			}
 		}
-			
-//			result.details.fixup(result, config.quiet);
 	}
 
 	/**

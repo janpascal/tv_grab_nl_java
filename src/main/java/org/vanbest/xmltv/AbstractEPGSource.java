@@ -47,7 +47,7 @@ public abstract class AbstractEPGSource implements EPGSource {
 	}
 
 	@Override
-	public void close() throws FileNotFoundException, IOException {
+	public void close() {
 		cache.close();
 	}
 

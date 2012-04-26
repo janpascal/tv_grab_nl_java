@@ -47,6 +47,10 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.Parser;
 import org.apache.commons.io.FileUtils;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
 public class Main {
 	private File configFile;
 	private Config config;
@@ -54,6 +58,8 @@ public class Main {
 	private int days = 5;
 	private int offset = 0;
 	private boolean clearCache = false;
+	
+	static Logger logger = Logger.getLogger(Main.class);
 	/**
 	 * @param args
 	 */
@@ -61,23 +67,24 @@ public class Main {
 	public Main() {
 		this.configFile = defaultConfigFile();
 		this.outputWriter = System.out;
+		//PropertyConfigurator.configure(args[0]);
 	}
 
 	public void showHeader() {
-		System.out.println("tv_grab_nl_java version "+config.project_version + " (built "+config.build_time+")");
-		System.out.println("Copyright (C) 2012 Jan-Pascal van Best <janpascal@vanbest.org>");
-		System.out.println("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
-		System.out.println("under certain conditions; `tv_grab_nl_java --license' for details.");
+		logger.info("tv_grab_nl_java version "+config.project_version + " (built "+config.build_time+")");
+		logger.info("Copyright (C) 2012 Jan-Pascal van Best <janpascal@vanbest.org>");
+		logger.info("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
+		logger.info("under certain conditions; `tv_grab_nl_java --license' for details.");
 	}
 	
 	public void run() throws FactoryConfigurationError, Exception {
 		if (!config.quiet) {
 			showHeader();
-			System.out.println("Fetching programme data for " + this.days + " days starting from day " + this.offset);
+			logger.info("Fetching programme data for " + this.days + " days starting from day " + this.offset);
 			int enabledCount = 0;
 			for(Channel c: config.channels) { if (c.enabled) enabledCount++; } 
-			System.out.println("... from " + enabledCount + " channels");
-			System.out.println("... using cache at " + config.cacheDbHandle);
+			logger.info("... from " + enabledCount + " channels");
+			logger.info("... using cache at " + config.cacheDbHandle);
 		}
 		if (clearCache) {
 			ProgrammeCache cache = new ProgrammeCache(config);
@@ -123,16 +130,8 @@ public class Main {
 		writer.flush();
 		writer.close();
 		
-		try {
-			for(int source: guides.keySet()) {
-				guides.get(source).close();
-			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		for(int source: guides.keySet()) {
+			guides.get(source).close();
 		}
 
 		if (!config.quiet) {
@@ -143,9 +142,9 @@ public class Main {
 				stats.cacheMisses += part.cacheMisses;
 				stats.fetchErrors += part.fetchErrors;
 			}
-			System.out.println("Number of programmes from cache: " + stats.cacheHits);
-			System.out.println("Number of programmes fetched: " + stats.cacheMisses);
-			System.out.println("Number of fetch errors: " + stats.fetchErrors);
+			logger.info("Number of programmes from cache: " + stats.cacheHits);
+			logger.info("Number of programmes fetched: " + stats.cacheMisses);
+			logger.warn("Number of fetch errors: " + stats.fetchErrors);
 		}
 	}
 	
@@ -263,7 +262,7 @@ public class Main {
 		config.setChannels(channels);
 		try {
 			config.writeConfig(configFile);
-			System.out.println("Configuration file written to " + configFile.getPath());
+			logger.info("Configuration file written to " + configFile.getPath());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -393,6 +392,9 @@ public class Main {
 		if (line.hasOption("log-level")) {
 			config.logLevel = Integer.parseInt(line.getOptionValue("log-level"));
 			if (config.quiet) config.logLevel = 0;
+                        // TODO: make distinction between levels for console and
+                        // file appenders
+                        logger.getRootLogger().setLevel(Level.toLevel(config.logLevel, Level.INFO));
 		}
 		if (line.hasOption("cache")) {
 			config.setCacheFile(line.getOptionValue("cache"));

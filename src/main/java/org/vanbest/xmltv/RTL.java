@@ -373,10 +373,6 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		return result;
 	}
 
-	public void close() throws FileNotFoundException, IOException {
-		super.close();
-	}
-
 	// Assumption: programmes are more-or-less in ascending order by start time
 	private Date parseTime(String time, DateStatus status, int mode) {
 		Calendar result = Calendar.getInstance();
