@@ -57,6 +57,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
 	
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
+	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_TVGIDS = 3;
+	
 	public static String NAME="tvgids.nl";
 
 	public TvGids(int sourceId, Config config) {
@@ -182,10 +184,13 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	@Override
 	public List<Programme> getProgrammes(List<Channel> channels, int day) throws Exception {
 		List<Programme> result = new ArrayList<Programme>();
+		if (day>MAX_DAYS_AHEAD_SUPPORTED_BY_TVGIDS) {
+			return result; // empty list
+		}
+
 		URL url = programmeUrl(channels, day);
 
 		JSONObject jsonObject = fetchJSON(url);  
-		//System.out.println( jsonObject );  
 		
 		for(Channel c: channels) {
 			JSON ps = (JSON) jsonObject.get(c.id);
