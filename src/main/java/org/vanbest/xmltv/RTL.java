@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
@@ -49,6 +50,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.vanbest.xmltv.EPGSource.Stats;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -64,6 +66,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	private static final String icon_url="http://www.rtl.nl/service/gids/components/vaste_componenten/";
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
 	public static final String NAME="rtl.nl";
+	static Logger logger = Logger.getLogger(RTL.class);
+
 	
 	String[] xmlKeys = {"zendernr", "pgmsoort", "genre", "bijvnwlanden", "ondertiteling", "begintijd", "titel", 
 			"site_path", "wwwadres", "presentatie", "omroep", "eindtijd", "inhoud", "tt_inhoud", "alginhoud", "afl_titel", "kijkwijzer" };
@@ -190,17 +194,19 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
 		Element root = xml.getDocumentElement();
 		if (root.hasAttributes()) {
-			System.out.println("Unknown attributes for RTL detail root node");
+			logger.warn("Unknown attributes for RTL detail root node");
 		}
 		NodeList nodes = root.getChildNodes();
 		DescStatus descStatus = new DescStatus();
 		for(int i=0; i<nodes.getLength(); i++) {
 			Node n = nodes.item(i);
 			if (!n.getNodeName().equals("uitzending_data_item")) {
-				System.out.println("Ignoring RTL detail, tag " + n.getNodeName() +", full xml:");
+				logger.warn("Ignoring RTL detail, tag " + n.getNodeName() +", full xml:");
 				Transformer t = TransformerFactory.newInstance().newTransformer();
-				t.transform(new DOMSource(xml),new StreamResult(System.out));
-				System.out.println();
+				StringWriter writer = new StringWriter();
+				StreamResult result = new StreamResult(writer);
+				t.transform(new DOMSource(xml),result);
+				logger.debug(writer.toString());
 				continue;
 			}
 			// we have a uitzending_data_item node
@@ -217,10 +223,11 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 					}
 					handleNode(prog, dateStatus, descStatus, subnodes.item(j));
 				} catch (RTLException e) {
-					System.out.println(e.getMessage());
 					Transformer t = TransformerFactory.newInstance().newTransformer();
-					t.transform(new DOMSource(xml),new StreamResult(System.out));
-					System.out.println();
+					StringWriter writer = new StringWriter();
+					StreamResult result2 = new StreamResult(writer);
+					t.transform(new DOMSource(xml),result2);
+					logger.debug(writer.toString(), e);
 					continue;
 				}
 			}
@@ -379,7 +386,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		result.setTime(status.programDate);
 		String[] parts = time.split(":");
 		if(parts.length != 2) {
-			if (!config.quiet)System.out.println("Wrong time format " + time); 
+			if (!config.quiet) logger.debug("Wrong time format " + time); 
 			// ignore
 		}
 		result.set(Calendar.HOUR_OF_DAY, Integer.parseInt(parts[0]));
@@ -442,7 +449,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		RTL rtl = new RTL(2, config);
 		if (debug) {
 			rtl.cache.clear();
-			System.out.println("Writing CSV to rtl.csv");
+			logger.info("Writing CSV to rtl.csv");
 			rtl.debugWriter = new PrintWriter( new BufferedOutputStream(new FileOutputStream("rtl.csv")));
 			rtl.debugWriter.print("\"zender\",\"starttime\",\"title\",\"quark1\",\"quark2\",");
 			for(int k=0; k<rtl.xmlKeys.length; k++) {
@@ -454,7 +461,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 
 		try {
 			List<Channel> channels = rtl.getChannels();
-			System.out.println("Channels: " + channels);
+			logger.info("Channels: " + channels);
 			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(new FileWriter("rtl.xml"));
 			writer.writeStartDocument();
 			writer.writeCharacters("\n");
@@ -473,9 +480,9 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			writer.flush();
 			if (!config.quiet) {
 				EPGSource.Stats stats = rtl.getStats();
-				System.out.println("Number of programmes from cache: " + stats.cacheHits);
-				System.out.println("Number of programmes fetched: " + stats.cacheMisses);
-				System.out.println("Number of fetch errors: " + stats.fetchErrors);
+				logger.info("Number of programmes from cache: " + stats.cacheHits);
+				logger.info("Number of programmes fetched: " + stats.cacheMisses);
+				logger.info("Number of fetch errors: " + stats.fetchErrors);
 			}
 			if (debug) {
 				rtl.debugWriter.flush();
@@ -484,7 +491,7 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			rtl.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.debug("Exception in RTL.main()", e);
 		}
 	}
 

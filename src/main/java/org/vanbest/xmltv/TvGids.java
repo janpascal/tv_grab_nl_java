@@ -431,8 +431,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 					kijkwijzer.add(m3.group(1));
 				}
 				if (!kijkwijzer.isEmpty()) {
-					logger.debug("  (kijkwijzer): " + p.details.kijkwijzer);
-					logger.debug("    kijkwijzer: " + kijkwijzer);
+					//logger.debug("    kijkwijzer: " + kijkwijzer);
 				}
 			}
 		}
