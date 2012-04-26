@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 
 public class Config {
 	//constants
@@ -62,6 +63,7 @@ public class Config {
 	
 	String project_version;
 	String build_time;
+	static Logger logger = Logger.getLogger(Config.class);
 	
 	private Config() {
 		Properties configProp = new Properties();
@@ -231,7 +233,7 @@ public class Config {
 						} else if (value.equals("disabled")) {
 							c.setEnabled(false); 
 						} else {
-							System.out.println("Error in config file, unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
+							logger.error("Error in config file, unknown channel status \"" + parts.get(2) + "\", should be enabled or disabled");
 						}
 						break;
 					case 2:
@@ -253,7 +255,7 @@ public class Config {
 						} else if (value.equals("disabled")) {
 							c.setEnabled(false); 
 						} else {
-							System.out.println("Error in config file, unknown channel status \"" + parts.get(3) + "\", should be enabled or disabled");
+							logger.error("Error in config file, unknown channel status \"" + parts.get(3) + "\", should be enabled or disabled");
 						}
 					}
 			 		result.channels.add(c);
@@ -263,11 +265,11 @@ public class Config {
 					try {
 						fileformat = Integer.parseInt(parts.get(1));
 					} catch (NumberFormatException e) {
-						System.out.println("Unknown config file format " + parts.get(1));
+						logger.error("Unknown config file format " + parts.get(1));
 						fileformat = CURRENT_FILE_FORMAT; // may crash later
 					}
 					if (fileformat > CURRENT_FILE_FORMAT) {
-						System.out.println("Unknown config file format " + parts.get(1));
+						logger.error("Unknown config file format " + parts.get(1));
 						fileformat = CURRENT_FILE_FORMAT;
 					}
 				} else if (key.equals("cache-file")) {
@@ -277,7 +279,7 @@ public class Config {
 						result.cacheDbUser = "SA";
 						result.cacheDbPassword = "";
 					} else {
-						System.out.println("Illegal key cache-file in config file!");
+						logger.warn("Illegal key cache-file in config file with fileformat "+fileformat+"!");
 					}
 				} else if (key.equals("cache-db-handle")) {
 					result.cacheDbHandle = parts.get(1);
@@ -288,12 +290,12 @@ public class Config {
 				} else if (key.equals("nice-time-milliseconds")) {
 					result.niceMilliseconds = Integer.parseInt(parts.get(1));
 				} else {
-					System.out.println("Unknown key " + key + " in config file!");
+					logger.error("Unknown key " + key + " in config file!");
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.out.println("Error reading configuration file, continuing with empty configuration");
+			logger.warn("Error reading configuration file, continuing with empty configuration");
 			return getDefaultConfig();
 		}
 		return result;

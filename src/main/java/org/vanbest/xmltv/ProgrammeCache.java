@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 
 public class ProgrammeCache {
 	private Connection db;
@@ -49,6 +50,8 @@ public class ProgrammeCache {
 	
 	private final static Integer SCHEMA_VERSION=1;
 	private final static String SCHEMA_KEY="TV_GRAB_NL_JAVA_SCHEMA_VERSION";
+	
+	static Logger logger = Logger.getLogger(ProgrammeCache.class);
 	
 	public ProgrammeCache(Config config) {
 		this.config = config;
@@ -64,8 +67,8 @@ public class ProgrammeCache {
 		} catch (SQLException e) {
 			db = null;
 			if (!config.quiet) {
-				System.out.println("Unable to open cache database, proceeding without cache");
-				if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+				logger.warn("Unable to open cache database, proceeding without cache");
+				logger.debug("Stack trace: ", e);
 			}
         }
         boolean recreateTable = false;
@@ -76,15 +79,15 @@ public class ProgrammeCache {
 				stat.setString(2, SCHEMA_KEY);
 				ResultSet result = stat.executeQuery();
 				if (!result.next()) {
-					if (!config.quiet) System.out.println("No schema version found in database");
+					logger.debug("No schema version found in database");
 					recreateTable=true;
 				} else {
 					Integer currentSchema = (Integer) result.getObject("programme");
 					if (currentSchema<SCHEMA_VERSION) {
-						if (!config.quiet) System.out.println("Current cache database schema version " + currentSchema + " is lower than my version " + SCHEMA_VERSION);
+						logger.debug("Current cache database schema version " + currentSchema + " is lower than my version " + SCHEMA_VERSION);
 						recreateTable = true;
 					} else if (currentSchema>SCHEMA_VERSION) {
-						if (!config.quiet) System.out.println("Got a database schema from the future, since my version is " + SCHEMA_VERSION+ " and yours is " + currentSchema);
+						logger.warn("Got a database schema from the future, since my version is " + SCHEMA_VERSION+ " and yours is " + currentSchema);
 						recreateTable = true;
 					}
 					
@@ -92,15 +95,13 @@ public class ProgrammeCache {
 				stat.close();
 			} catch (SQLException e) {
 				if (!config.quiet) {
-					System.out.println("Got SQL exception when trying to find current database schema");
-					System.out.flush();
-					if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
-					System.out.flush();
+					logger.warn("Got SQL exception when trying to find current database schema");
+					logger.debug("Stack trace", e);
 				}
 				recreateTable = true;
 			}
 	        if (recreateTable) {
-	        	if (!config.quiet) System.out.println("Unknown cache schema, removing and recreating cache");
+	        	logger.info("Unknown cache schema, removing and recreating cache");
 		        try {
 					Statement stat = db.createStatement();
 					// System.out.println("Dropping old table");
@@ -120,10 +121,8 @@ public class ProgrammeCache {
 					stat2.executeUpdate();
 				} catch (SQLException e) {
 					if (!config.quiet) {
-						System.out.println("Unable to create cache database, proceeding without cache");
-						System.out.flush();
-						if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
-						System.out.flush();
+						logger.warn("Unable to create cache database, proceeding without cache");
+						logger.debug("stack trace: ", e);
 					}
 					db = null;
 				}
@@ -137,10 +136,8 @@ public class ProgrammeCache {
 				clearSourceStatement = db.prepareStatement("DELETE FROM cache WHERE source=?");
 			} catch (SQLException e) {
 				if (!config.quiet) {
-					System.out.println("Unable to prepare statements, proceeding without cache");
-					System.out.flush();
-					if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
-					System.out.flush();
+					logger.warn("Unable to prepare statements, proceeding without cache");
+					logger.debug("stack trace: ", e);
 				}
 				db = null;
 	        }
@@ -192,11 +189,11 @@ public class ProgrammeCache {
 			//System.out.println(putStatement.toString());
 			int count = putStatement.executeUpdate();
 			if (count!=1 && !config.quiet) {
-				System.out.println("Weird, cache database update statement affected " + count + " rows");
+				logger.warn("Weird, cache database update statement affected " + count + " rows");
 			}
 		} catch (SQLException e) {
-			System.out.println("Error writing programme ("+source+","+id+") to cache");
-			if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+			logger.warn("Error writing programme ("+source+","+id+") to cache");
+			logger.debug("stack trace:", e);
 		}
 	}
 
@@ -207,12 +204,12 @@ public class ProgrammeCache {
 			stat = db.createStatement();
 			int count = stat.executeUpdate("DELETE FROM cache WHERE date<CURRENT_DATE - 3 DAY");
 			if (!config.quiet && count>0) {
-				System.out.println("Purged " + count + " old entries from cache");
+				logger.info("Purged " + count + " old entries from cache");
 			}
 			stat.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.debug("stack trace:", e);
 		}
 	}
 

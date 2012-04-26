@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.vanbest.xmltv.EPGSource.Stats;
 
 public abstract class AbstractEPGSource implements EPGSource {
@@ -17,6 +18,7 @@ public abstract class AbstractEPGSource implements EPGSource {
 	protected Config config;
 	protected ProgrammeCache cache;
 	protected Stats stats = new Stats();
+	static Logger logger = Logger.getLogger(AbstractEPGSource.class);
 	
 	public static final int MAX_FETCH_TRIES=5;
 
@@ -63,7 +65,7 @@ public abstract class AbstractEPGSource implements EPGSource {
 				done = true;
 			} catch (IOException e) {
 				if (!config.quiet) {
-					System.out.println("Error fetching from url " + url + ", count="+count);
+					logger.warn("Error fetching from url " + url + ", count="+count);
 				}
 				if (count>=MAX_FETCH_TRIES) { 
 					stats.fetchErrors++;
