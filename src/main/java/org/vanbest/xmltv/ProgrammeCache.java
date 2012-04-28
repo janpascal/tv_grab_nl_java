@@ -59,7 +59,7 @@ public class ProgrammeCache {
 			db = DriverManager.getConnection(config.cacheDbHandle, config.cacheDbUser, config.cacheDbPassword);
 			/* Test for upgrade path from legacy database
 			Statement stat = db.createStatement();
-			System.out.println("Dropping old table");
+			.println("Dropping old table");
 			stat.execute("DROP TABLE IF EXISTS cache");
 			System.out.println("Creating new table");
 			stat.execute("CREATE CACHED TABLE IF NOT EXISTS cache (id VARCHAR(64) PRIMARY KEY, date DATE, programme OTHER)");
@@ -161,8 +161,8 @@ public class ProgrammeCache {
 			}
 		} catch (SQLException e) {
 			if (!config.quiet) {
-				System.out.println("Error fetching programme ("+source+","+id+") from cache");
-				if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+				logger.warn("Error fetching programme ("+source+","+id+") from cache");
+				logger.debug("stack trace: ", e);
 			}
 			return null;
 		}
@@ -174,8 +174,8 @@ public class ProgrammeCache {
 			removeStatement.setString(2, id);
 			removeStatement.execute();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Exception trying to remove item "+id+" from source "+source+" from cache");
+			logger.debug("Stack trace: ", e);
 		}
 	}
 
@@ -208,7 +208,6 @@ public class ProgrammeCache {
 			}
 			stat.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			logger.debug("stack trace:", e);
 		}
 	}
@@ -218,10 +217,11 @@ public class ProgrammeCache {
 		try {
 			int count = clearStatement.executeUpdate();
 			if (!config.quiet && count>0) {
-				System.out.println("Cleared " + count + " entries from cache");
+				logger.info("Cleared " + count + " entries from cache");
 			}
 		} catch (SQLException e) {
-			if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+			logger.warn("Failed to clear cache");
+			logger.debug("Stack trace: ", e);
 		}
 	}
 
@@ -231,10 +231,11 @@ public class ProgrammeCache {
 			clearSourceStatement.setInt(1, source);
 			int count = clearSourceStatement.executeUpdate();
 			if (!config.quiet && count>0) {
-				System.out.println("Cleared " + count + " entries from cache for source " + source);
+				logger.info("Cleared " + count + " entries from cache");
 			}
 		} catch (SQLException e) {
-			if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+			logger.warn("Failed to clear cache");
+			logger.debug("Stack trace: ", e);
 		}
 	}
 
@@ -249,8 +250,8 @@ public class ProgrammeCache {
 				clearSourceStatement.close();
 				db.close();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+				logger.warn("Error closing cache database connection");
+				logger.debug("Stack trace: ", e);
 			}
 		}
 	}

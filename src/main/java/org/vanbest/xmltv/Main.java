@@ -264,11 +264,9 @@ public class Main {
 			config.writeConfig(configFile);
 			logger.info("Configuration file written to " + configFile.getPath());
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("File not found trying to write config file to "+configFile.getPath(), e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("IO Exception trying to write config file to "+configFile.getPath(), e);
 		}
 	}
 
@@ -419,8 +417,8 @@ public class Main {
 			try {
 				configure();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Exception during configure");
+				logger.debug("Stack trace: ", e);
 			}
 			System.exit(0);
 		}

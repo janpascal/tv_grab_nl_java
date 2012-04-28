@@ -71,7 +71,8 @@ public class Config {
         try {
             configProp.load(in);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("Error reading application properties from tv_grab_nl_java.properties resource");
+            logger.debug("stack trace: ", e);
         }
         project_version=configProp.getProperty("project.version");
         build_time=configProp.getProperty("build.time");
@@ -294,7 +295,7 @@ public class Config {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.debug("stack trace:", e);
 			logger.warn("Error reading configuration file, continuing with empty configuration");
 			return getDefaultConfig();
 		}

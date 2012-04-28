@@ -13,12 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
 public class EPGSourceFactory {
 	private static Map<String,Integer> ids = new HashMap<String,Integer>();
 	private static Map<Integer,Class<EPGSource>> classes = new HashMap<Integer,Class<EPGSource>>();
 	private static Map<Integer,String> names = new HashMap<Integer,String>();
 	private static boolean initialised=false;
 	private static List<Integer> sources=new ArrayList<Integer>();
+	static Logger logger = Logger.getLogger(EPGSourceFactory.class);
+
 
 	static void init() {
 		if(initialised) return;
@@ -28,7 +32,7 @@ public class EPGSourceFactory {
         try {
             configProp.load(in);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("Error reading application properties resource", e);
         }
         for(int source=1; ; source++) {
         	String name = configProp.getProperty("org.vanbest.xmltv.epgsource.impl."+source);
@@ -43,21 +47,8 @@ public class EPGSourceFactory {
 				names.put(source,sourceName);
 				ids.put(sourceName,source);
 				sources.add(source);
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Exception e) {
+				logger.error("Error reading EPG Source class "+name, e);
 			}
         }
         initialised=true;
@@ -76,24 +67,8 @@ public class EPGSourceFactory {
 		try {
 			constructor = classes.get(source).getConstructor(Integer.TYPE,Config.class);
 			return constructor.newInstance(source, config);
-		} catch (NoSuchMethodException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Error instantiating EPG source "+classes.get(source), e);
 		}
 		return null;
 	}

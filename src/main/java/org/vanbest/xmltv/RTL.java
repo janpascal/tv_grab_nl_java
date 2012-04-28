@@ -122,15 +122,13 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 		try {
 			url = new URL(programme_url+"1");
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Exception creating RTL channel list url", e);
 		}
 		Document xml = null;
 		try {
 			xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Exception reading info from "+url+" and transforming to XML", e);
 		}
 		Element root = xml.getDocumentElement();
 		String json = root.getTextContent();

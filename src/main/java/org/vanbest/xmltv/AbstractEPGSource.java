@@ -69,7 +69,7 @@ public abstract class AbstractEPGSource implements EPGSource {
 				}
 				if (count>=MAX_FETCH_TRIES) { 
 					stats.fetchErrors++;
-					if (config.logLevel>=Config.LOG_DEBUG) e.printStackTrace();
+					logger.debug("Error getting progrm data from url", e);
 					throw new Exception("Error getting program data from url " + url, e);
 				}
 			}
