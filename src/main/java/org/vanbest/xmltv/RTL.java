@@ -420,27 +420,6 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 * @throws FileNotFoundException 
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
-		/*
-		Calendar result = Calendar.getInstance();
-		Calendar d = Calendar.getInstance();
-		try {
-			d.setTime(new SimpleDateFormat("yyyy-MM-dd").parse("2012-04-16"));
-		} catch (ParseException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-
-		SimpleDateFormat df = new SimpleDateFormat("HH:mm");
-		try {
-			result.setTime(df.parse("04:50"));
-			result.set(d.get(Calendar.YEAR), d.get(Calendar.MONTH), d.get(Calendar.DAY_OF_MONTH));
-			System.out.println(result.getTime());
-			System.exit(1);
-		} catch (ParseException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		*/
 		debug = true;
 		Config config = Config.getDefaultConfig();
 		config.niceMilliseconds = 50;

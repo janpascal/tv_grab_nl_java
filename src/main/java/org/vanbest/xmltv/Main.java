@@ -356,8 +356,7 @@ public class Main {
 		try {
 			line = new GnuParser().parse(options, args);
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error parsing command-line options", e);
 		}
 
 		if(line.hasOption("license")) {
@@ -434,8 +433,7 @@ public class Main {
 			main.processOptions(args);
 			main.run();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error in tv_grab_nl_java application", e);
 		}
 	}
 

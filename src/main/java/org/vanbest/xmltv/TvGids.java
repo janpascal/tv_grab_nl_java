@@ -141,8 +141,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		try {
 			url = new URL(channels_url);
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Exception creating tvgids channel list url", e);
 		}
 		
 		StringBuffer json = new StringBuffer();
@@ -153,8 +152,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			String s;
 			while ((s = reader.readLine()) != null) json.append(s);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("IO Exception reading channel information from tvgids url "+url.toString(), e);
 		}
 
 		logger.debug("tvgids channels json: " + json.toString());
@@ -469,8 +467,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			}
 			gids.close();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error in tvgids testing", e);
 		}
 	}
 
