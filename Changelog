@@ -1,6 +1,10 @@
 Changelog for tv_grab_nl_java
 =============================
 
+- Andere loglevels (ERROR,WARN,INFO,DEBUG,TRACE)
+- Print stack traces alleen bij loglevel DEBUG of hoger
+- Fix voor probleem dat tvgids oude data oplevert voor --days>3
+
 tv_grab_nl_java-0.9.3 (2012-04-25)
 - RTL: stel de <desc> tag op de juiste wijze samen uit alginhoud en inhoud
   (issue #2)
