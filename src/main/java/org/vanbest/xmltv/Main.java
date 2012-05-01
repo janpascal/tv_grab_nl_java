@@ -370,6 +370,7 @@ public class Main {
 		config = Config.readConfig(configFile);
 		if (line.hasOption("quiet")) {
 			config.quiet = true;
+			Logger.getRootLogger().setLevel(Level.ERROR);
 		}
 		if (line.hasOption("description")) {
 			showHeader();
@@ -388,9 +389,9 @@ public class Main {
 		}
 		if (line.hasOption("log-level")) {
 			String arg = line.getOptionValue("log-level");
-            // TODO: make distinction between levels for console and
-            // file appenders
-            Logger.getRootLogger().setLevel(Level.toLevel(arg, Level.INFO));
+			// TODO: make distinction between levels for console and 
+                        // file appenders 
+                        Logger.getRootLogger().setLevel(Level.toLevel(arg, Level.INFO));
 		}
 		if (line.hasOption("cache")) {
 			config.setCacheFile(line.getOptionValue("cache"));
