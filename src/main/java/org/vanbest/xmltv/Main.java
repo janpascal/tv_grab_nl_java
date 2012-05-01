@@ -344,7 +344,7 @@ public class Main {
 				.addOption(OptionBuilder
 						.withLongOpt("log-level")
 						.hasArg()
-						.withDescription("Set log level (0x0100=JSON)")
+						.withDescription("Set log level (ERROR,WARN,INFO,DEBUG,TRACE)")
 						.create())
 				.addOption(OptionBuilder
 						.withLongOpt("license")
@@ -387,11 +387,10 @@ public class Main {
 			this.outputWriter = new PrintStream( new FileOutputStream(line.getOptionValue("output")));
 		}
 		if (line.hasOption("log-level")) {
-			config.logLevel = Integer.parseInt(line.getOptionValue("log-level"));
-			if (config.quiet) config.logLevel = 0;
-                        // TODO: make distinction between levels for console and
-                        // file appenders
-                        logger.getRootLogger().setLevel(Level.toLevel(config.logLevel, Level.INFO));
+			String arg = line.getOptionValue("log-level");
+            // TODO: make distinction between levels for console and
+            // file appenders
+            Logger.getRootLogger().setLevel(Level.toLevel(arg, Level.INFO));
 		}
 		if (line.hasOption("cache")) {
 			config.setCacheFile(line.getOptionValue("cache"));

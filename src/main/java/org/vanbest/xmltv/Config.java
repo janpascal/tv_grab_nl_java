@@ -38,12 +38,7 @@ import org.apache.log4j.Logger;
 
 public class Config {
 	//constants
-	public static final int LOG_INFO = 0x0001;
-	public static final int LOG_DEBUG = 0x0005;
-	public static final int LOG_JSON = 0x0100;
-	private final static int LOG_PROGRAMME_INFO = 0x0200;
 	private final static int CURRENT_FILE_FORMAT=4;
-	public final static int LOG_DEFAULT = LOG_INFO;
 
 	// in config file
 	public int niceMilliseconds;
@@ -55,11 +50,10 @@ public class Config {
 	
 	// not stored (yet)
 	public boolean joinKijkwijzerRatings = true;
+	boolean fetchDetails = true;
 	
 	// command-line options
 	boolean quiet = false;
-	public int logLevel = LOG_DEFAULT;
-	boolean fetchDetails = true;
 	
 	String project_version;
 	String build_time;
@@ -300,14 +294,6 @@ public class Config {
 			return getDefaultConfig();
 		}
 		return result;
-	}
-	
-	public boolean logJSON() {
-		return (logLevel & LOG_JSON) != 0;
-	}
-
-	public boolean logProgrammes() {
-		return (logLevel & LOG_PROGRAMME_INFO) != 0;
 	}
 
 	public void setCacheFile(String cacheFile) {

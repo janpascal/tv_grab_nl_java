@@ -111,8 +111,8 @@ Beschikbare opties:
 --configure           Interactive configuration
 --output <arg>        Set xlmtv output filename
 --quiet               Be quiet
---log-level           Zet het logging-level. Defaultwaarde is 1; hogere waarde
-                      kan (veel) meer logging opleveren
+--log-level           Zet het logging-level. Defaultwaarde is INFO, andere mogelijkheden zijn
+					  ERROR,WARN,INFO,DEBUG en TRACE
 --offset <arg>        Start day for grabbing (0=today)
 --days <arg>          Number of days to grab
 
