@@ -360,7 +360,6 @@ public class Main {
 		}
 
 		if(line.hasOption("license")) {
-			showHeader();
             showLicense();
             System.exit(0);
 		}
