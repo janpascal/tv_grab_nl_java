@@ -107,10 +107,9 @@ Beschikbare opties:
 --config-file <arg>   Configuration file location
 --cache <arg>         Cache file location
 --clear-cache         Verwijder gecachede programmagegevens
---log-level <arg>     Set log level (0x0100=JSON)
 --configure           Interactive configuration
 --output <arg>        Set xlmtv output filename
---quiet               Be quiet
+--quiet               Disable progress display. Also set log-level to ERROR.
 --log-level           Zet het logging-level. Defaultwaarde is INFO, andere mogelijkheden zijn
 					  ERROR,WARN,INFO,DEBUG en TRACE
 --offset <arg>        Start day for grabbing (0=today)

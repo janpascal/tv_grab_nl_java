@@ -302,7 +302,7 @@ public class Main {
     					.create())
 				.addOption(OptionBuilder
 						.withLongOpt("quiet")
-						.withDescription("Be quiet")
+						.withDescription("Disable progress information. Also set log-level to ERROR")
 						.create())
 				.addOption(OptionBuilder
 						.withLongOpt("output")
