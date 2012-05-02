@@ -107,30 +107,6 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		return new URL(s.toString());
 	}
 
-	List<String> parseKijkwijzer(String s) {
-		List<String> result = new ArrayList<String>();
-		for (int i=0; i<s.length(); i++) {
-			char c = s.charAt(i);
-			switch(c) {
-			case 'a':result.add("Angst"); break;
-			case 'd':result.add("Discriminatie"); break;
-			case 's':result.add("Seks"); break;
-			case 'h':result.add("Drugs/Alcohol"); break;
-			case 'g':result.add("Geweld"); break;
-			case 't':result.add("Grof taalgebruik"); break;
-			case '1':result.add("Voor alle leeftijden"); break;
-			case '2':result.add("Afgeraden voor kinderen jonger dan 6 jaar"); break;
-			case '9':result.add("Afgeraden voor kinderen jonger dan 9 jaar"); break;
-			case '3':result.add("Afgeraden voor kinderen jonger dan 12 jaar"); break;
-			case '4':result.add("Afgeraden voor kinderen jonger dan 16 jaar"); break;
-			default: if (!config.quiet) {
-				logger.warn("Unknown kijkwijzer character: " + c + " in string " + s);
-				}
-			}
-		}
-		return result;
-	}
-
 	/* (non-Javadoc)
 	 * @see org.vanbest.xmltv.EPGSource#getChannels()
 	 */

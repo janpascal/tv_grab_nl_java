@@ -50,6 +50,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.vanbest.xmltv.EPGSource.Stats;
 import org.w3c.dom.DOMException;
@@ -281,7 +283,20 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 			prog.endTime = parseTime(e.getTextContent(), dateStatus, DateStatus.END_TIME);
 		} else if (tag.equals("omroep")) {
 		} else if (tag.equals("kijkwijzer")) {
-			//System.out.println("Kijkwijzer: \"" + e.getTextContent() + "\"");
+			logger.trace(prog.toString());
+			logger.trace("Kijkwijzer: \"" + e.getTextContent() + "\"");
+			String kijkwijzer = e.getTextContent();
+			List<String> list = parseKijkwijzer(kijkwijzer);
+			if (config.joinKijkwijzerRatings) {
+				// mythtv doesn't understand multiple <rating> tags
+				prog.addRating("kijkwijzer", StringUtils.join(list, ","));
+			} else {
+				for(String rating: list) {
+					prog.addRating("kijkwijzer", rating);
+				}
+			}
+			logger.trace("Kijkwijzer: \"" + StringUtils.join(list, ",") + "\"");
+			// TODO add kijkwijzer icons?
 		} else if (tag.equals("presentatie")) {
 			// A; A en B; A, B, C en D
 			String[] presentatoren = e.getTextContent().split(", | en ");
@@ -421,6 +436,8 @@ public class RTL extends AbstractEPGSource implements EPGSource  {
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
 		debug = true;
+        Logger.getRootLogger().setLevel(Level.TRACE);
+
 		Config config = Config.getDefaultConfig();
 		config.niceMilliseconds = 50;
 		RTL rtl = new RTL(2, config);
