@@ -1,6 +1,10 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.0.0-RC1 (2012-05-02)
+- First 1.0 release candidate
+- Add kijkwijzer support for RTL programme source
+
 tv_grab_nl_java-0.9.4 (2012-05-01)
 - Andere loglevels (ERROR,WARN,INFO,DEBUG,TRACE)
 - Print stack traces alleen bij loglevel DEBUG of hoger
