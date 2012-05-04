@@ -3,25 +3,27 @@ package org.vanbest.xmltv;
 import static org.junit.Assert.*;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class RTLTest {
 
-	private RTL rtl;
+	private static RTL rtl;
 	private final static int RTL_SOURCE_ID=2;
-	@Before
-	public void setUp() throws Exception {
+	private static List<Channel> channels = null;
+	
+	@BeforeClass
+	public static void setUp() throws Exception {
 		Config config = Config.getDefaultConfig();
 		rtl = new RTL(RTL_SOURCE_ID, config);
+		rtl.clearCache();
 	}
 
-	@After
-	public void tearDown() throws Exception {
+	@AfterClass
+	public static void tearDown() throws Exception {
 		rtl.close();
 	}
 
@@ -32,7 +34,7 @@ public class RTLTest {
 
 	@Test
 	public void testgetChannels() {
-		List<Channel> channels = rtl.getChannels();
+		fetchChannels();
 		
 		// there should be a least 20 channels
 		assertTrue("There should be at least 20 channels from rtl.nl", channels.size()>=20);
@@ -50,10 +52,13 @@ public class RTLTest {
 		}
 	}
 
+	private void fetchChannels() {
+		if(channels==null) channels = rtl.getChannels();
+	}
+
 	@Test
 	public void testFindGTSTRerun() throws Exception {
-		List<Channel> channels = rtl.getChannels();
-
+		fetchChannels();
 		Channel rtl4 = null;
 		for(Channel c: channels) {
 			if(c.defaultName().equals("RTL 4")) {
@@ -90,7 +95,17 @@ public class RTLTest {
 				}
 			}
 			assertNotNull("Should have a programme called Goede Tijden, Slechte Tijden after 19:00 on date with offset "+offset+ " for today", gtstOriginal);
-			System.out.println(gtstOriginal.toString());
+			assertNotNull("GTST should have a description", gtstOriginal.descriptions);
+			assertTrue("GTST should have at least one description", gtstOriginal.descriptions.size()>0);
+			assertNotNull("GTST should have at least one non-empty description", gtstOriginal.descriptions.get(0).title);
+			assertFalse("GTST should have at least one non-empty description", gtstOriginal.descriptions.get(0).title.isEmpty());
+			
+			assertNotNull("GTST should have kijkwijzer information", gtstOriginal.ratings);
+			assertTrue("GTST should have at least two kijkwijzer ratings", gtstOriginal.ratings.size()>=2);
+			assertNotNull("GTST rating should have kijkwijzer system", gtstOriginal.ratings.get(0).system);
+			assertTrue("GTST rating should have kijkwijzer system filled in", gtstOriginal.ratings.get(0).system.matches(".*ijkwijz.*"));
+			assertNotNull("GTST rating should have value", gtstOriginal.ratings.get(0).value);
+			assertFalse("GTST rating should have value", gtstOriginal.ratings.get(0).value.isEmpty());
 
 			List<Programme> reruns = rtl.getProgrammes(rtl4,  rerun);
 			Programme gtstRerun = null;
@@ -106,9 +121,5 @@ public class RTLTest {
 
 			assertEquals("GTST rerun should have the same description as the original", gtstRerun.descriptions.get(0).title, gtstOriginal.descriptions.get(0).title);
 		}
-		
-		
-		
-		
 	}
 }
