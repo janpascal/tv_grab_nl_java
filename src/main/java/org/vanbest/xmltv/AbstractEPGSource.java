@@ -1,16 +1,12 @@
 package org.vanbest.xmltv;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
-import org.vanbest.xmltv.EPGSource.Stats;
 
 public abstract class AbstractEPGSource implements EPGSource {
 

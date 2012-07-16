@@ -3,7 +3,6 @@ package org.vanbest.xmltv;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 public interface EPGSource {
 	public class Stats {

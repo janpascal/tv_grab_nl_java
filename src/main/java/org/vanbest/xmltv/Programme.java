@@ -5,7 +5,6 @@ package org.vanbest.xmltv;
  * some aren't written to xmltv format
  */
 import java.io.Serializable;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
