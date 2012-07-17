@@ -12,7 +12,7 @@ public class Channel {
 	List<String> urls;
 	protected boolean enabled = true;
 	int source;
-	
+
 	protected Channel(int source, String id) {
 		this.id = id;
 		this.source = source;
@@ -20,11 +20,11 @@ public class Channel {
 		icons = new ArrayList<Icon>();
 		urls = new ArrayList<String>();
 	}
-	
+
 	public String defaultName() {
 		return names.get(0);
 	}
-	
+
 	static Channel getChannel(int source, String id, String name) {
 		Channel c = new Channel(source, id);
 		c.names.add(name);
@@ -37,28 +37,28 @@ public class Channel {
 		c.icons.add(new Icon(iconUrl));
 		return c;
 	}
-	
+
 	public String getXmltvChannelId() {
-		return id+"."+getSourceName();
+		return id + "." + getSourceName();
 	}
-	
+
 	public String getSourceName() {
 		return EPGSourceFactory.newInstance().getChannelSourceName(source);
 	}
-	
+
 	public void serialize(XMLStreamWriter writer) throws XMLStreamException {
 		writer.writeStartElement("channel");
 		writer.writeAttribute("id", getXmltvChannelId());
-		for(String name: names) {
+		for (String name : names) {
 			writer.writeStartElement("display-name");
 			writer.writeAttribute("lang", "nl");
 			writer.writeCharacters(name);
 			writer.writeEndElement();
 		}
-		for(Icon i: icons) {
+		for (Icon i : icons) {
 			i.serialize(writer);
 		}
-		for(String url: urls) {
+		for (String url : urls) {
 			writer.writeStartElement("url");
 			writer.writeCharacters(url);
 			writer.writeEndElement();
@@ -75,8 +75,8 @@ public class Channel {
 	public void setEnabled(boolean b) {
 		this.enabled = b;
 	}
-	
-    public String toString() {
-    	return "Channel " + source + "::" + id + " (" + defaultName() + ")";
-    }
+
+	public String toString() {
+		return "Channel " + source + "::" + id + " (" + defaultName() + ")";
+	}
 }

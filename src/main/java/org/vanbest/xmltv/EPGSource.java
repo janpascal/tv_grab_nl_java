@@ -12,18 +12,26 @@ public interface EPGSource {
 	}
 
 	public int getId();
+
 	public void setId(int id);
-    public String getName(); 
+
+	public String getName();
+
 	// All implementing class must declare a
-    // public static final String NAME (e.g tvgids.nl or rtl.nl)
+	// public static final String NAME (e.g tvgids.nl or rtl.nl)
 
 	public List<Channel> getChannels();
+
 	// Convenience method
-	public List<Programme> getProgrammes(Channel channel, int day) throws Exception;
-	public List<Programme> getProgrammes(List<Channel> channels, int day) throws Exception;
-	
+	public List<Programme> getProgrammes(Channel channel, int day)
+			throws Exception;
+
+	public List<Programme> getProgrammes(List<Channel> channels, int day)
+			throws Exception;
+
 	public Stats getStats();
-	
+
 	public void clearCache();
+
 	public void close() throws FileNotFoundException, IOException;
 }
