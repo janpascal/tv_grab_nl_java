@@ -19,7 +19,7 @@ public class MainTest {
 		StringWriter  writer = new StringWriter();
 		logger.addAppender(new WriterAppender(new SimpleLayout(), writer));
 		Main main = new Main();
-		String[] args = {"--license"}; 
+		String[] args = {}; 
 		try {
 			main.processOptions(args);
 		} catch (FileNotFoundException e) {
