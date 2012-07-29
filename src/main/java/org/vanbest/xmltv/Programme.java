@@ -1,7 +1,7 @@
 package org.vanbest.xmltv;
 
-/* TODO 
- * Only partially implemented. Some fields are not implemented at all; some miss easy functions for adding; 
+/* TODO
+ * Only partially implemented. Some fields are not implemented at all; some miss easy functions for adding;
  * some aren't written to xmltv format
  */
 import java.io.Serializable;

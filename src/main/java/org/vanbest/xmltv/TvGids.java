@@ -101,7 +101,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.vanbest.xmltv.EPGSource#getChannels()
 	 */
 	@Override
@@ -158,7 +158,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.vanbest.xmltv.EPGSource#getProgrammes(java.util.List, int,
 	 * boolean)
 	 */

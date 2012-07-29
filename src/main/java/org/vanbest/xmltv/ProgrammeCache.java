@@ -29,31 +29,31 @@ import org.apache.log4j.Logger;
  * The Class ProgrammeCache.
  */
 public class ProgrammeCache {
-    
+
     /** The db. */
     private Connection db;
-    
+
     /** The config. */
     private Config config;
-    
+
     /** The get statement. */
     private PreparedStatement getStatement;
-    
+
     /** The put statement. */
     private PreparedStatement putStatement;
-    
+
     /** The remove statement. */
     private PreparedStatement removeStatement;
-    
+
     /** The clear statement. */
     private PreparedStatement clearStatement;
-    
+
     /** The clear source statement. */
     private PreparedStatement clearSourceStatement;
 
     /** The Constant SCHEMA_VERSION. */
     private final static Integer SCHEMA_VERSION = 1;
-    
+
     /** The Constant SCHEMA_KEY. */
     private final static String SCHEMA_KEY = "TV_GRAB_NL_JAVA_SCHEMA_VERSION";
 
