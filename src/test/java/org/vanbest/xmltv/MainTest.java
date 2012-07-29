@@ -2,6 +2,7 @@ package org.vanbest.xmltv;
 
 import static org.junit.Assert.*;
 
+import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 
@@ -18,6 +19,13 @@ public class MainTest {
 		StringWriter  writer = new StringWriter();
 		logger.addAppender(new WriterAppender(new SimpleLayout(), writer));
 		Main main = new Main();
+		String[] args = {"--license"}; 
+		try {
+			main.processOptions(args);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		main.showHeader();
 		String result = writer.toString();
 		assertTrue(result.contains("ABSOLUTELY NO WARRANTY"));
