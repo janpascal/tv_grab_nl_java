@@ -31,7 +31,7 @@ public class MainTest {
 		assertTrue(result.contains("ABSOLUTELY NO WARRANTY"));
 		// fail("Not yet implemented");
 	}
-
+/*
 	@Test
 	public void testConfigure() {
 		fail("Not yet implemented");
@@ -51,5 +51,5 @@ public class MainTest {
 	public void testMain() {
 		fail("Not yet implemented");
 	}
-
+*/
 }
