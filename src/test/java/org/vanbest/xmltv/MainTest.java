@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 
+import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
 import org.apache.log4j.SimpleLayout;
 import org.apache.log4j.WriterAppender;
@@ -21,7 +22,8 @@ public class MainTest {
 		Main main = new Main();
 		String[] args = {}; 
 		try {
-			main.processOptions(args);
+			Options options = main.createOptions();
+			main.processOptions(options, args);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -46,6 +46,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class Main {
+	private static final int ACTION_DEFAULT = 0;
+	private static final int ACTION_LICENSE = 1;
+	private static final int ACTION_DESCRIPTION = 2;
+	private static final int ACTION_HELP = 3;
+	private static final int ACTION_CAPABILITIES = 4;
+	private static final int ACTION_CONFIGURE = 5;
 	private File configFile;
 	private Config config;
 	private PrintStream outputWriter;
@@ -73,7 +79,7 @@ public class Main {
 		logger.info("under certain conditions; `tv_grab_nl_java --license' for details.");
 	}
 
-	public void run() throws FactoryConfigurationError, Exception {
+	public void fetchData() throws FactoryConfigurationError, Exception {
 		if (!config.quiet) {
 			showHeader();
 			logger.info("Fetching programme data for " + this.days
@@ -327,7 +333,7 @@ public class Main {
 		System.out.println(copyright);
 	}
 
-	public void processOptions(String[] args) throws FileNotFoundException {
+	public Options createOptions()  {
 		Options options = new Options();
 		options.addOption(
 				OptionBuilder
@@ -392,7 +398,12 @@ public class Main {
 						OptionBuilder.withLongOpt("license")
 								.withDescription("Show license information")
 								.create());
-		// .addOption(OptionBuilder.withLongOpt("preferredmethod").withDescription("Show preferred method").create();
+			// .addOption(OptionBuilder.withLongOpt("preferredmethod").withDescription("Show preferred method").create();
+		return options;
+	}
+
+	public int processOptions(Options options, String[] args) throws FileNotFoundException {
+		int action = ACTION_DEFAULT;
 
 		CommandLine line = null;
 		try {
@@ -402,8 +413,8 @@ public class Main {
 		}
 
 		if (line.hasOption("license")) {
-			showLicense();
-			System.exit(0);
+			action = ACTION_LICENSE;
+			return action; // do not read config file
 		}
 		if (line.hasOption("config-file")) {
 			configFile = new File(line.getOptionValue("config-file"));
@@ -414,17 +425,10 @@ public class Main {
 			Logger.getRootLogger().setLevel(Level.ERROR);
 		}
 		if (line.hasOption("description")) {
-			showHeader();
-			System.out.println();
-			System.out
-					.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
-			System.exit(0);
+			action = ACTION_DESCRIPTION;
 		}
 		if (line.hasOption("help")) {
-			// automatically generate the help statement
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("tv_grab_nl_java", options);
-			System.exit(0);
+			action = ACTION_HELP;
 		}
 		if (line.hasOption("output")) {
 			this.outputWriter = new PrintStream(new FileOutputStream(
@@ -449,21 +453,12 @@ public class Main {
 			this.offset = Integer.parseInt(line.getOptionValue("offset"));
 		}
 		if (line.hasOption("capabilities")) {
-			System.out.println("baseline");
-			System.out.println("manualconfig");
-			System.out.println("cache");
-			// System.out.println("preferredmethod");
-			System.exit(0);
+			action = ACTION_CAPABILITIES;
 		}
 		if (line.hasOption("configure")) {
-			try {
-				configure();
-			} catch (IOException e) {
-				logger.warn("Exception during configure");
-				logger.debug("Stack trace: ", e);
-			}
-			System.exit(0);
+			action = ACTION_CONFIGURE;
 		}
+		return action;
 	}
 
 	public static File defaultConfigFile() {
@@ -471,11 +466,49 @@ public class Main {
 				"tv_grab_nl_java.conf");
 	}
 
+	public void run(String[] args) throws FactoryConfigurationError, Exception {
+		Options options = createOptions();
+		int action = processOptions(options, args);
+		switch(action) {
+		case ACTION_DEFAULT: 
+			fetchData();
+			break;
+		case ACTION_LICENSE: 
+			showLicense();
+			break;
+		case ACTION_DESCRIPTION:
+			showHeader();
+			System.out.println();
+			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
+			break;
+		case ACTION_HELP:
+			// automatically generate the help statement
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("tv_grab_nl_java", options);
+			break;
+		case ACTION_CAPABILITIES:
+			System.out.println("baseline");
+			System.out.println("manualconfig");
+			System.out.println("cache");
+			// System.out.println("preferredmethod");
+			break;
+		case ACTION_CONFIGURE:
+			try {
+				configure();
+			} catch (IOException e) {
+				logger.warn("Exception during configure");
+				logger.debug("Stack trace: ", e);
+			}
+			break;
+		default:
+			logger.error("Unknown main action value "+action);
+		}		
+	}
+
 	public static void main(String[] args) {
 		Main main = new Main();
 		try {
-			main.processOptions(args);
-			main.run();
+			main.run(args);
 		} catch (Exception e) {
 			logger.error("Error in tv_grab_nl_java application", e);
 		}
