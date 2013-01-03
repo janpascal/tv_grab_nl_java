@@ -67,6 +67,7 @@ public class RTLTest {
 		for (Channel c : channels) {
 			if (c.defaultName().equals("RTL 4")) {
 				rtl4 = c;
+                                break;
 			}
 		}
 		assertNotNull("Should be able to find RTL 4 channel", rtl4);
