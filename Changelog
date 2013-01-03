@@ -1,6 +1,11 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.1.0 (2013-01-03)
+- Meer stabiliteit in RTL module doordat er nu vijf keer geprobeerd wordt een
+  URL op te halen
+- Aantal unit tests geimplementeerd
+
 tv_grab_nl_java-1.0.0 (2012-05-09)
 - First official release
 - Identical to RC1
