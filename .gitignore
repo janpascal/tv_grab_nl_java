@@ -8,3 +8,4 @@
 *.orig
 /github-token
 .*.swp
+pom.xml.releaseBackup
