@@ -98,6 +98,32 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 		return NAME;
 	}
 
+
+	private Document fetchXML(URL url) throws Exception {
+		Document xml = null;
+		boolean done = false;
+		for (int count = 0; !done; count++) {
+			Thread.sleep(config.niceMilliseconds*(1<<count));
+           		try {
+                          	xml = DocumentBuilderFactory.newInstance()
+                                  	.newDocumentBuilder().parse(url.openStream());
+                          	done = true;
+                  	} catch (Exception e) {
+				if (!config.quiet) {
+					logger.warn("Error fetching from url " + url + ", count="
+							+ count);
+				}
+				if (count >= MAX_FETCH_TRIES) {
+					stats.fetchErrors++;
+					logger.debug("Error getting data from url", e);
+					throw new Exception("Error getting data from url "
+							+ url, e);
+				}
+         	       }
+                }
+                return xml;
+        }
+
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
 
@@ -109,11 +135,11 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 		}
 		Document xml = null;
 		try {
-			xml = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-					.parse(url.openStream());
+			xml = fetchXML(url);
 		} catch (Exception e) {
-			logger.error("Exception reading info from " + url
+			logger.error("Exception reading RTL channel listing from " + url
 					+ " and transforming to XML", e);
+                        return result;
 		}
 		Element root = xml.getDocumentElement();
 		String json = root.getTextContent();
@@ -165,9 +191,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 	private void fetchDetail(Programme prog, DateStatus dateStatus, String id)
 			throws Exception {
 		URL url = detailUrl(id);
-		Thread.sleep(config.niceMilliseconds);
-		Document xml = DocumentBuilderFactory.newInstance()
-				.newDocumentBuilder().parse(url.openStream());
+		Document xml = fetchXML(url);
 		Element root = xml.getDocumentElement();
 		if (root.hasAttributes()) {
 			logger.warn("Unknown attributes for RTL detail root node");
@@ -333,11 +357,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 				channelMap.put(c.id, c);
 		}
 		URL url = programmeUrl(day);
-		// String xmltext = fetchURL(url);
-		// System.out.println(xmltext);
-		Thread.sleep(config.niceMilliseconds);
-		Document xml = DocumentBuilderFactory.newInstance()
-				.newDocumentBuilder().parse(url.openStream());
+		Document xml = fetchXML(url);
 		Element root = xml.getDocumentElement();
 		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(root
 				.getAttribute("date"));

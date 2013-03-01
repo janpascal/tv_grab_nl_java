@@ -67,6 +67,7 @@ public class RTLTest {
 		for (Channel c : channels) {
 			if (c.defaultName().equals("RTL 4")) {
 				rtl4 = c;
+                                break;
 			}
 		}
 		assertNotNull("Should be able to find RTL 4 channel", rtl4);
@@ -124,8 +125,8 @@ public class RTLTest {
 
 			assertNotNull("GTST should have kijkwijzer information",
 					gtstOriginal.ratings);
-			assertTrue("GTST should have at least two kijkwijzer ratings",
-					gtstOriginal.ratings.size() >= 2);
+			assertTrue("GTST should have at least one kijkwijzer ratings",
+					gtstOriginal.ratings.size() >= 1);
 			assertNotNull("GTST rating should have kijkwijzer system",
 					gtstOriginal.ratings.get(0).system);
 			assertTrue("GTST rating should have kijkwijzer system filled in",

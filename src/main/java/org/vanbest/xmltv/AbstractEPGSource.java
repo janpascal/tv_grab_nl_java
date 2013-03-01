@@ -50,10 +50,10 @@ public abstract class AbstractEPGSource implements EPGSource {
 	}
 
 	protected String fetchURL(URL url) throws Exception {
-		Thread.sleep(config.niceMilliseconds);
 		StringBuffer buf = new StringBuffer();
 		boolean done = false;
 		for (int count = 0; !done; count++) {
+			Thread.sleep(config.niceMilliseconds*(1<<count));
 			try {
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(url.openStream()));
