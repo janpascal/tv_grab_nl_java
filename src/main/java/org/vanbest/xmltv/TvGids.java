@@ -150,12 +150,6 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		return result;
 	}
 
-	private JSONObject fetchJSON(URL url) throws Exception {
-		String json = fetchURL(url);
-		logger.debug(json);
-		return JSONObject.fromObject(json);
-	}
-
 	/*
 	 * (non-Javadoc)
 	 *

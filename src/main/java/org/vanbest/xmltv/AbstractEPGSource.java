@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import net.sf.json.JSONObject;
+
 import org.apache.log4j.Logger;
 
 public abstract class AbstractEPGSource implements EPGSource {
@@ -75,6 +78,12 @@ public abstract class AbstractEPGSource implements EPGSource {
 			}
 		}
 		return buf.toString();
+	}
+
+	protected JSONObject fetchJSON(URL url) throws Exception {
+		String json = fetchURL(url);
+		logger.debug(json);
+		return JSONObject.fromObject(json);
 	}
 
 	public void clearCache() {
