@@ -95,6 +95,9 @@ public class RTLTest {
 				rerun = 3;
 				break;
 			case Calendar.SATURDAY:
+				rerun = 3;
+				break;
+			case Calendar.SUNDAY:
 				rerun = 2;
 				break;
 			default:
