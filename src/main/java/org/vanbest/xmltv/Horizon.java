@@ -121,11 +121,21 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			
 			JSONObject firstSchedule = stationSchedules.getJSONObject(0);
 			JSONObject station = firstSchedule.getJSONObject("station");
-			logger.info("firstschedule: " + firstSchedule.toString());
+			logger.debug("firstschedule: " + firstSchedule.toString());
 			int id = station.getInt("id");
 			String name = station.getString("title");
+			// Use the largest available station logo as icon
 			JSONArray images = station.getJSONArray("images");
 			String icon = "";
+			int maxSize = 0;
+			for( int j=0; j<images.size(); j++) {
+				JSONObject image = images.getJSONObject(j);
+				if (image.getString("assetType").startsWith("station-logo") &&
+						image.getInt("width")>maxSize) {
+					icon = image.getString("url");
+					maxSize = image.getInt("width");
+				}
+			}
 			Channel c = Channel.getChannel(getId(), Integer.toString(id), name,
 					icon);
 			result.add(c);
@@ -150,9 +160,9 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 
 		for (Channel c : channels) {
 			URL url = programmeUrl(c, day);
-			logger.info("Programme url:" + url);
+			logger.debug("Programme url:" + url);
 			JSONObject jsonObject = fetchJSON(url);
-			logger.info(jsonObject.toString());
+			logger.debug(jsonObject.toString());
 			JSONArray listings = jsonObject.getJSONArray("listings");
 			for (int i = 0; i < listings.size(); i++) {
 				JSONObject listing = listings.getJSONObject(i);
@@ -212,7 +222,45 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			result.startTime = new Date(json.getLong("startTime"));
 			result.endTime = new Date(json.getLong("endTime"));
 			JSONObject prog = json.getJSONObject("program");
-			result.addTitle(prog.getString("title"));
+			if (prog.containsKey("secondaryTitle")){
+				result.addTitle(prog.getString("secondaryTitle"));
+			} else {
+				result.addTitle(prog.getString("title"));
+			}
+			String description = prog.getString("longDescription");
+			if (description==null || description.isEmpty()) {
+			description = prog.getString("description");
+				if (description==null || description.isEmpty()) {
+					description = prog.getString("shortDescription");
+				}
+			}
+			result.addDescription(description);
+
+			JSONArray cast = prog.getJSONArray("cast");
+			for( int j=0; j<cast.size(); j++) {
+				result.addActor(cast.getString(j));
+			}
+
+			JSONArray directors = prog.getJSONArray("directors");
+			for( int j=0; j<directors.size(); j++) {
+				result.addDirector(directors.getString(j));
+			}
+			JSONArray categories = prog.getJSONArray("categories");
+			for( int j=0; j<categories.size(); j++) {
+				String cat = categories.getJSONObject(j).getString("title");
+				if (!cat.contains("/")) {
+					// Remove things like "drama/drama" and subcategories
+					result.addCategory(config.translateCategory(cat));
+				}
+			}
+			if (prog.containsKey("seriesEpisodeNumber")){
+				String episode = prog.getString("seriesEpisodeNumber");
+				result.addEpisode(episode,"onscreen");
+			}
+			if (prog.containsKey("parentalRating")){
+				String rating  = prog.getString("parentalRating");
+				result.addRating("kijkwijzer", "Afgeraden voor kinderen jonger dan "+rating+" jaar");
+			}
 			/*
 			// Do this here, because we can only add to these fields. Pity if
 			// they're updated
@@ -253,7 +301,8 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
-		Horizon horizon = new Horizon(1, config);
+		Horizon horizon = new Horizon(3, config);
+		horizon.clearCache();
 		try {
 			List<Channel> channels = horizon.getChannels();
 			System.out.println("Channels: " + channels);

@@ -152,6 +152,15 @@ public class Programme implements Serializable {
 		descriptions.add(new Title(title, lang));
 	}
 
+	public void addEpisode(String episode, String system) {
+		if (episodes == null)
+			episodes = new ArrayList<Episode>();
+		Episode e = new Episode();
+		e.episode = episode;
+		e.system = system;
+		episodes.add(e);
+	}
+		
 	public void addCategory(String category) {
 		addCategory(category, null);
 	}
@@ -323,6 +332,20 @@ public class Programme implements Serializable {
 		}
 	}
 
+	private void writeEpisodeList(List<Episode> episodes, XMLStreamWriter writer)
+			throws XMLStreamException {
+		if (episodes == null)
+			return;
+		for (Episode e: episodes) {
+			writer.writeStartElement("episode");
+			if (e.system != null)
+				writer.writeAttribute("system", e.system);
+			if (e.episode != null)
+				writer.writeCharacters(e.episode);
+			writer.writeEndElement();
+		}
+	}
+
 	private void writeIconList(List<Icon> icons, XMLStreamWriter writer)
 			throws XMLStreamException {
 		if (icons == null)
@@ -355,6 +378,7 @@ public class Programme implements Serializable {
 		writeTitleList(categories, "category", writer);
 		writeIconList(icons, writer);
 		writeStringList(urls, "url", writer);
+		writeEpisodeList(episodes,writer);
 		if (video != null) {
 			writer.writeStartElement("video");
 			if (!video.present) {

@@ -126,6 +126,7 @@ public class Config {
 		result.put("sport", "Sports");
 		result.put("theater", "Arts/Culture");
 		result.put("wetenschap", "Science/Nature");
+		result.put("news", "News");
 		return result;
 	}
 

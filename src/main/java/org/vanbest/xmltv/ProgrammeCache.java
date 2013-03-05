@@ -52,7 +52,7 @@ public class ProgrammeCache {
     private PreparedStatement clearSourceStatement;
 
     /** The Constant SCHEMA_VERSION. */
-    private final static Integer SCHEMA_VERSION = 1;
+    private final static Integer SCHEMA_VERSION = 2;
 
     /** The Constant SCHEMA_KEY. */
     private final static String SCHEMA_KEY = "TV_GRAB_NL_JAVA_SCHEMA_VERSION";
@@ -128,7 +128,7 @@ public class ProgrammeCache {
                     // System.out.println("Dropping old table");
                     stat.execute("DROP TABLE IF EXISTS cache");
                     // System.out.println("Creating new table");
-                    stat.execute("CREATE CACHED TABLE IF NOT EXISTS cache (source INTEGER, id VARCHAR(64), date DATE, programme OTHER, PRIMARY KEY (source,id))");
+                    stat.execute("CREATE CACHED TABLE IF NOT EXISTS cache (source INTEGER, id VARCHAR(128), date DATE, programme OTHER, PRIMARY KEY (source,id))");
                     stat.close();
 
                     // System.out.println("Writing new schema version to database");
