@@ -4,12 +4,12 @@ README for tv_grab_nl_java
 English Summary
 ---------------
 tv_grab_nl_java is an XMLTV-compatible grabber for Dutch television that uses
-TVGids.nl and rtl.nl as sources.
+TVGids.nl, rtl.nl and/or horizon.nl (UPC) as sources.
 
 Algemeen
 --------
 tv_grab_nl_java is een XMLTV-compatibele grabber voor Nederlandse televisie 
-die TVGids.nl en rtl.nl als bron kan gebruiken. tv_grab_nl_java is geschreven 
+die TVGids.nl, rtl.nl en horizon.nl (UPC) als bron kan gebruiken. tv_grab_nl_java is geschreven 
 in Java en gebruikt o.a. de JSON-interface van TVGids.nl.
 
 Kenmerken van tv_grab_nl_java:
@@ -20,7 +20,6 @@ Kenmerken van tv_grab_nl_java:
   als default
 - geeft informatie over acteurs, presentatie, regisseur weer in xmltv
 - geschikt voor mythtv
-- rtl.nl als bron is nog vrij nieuw en kan nog onverwachte resultaten opleveren
 
 Geschiedenis
 ------------
@@ -143,7 +142,7 @@ Het adres van de git repository is git://github.com/janpascal/tv_grab_nl_java.gi
 
 License
 -------
-Copyright (c) 2012 Jan-Pascal van Best <janpascal@vanbest.org>
+Copyright (c) 2012-2013 Jan-Pascal van Best <janpascal@vanbest.org>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

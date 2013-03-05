@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.2.0 (2013-03-05)
+- UPC (www.horizon.tv) module toegevoegd
+
 tv_grab_nl_java-1.1.0 (2013-01-03)
 - Meer stabiliteit in RTL module doordat er nu vijf keer geprobeerd wordt een
   URL op te halen

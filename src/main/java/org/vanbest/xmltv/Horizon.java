@@ -49,8 +49,6 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	static String listings_url = "https://www.horizon.tv/oesp/api/NL/nld/web/listings";
 	//  ?byStationId=28070126&sort=startTime&range=1-100&byStartTime=1362000000000~1362100000000";
 
-	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_HORIZON = 3;
-
 	public static String NAME = "horizon.tv";
 
 	static Logger logger = Logger.getLogger(Horizon.class);
@@ -74,7 +72,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		startTime.set(Calendar.MINUTE, 0);
 		startTime.set(Calendar.SECOND, 0);
 		startTime.set(Calendar.MILLISECOND, 0);
-		startTime.add(Calendar.DAY_OF_MONTH,  1);
+		startTime.add(Calendar.DAY_OF_MONTH,  day);
 		Calendar endTime = (Calendar) startTime.clone();
 		endTime.add(Calendar.DAY_OF_MONTH,  1);
 		s.append("&byStartTime=");
@@ -154,10 +152,6 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	public List<Programme> getProgrammes(List<Channel> channels, int day)
 			throws Exception {
 		List<Programme> result = new ArrayList<Programme>();
-		if (day > MAX_DAYS_AHEAD_SUPPORTED_BY_HORIZON) {
-			return result; // empty list
-		}
-
 		for (Channel c : channels) {
 			URL url = programmeUrl(c, day);
 			logger.debug("Programme url:" + url);
@@ -216,71 +210,76 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		String id = json.getString("id");
 		Programme result = cache.get(getId(), id);
 		boolean cached = (result != null);
+		boolean doNotCache = false;
 		if (result == null) {
 			stats.cacheMisses++;
 			result = new Programme();
 			result.startTime = new Date(json.getLong("startTime"));
 			result.endTime = new Date(json.getLong("endTime"));
 			JSONObject prog = json.getJSONObject("program");
-			if (prog.containsKey("secondaryTitle")){
-				result.addTitle(prog.getString("secondaryTitle"));
-			} else {
-				result.addTitle(prog.getString("title"));
+			String title = null;
+			if (prog.has("secondaryTitle")){
+				title = prog.getString("secondaryTitle");
+				if (title.contains("Zal snel bekend")) title = null;
+			} 
+			if ((title==null || title.isEmpty()) && prog.has("title")) {
+				title = prog.getString("title");
 			}
-			String description = prog.getString("longDescription");
+            if (title != null && !title.isEmpty()) {
+                result.addTitle(title);
+            } else {
+                doNotCache = true;
+            }
+            String description = null;
+            if (prog.has("longDescription")) description = prog.getString("longDescription");
 			if (description==null || description.isEmpty()) {
-			description = prog.getString("description");
-				if (description==null || description.isEmpty()) {
-					description = prog.getString("shortDescription");
-				}
+			    if (prog.has("description")) description = prog.getString("description");
 			}
-			result.addDescription(description);
+			if (description==null || description.isEmpty()) {
+                if (prog.has("shortDescription")) description = prog.getString("shortDescription");
+			}
+            if (description!= null && !description.isEmpty()) {
+                result.addDescription(description);
+            } else {
+                doNotCache = true;
+            }
 
-			JSONArray cast = prog.getJSONArray("cast");
-			for( int j=0; j<cast.size(); j++) {
-				result.addActor(cast.getString(j));
-			}
+            if (prog.has("cast")) { 
+    			JSONArray cast = prog.getJSONArray("cast");
+    			for( int j=0; j<cast.size(); j++) {
+    				result.addActor(cast.getString(j));
+    			}
+            }
+            
+            if (prog.has("directors")) { 
+    			JSONArray directors = prog.getJSONArray("directors");
+    			for( int j=0; j<directors.size(); j++) {
+    				result.addDirector(directors.getString(j));
+    			}
+            }
 
-			JSONArray directors = prog.getJSONArray("directors");
-			for( int j=0; j<directors.size(); j++) {
-				result.addDirector(directors.getString(j));
-			}
-			JSONArray categories = prog.getJSONArray("categories");
-			for( int j=0; j<categories.size(); j++) {
-				String cat = categories.getJSONObject(j).getString("title");
-				if (!cat.contains("/")) {
-					// Remove things like "drama/drama" and subcategories
-					result.addCategory(config.translateCategory(cat));
-				}
-			}
-			if (prog.containsKey("seriesEpisodeNumber")){
+            if (prog.has("categories")) { 
+    			JSONArray categories = prog.getJSONArray("categories");
+    			for( int j=0; j<categories.size(); j++) {
+    				String cat = categories.getJSONObject(j).getString("title");
+    				if (!cat.contains("/")) {
+    					// Remove things like "drama/drama" and subcategories
+    					result.addCategory(config.translateCategory(cat));
+    				}
+    			}
+            }
+			if (prog.has("seriesEpisodeNumber")){
 				String episode = prog.getString("seriesEpisodeNumber");
 				result.addEpisode(episode,"onscreen");
 			}
-			if (prog.containsKey("parentalRating")){
+			/* Disabled, contains disinformation
+			if (prog.has("parentalRating")){
 				String rating  = prog.getString("parentalRating");
 				result.addRating("kijkwijzer", "Afgeraden voor kinderen jonger dan "+rating+" jaar");
 			}
+			*/
 			/*
-			// Do this here, because we can only add to these fields. Pity if
-			// they're updated
-			result.addTitle(programme.getString("titel"));
-			String genre = programme.getString("genre");
-			if (genre != null && !genre.isEmpty())
-				result.addCategory(config.translateCategory(genre));
-			String kijkwijzer = programme.getString("kijkwijzer");
-			if (kijkwijzer != null && !kijkwijzer.isEmpty()) {
-				List<String> list = parseKijkwijzer(kijkwijzer);
-				if (config.joinKijkwijzerRatings) {
-					// mythtv doesn't understand multiple <rating> tags
-					result.addRating("kijkwijzer", StringUtils.join(list, ","));
-				} else {
-					for (String rating : list) {
-						result.addRating("kijkwijzer", rating);
-					}
-				}
-				// TODO add icon from HTML detail page
-			}
+				// TODO add icon 
 			*/
 		} else {
 			// System.out.println("From cache: " +
@@ -289,8 +288,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		}
 		// TODO other fields
 
-		if (!cached) {
-			// FIXME where to do this?
+		if (!cached && !doNotCache) {
 			cache.put(getId(), id, result);
 		}
 		logger.debug(result);
@@ -319,7 +317,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 				c.serialize(writer);
 			}
 			writer.flush();
-			List<Programme> programmes = horizon.getProgrammes(my_channels, 2);
+			List<Programme> programmes = horizon.getProgrammes(my_channels, 3);
 			for (Programme p : programmes) {
 				p.serialize(writer);
 			}
