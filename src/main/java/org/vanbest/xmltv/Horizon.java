@@ -218,17 +218,28 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			result.endTime = new Date(json.getLong("endTime"));
 			JSONObject prog = json.getJSONObject("program");
 			String title = null;
-			if (prog.has("secondaryTitle")){
-				title = prog.getString("secondaryTitle");
-				if (title.contains("Zal snel bekend")) title = null;
-			} 
-			if ((title==null || title.isEmpty()) && prog.has("title")) {
+			if (prog.has("title")){
 				title = prog.getString("title");
+			} 
+			String secondary = null;
+			if (prog.has("secondaryTitle")) {
+                secondary = prog.getString("secondaryTitle");
+                if (secondary.contains("Zal snel bekend")) secondary = null;
+			}
+			if (title != null && secondary!=null && title.contains(secondary)) {
+			    title=secondary;
+			    secondary=null;
 			}
             if (title != null && !title.isEmpty()) {
                 result.addTitle(title);
+                if (secondary!=null && !secondary.isEmpty()) {
+                    result.addSecondaryTitle(secondary);
+                }
             } else {
                 doNotCache = true;
+                if (secondary!=null && !secondary.isEmpty()) {
+                    result.addTitle(secondary);
+                }
             }
             String description = null;
             if (prog.has("longDescription")) description = prog.getString("longDescription");
@@ -317,9 +328,11 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 				c.serialize(writer);
 			}
 			writer.flush();
-			List<Programme> programmes = horizon.getProgrammes(my_channels, 3);
-			for (Programme p : programmes) {
-				p.serialize(writer);
+			for(int day=0; day<5; day++) {
+    			List<Programme> programmes = horizon.getProgrammes(my_channels, day);
+    			for (Programme p : programmes) {
+    				p.serialize(writer);
+    			}
 			}
 			writer.writeEndElement();
 			writer.writeEndDocument();

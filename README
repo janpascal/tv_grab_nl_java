@@ -4,12 +4,12 @@ README for tv_grab_nl_java
 English Summary
 ---------------
 tv_grab_nl_java is an XMLTV-compatible grabber for Dutch television that uses
-TVGids.nl, rtl.nl and/or horizon.nl (UPC) as sources.
+TVGids.nl, rtl.nl and/or horizon.tv (UPC) as sources.
 
 Algemeen
 --------
 tv_grab_nl_java is een XMLTV-compatibele grabber voor Nederlandse televisie 
-die TVGids.nl, rtl.nl en horizon.nl (UPC) als bron kan gebruiken. tv_grab_nl_java is geschreven 
+die TVGids.nl, rtl.nl en horizon.tv (UPC) als bron kan gebruiken. tv_grab_nl_java is geschreven 
 in Java en gebruikt o.a. de JSON-interface van TVGids.nl.
 
 Kenmerken van tv_grab_nl_java:
@@ -158,5 +158,5 @@ The full license text can be found in the LICENSE file.
 
 Laatste aanpassing
 ------------------
-24/4/2012 (versie 0.9.2)
+5/3/2013 (versie 1.1.0)
 
