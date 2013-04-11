@@ -26,6 +26,8 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerConfigurationException;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -98,10 +100,25 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 		return NAME;
 	}
 
+        private String xmlToString(Document doc) {
+                try {
+                  Transformer transformer = TransformerFactory.newInstance().newTransformer();
+                  StringWriter stw = new StringWriter();  
+                  transformer.transform(new DOMSource(doc), new StreamResult(stw));  
+                  return stw.toString();
+                } catch (TransformerConfigurationException e) {
+                  logger.debug("Cannot convert XML Document to String, e");
+                  return "";
+                } catch (TransformerException e) {
+                  logger.debug("Cannot convert XML Document to String, e");
+                  return "";
+                }
+        }
 
 	private Document fetchXML(URL url) throws Exception {
 		Document xml = null;
 		boolean done = false;
+		logger.debug("Fetching XML from URL "+url);
 		for (int count = 0; !done; count++) {
 			Thread.sleep(config.niceMilliseconds*(1<<count));
            		try {
@@ -109,18 +126,19 @@ public class RTL extends AbstractEPGSource implements EPGSource {
                                   	.newDocumentBuilder().parse(url.openStream());
                           	done = true;
                   	} catch (Exception e) {
-				if (!config.quiet) {
-					logger.warn("Error fetching from url " + url + ", count="
-							+ count);
-				}
-				if (count >= MAX_FETCH_TRIES) {
-					stats.fetchErrors++;
-					logger.debug("Error getting data from url", e);
-					throw new Exception("Error getting data from url "
-							+ url, e);
-				}
+        				if (!config.quiet) {
+        					logger.warn("Error fetching from url " + url + ", count="
+        							+ count);
+        				}
+        				if (count >= MAX_FETCH_TRIES) {
+        					stats.fetchErrors++;
+        					logger.debug("Error getting data from url", e);
+        					throw new Exception("Error getting data from url "
+        							+ url, e);
+        				}
          	       }
                 }
+		logger.debug(xmlToString(xml));
                 return xml;
         }
 
@@ -203,12 +221,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 			if (!n.getNodeName().equals("uitzending_data_item")) {
 				logger.warn("Ignoring RTL detail, tag " + n.getNodeName()
 						+ ", full xml:");
-				Transformer t = TransformerFactory.newInstance()
-						.newTransformer();
-				StringWriter writer = new StringWriter();
-				StreamResult result = new StreamResult(writer);
-				t.transform(new DOMSource(xml), result);
-				logger.debug(writer.toString());
+				logger.debug(xmlToString(xml));
 				continue;
 			}
 			// we have a uitzending_data_item node
@@ -227,12 +240,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 					}
 					handleNode(prog, dateStatus, descStatus, subnodes.item(j));
 				} catch (RTLException e) {
-					Transformer t = TransformerFactory.newInstance()
-							.newTransformer();
-					StringWriter writer = new StringWriter();
-					StreamResult result2 = new StreamResult(writer);
-					t.transform(new DOMSource(xml), result2);
-					logger.debug(writer.toString(), e);
+					logger.debug(xmlToString(xml), e);
 					continue;
 				}
 			}
