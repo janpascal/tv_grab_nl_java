@@ -1,6 +1,14 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.2.1 (2013-06-10)
+- Fix for Horizon programme title
+- Log XML messages in RTL class with log-level=DEBUG
+- Updated the Horizon fetcher to treat the station id as 
+  a long value because Horizion's channel id's are now above Integer.MAX_VALUE.
+  (Thanks to Oele for the patch)
+- Fix a few categories to comply with MythWeb colouring
+
 tv_grab_nl_java-1.2.0 (2013-03-05)
 - UPC (www.horizon.tv) module toegevoegd
 
