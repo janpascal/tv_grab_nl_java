@@ -120,7 +120,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			JSONObject firstSchedule = stationSchedules.getJSONObject(0);
 			JSONObject station = firstSchedule.getJSONObject("station");
 			logger.debug("firstschedule: " + firstSchedule.toString());
-			int id = station.getInt("id");
+			long id = station.getLong("id");
 			String name = station.getString("title");
 			// Use the largest available station logo as icon
 			JSONArray images = station.getJSONArray("images");
@@ -134,7 +134,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 					maxSize = image.getInt("width");
 				}
 			}
-			Channel c = Channel.getChannel(getId(), Integer.toString(id), name,
+			Channel c = Channel.getChannel(getId(), Long.toString(id), name,
 					icon);
 			result.add(c);
 		}
