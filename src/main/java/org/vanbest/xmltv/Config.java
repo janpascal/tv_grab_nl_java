@@ -104,18 +104,39 @@ public class Config {
 		return cattrans.get(category.toLowerCase());
 	}
 
+        /*
+        MythWeb categories:
+          Action         Adult          
+          Animals        Art_Music      
+          Business       Children       
+          Comedy         Crime_Mystery  
+          Documentary    Drama          
+          Educational    Food           
+          Game           Health_Medical 
+          History        HowTo          
+          Horror         Misc           
+          News           Reality        
+          Romance        Science_Nature 
+          SciFi_Fantasy  Shopping       
+          Soaps          Spiritual      
+          Sports         Talk           
+          Travel         War            
+          Western        Movie
+          Unknown        
+        */
+
 	static private Map<String, String> getDefaultCattrans() {
 		Map<String, String> result = new HashMap<String, String>();
-		result.put("amusement", "Animated");
+		result.put("amusement", "Unknown");
 		result.put("comedy", "Comedy");
 		result.put("documentaire", "Documentary");
 		result.put("educatief", "Educational");
 		result.put("erotiek", "Adult");
-		result.put("film", "Film");
+		result.put("film", "Movie");
 		result.put("muziek", "Art/Music");
 		result.put("informatief", "Educational");
 		result.put("jeugd", "Children");
-		result.put("kunst/cultuur", "Arts/Culture");
+		result.put("kunst/cultuur", "Art/Music");
 		result.put("misdaad", "Crime/Mystery");
 		result.put("muziek", "Music");
 		result.put("natuur", "Science/Nature");
@@ -124,7 +145,7 @@ public class Config {
 		result.put("religieus", "Religion");
 		result.put("serie/soap", "Drama");
 		result.put("sport", "Sports");
-		result.put("theater", "Arts/Culture");
+		result.put("theater", "Art/Music");
 		result.put("wetenschap", "Science/Nature");
 		result.put("news", "News");
 		return result;
