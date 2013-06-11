@@ -16,12 +16,13 @@ ZIPFILE="$PWD/../tv_grab_nl_java-$VERSION.zip"
 mkdir "$DESTDIR"
 rm -f "$ZIPFILE"
 
-mvn compile
+mvn compiler:compile
 mvn test
 if [ "$?" != 0 ]; then
   echo "Test failed, aborting"
   exit 1;
 fi
+mvn package
 mvn assembly:single
 cp target/tv_grab_nl_java-$VERSION-dep.jar "$DESTDIR/tv_grab_nl_java.jar"
 cp tv_grab_nl_java install.sh README LICENSE Changelog "$DESTDIR"
