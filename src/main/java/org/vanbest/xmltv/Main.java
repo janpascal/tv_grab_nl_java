@@ -477,9 +477,7 @@ public class Main {
 			showLicense();
 			break;
 		case ACTION_DESCRIPTION:
-			showHeader();
-			System.out.println();
-			System.out.println("tv_grab_nl_java is a parser for Dutch TV listings using the tvgids.nl JSON interface");
+			System.out.println("Dutch TV listings using tvgids.nl, rtl.nl and horizon.tv");
 			break;
 		case ACTION_HELP:
 			// automatically generate the help statement
