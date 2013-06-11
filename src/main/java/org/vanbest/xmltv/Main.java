@@ -196,10 +196,12 @@ public class Main {
 		// public String cacheDbPassword;
 
 		Set<String> oldChannels = new HashSet<String>();
+		Set<String> oldChannelNames = new HashSet<String>();
 		Set<Integer> oldGuides = new HashSet<Integer>();
 		for (Channel c : config.channels) {
 			if (c.enabled) {
 				oldChannels.add(c.source + "::" + c.id);
+				oldChannelNames.add(c.source + "::" + c.defaultName());
 				oldGuides.add(c.source);
 			}
 		}
@@ -239,7 +241,8 @@ public class Main {
 		boolean none = false;
 		boolean keep = false;
 		for (Channel c : channels) {
-			boolean selected = oldChannels.contains(c.source + "::" + c.id);
+			boolean selected = oldChannels.contains(c.source + "::" + c.id) || 
+                                           oldChannelNames.contains(c.source + "::" + c.defaultName());
 			System.out.print("add channel " + c.getXmltvChannelId() + " ("
 					+ c.defaultName()
 					+ ") [[y]es,[n]o,[a]ll,[none],[k]eep selection (default="
