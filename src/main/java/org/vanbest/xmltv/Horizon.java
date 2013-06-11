@@ -125,15 +125,15 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			// Use the largest available station logo as icon
 			JSONArray images = station.getJSONArray("images");
 			String icon = "";
-			int maxSize = 0;
-			for( int j=0; j<images.size(); j++) {
-				JSONObject image = images.getJSONObject(j);
-				if (image.getString("assetType").startsWith("station-logo") &&
-						image.getInt("width")>maxSize) {
-					icon = image.getString("url");
-					maxSize = image.getInt("width");
-				}
-			}
+                        int maxSize = 0;
+                        for( int j=0; j<images.size(); j++) {
+                                JSONObject image = images.getJSONObject(j);
+                                if (image.getString("assetType").startsWith("station-logo") &&
+                                                image.getInt("width")>maxSize) {
+                                        icon = image.getString("url");
+                                        maxSize = image.getInt("width");
+                                }
+                        }
 			Channel c = Channel.getChannel(getId(), Long.toString(id), name,
 					icon);
 			result.add(c);
@@ -325,7 +325,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			// List<Channel> my_channels = channels;
 			List<Channel> my_channels = channels.subList(0, 5);
 			for (Channel c : my_channels) {
-				c.serialize(writer);
+				c.serialize(writer, true);
 			}
 			writer.flush();
 			for(int day=0; day<5; day++) {

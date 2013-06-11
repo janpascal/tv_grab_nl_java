@@ -1,7 +1,7 @@
 package org.vanbest.xmltv;
 
 /*
- Copyright (c) 2012 Jan-Pascal van Best <janpascal@vanbest.org>
+ Copyright (c) 2012,2013 Jan-Pascal van Best <janpascal@vanbest.org>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ public class Config {
 	public String cacheDbHandle;
 	public String cacheDbUser;
 	public String cacheDbPassword;
+        public boolean fetchLogos;
 
 	// not stored (yet)
 	public boolean joinKijkwijzerRatings = true;
@@ -81,6 +82,7 @@ public class Config {
 		result.setCacheFile(cachefile);
 		result.cacheDbUser = "SA";
 		result.cacheDbPassword = "";
+		result.fetchLogos= true;
 		return result;
 	}
 
@@ -159,6 +161,7 @@ public class Config {
 		out.println("cache-db-handle: " + escape(cacheDbHandle));
 		out.println("cache-db-user: " + escape(cacheDbUser));
 		out.println("cache-db-password: " + escape(cacheDbPassword));
+		out.println("fetch-channel-logos: " + (fetchLogos?"yes":"no"));
 		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for (Channel c : channels) {
 			// FIXME: handle multiple channels names, icons and urls
@@ -331,6 +334,11 @@ public class Config {
 					result.cacheDbPassword = parts.get(1);
 				} else if (key.equals("nice-time-milliseconds")) {
 					result.niceMilliseconds = Integer.parseInt(parts.get(1));
+				} else if (key.equals("fetch-channel-logos")) {
+                                        String value = parts.get(1).toLowerCase();
+					result.fetchLogos = (value.equals("yes") ||
+                                          value.equals("true") ||
+                                          value.equals("1")) ;
 				} else {
 					logger.error("Unknown key " + key + " in config file!");
 				}

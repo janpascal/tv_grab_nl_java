@@ -34,7 +34,9 @@ public class Channel {
 	static Channel getChannel(int source, String id, String name, String iconUrl) {
 		Channel c = new Channel(source, id);
 		c.names.add(name);
-		c.icons.add(new Icon(iconUrl));
+                if (iconUrl != null) {
+  		    c.icons.add(new Icon(iconUrl));
+                }
 		return c;
 	}
 
@@ -46,7 +48,7 @@ public class Channel {
 		return EPGSourceFactory.newInstance().getChannelSourceName(source);
 	}
 
-	public void serialize(XMLStreamWriter writer) throws XMLStreamException {
+	public void serialize(XMLStreamWriter writer, boolean writeLogos) throws XMLStreamException {
 		writer.writeStartElement("channel");
 		writer.writeAttribute("id", getXmltvChannelId());
 		for (String name : names) {
@@ -55,9 +57,11 @@ public class Channel {
 			writer.writeCharacters(name);
 			writer.writeEndElement();
 		}
-		for (Icon i : icons) {
-			i.serialize(writer);
-		}
+                if (writeLogos) {
+                    for (Icon i : icons) {
+                            i.serialize(writer);
+                    }
+                }
 		for (String url : urls) {
 			writer.writeStartElement("url");
 			writer.writeCharacters(url);

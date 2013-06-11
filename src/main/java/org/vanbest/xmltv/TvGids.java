@@ -140,8 +140,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			int id = zender.getInt("id");
 			String name = org.apache.commons.lang.StringEscapeUtils
 					.unescapeHtml(zender.getString("name"));
-			String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id
-					+ ".png";
+                        String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id
+                                    + ".png";
 			Channel c = Channel.getChannel(getId(), Integer.toString(id), name,
 					icon);
 			result.add(c);
@@ -445,7 +445,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			// List<Channel> my_channels = channels;
 			List<Channel> my_channels = channels.subList(0, 15);
 			for (Channel c : my_channels) {
-				c.serialize(writer);
+				c.serialize(writer, true);
 			}
 			writer.flush();
 			List<Programme> programmes = gids.getProgrammes(my_channels, 2);

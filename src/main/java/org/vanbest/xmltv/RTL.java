@@ -166,8 +166,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 			JSONArray j = (JSONArray) o.get(k);
 			String id = genericChannelId(k.toString());
 			String name = (String) j.get(0);
-			String icon = icon_url + id + ".gif";
-
+                        String icon = icon_url + id + ".gif";
 			Channel c = Channel.getChannel(getId(), id, name, icon);
 			result.add(c);
 		}
@@ -497,7 +496,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
 			for (Channel c : channels) {
-				c.serialize(writer);
+				c.serialize(writer, true);
 			}
 			writer.flush();
 			// List<Programme> programmes =

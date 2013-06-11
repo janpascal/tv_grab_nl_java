@@ -1,7 +1,7 @@
 package org.vanbest.xmltv;
 
 /*
- Copyright (c) 2012 Jan-Pascal van Best <janpascal@vanbest.org>
+ Copyright (c) 2012,2013 Jan-Pascal van Best <janpascal@vanbest.org>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ public class Main {
 
 		for (Channel c : config.channels)
 			if (c.enabled)
-				c.serialize(writer);
+				c.serialize(writer, config.fetchLogos);
 
 		for (int day = offset; day < offset + days; day++) {
 			if (!config.quiet)
