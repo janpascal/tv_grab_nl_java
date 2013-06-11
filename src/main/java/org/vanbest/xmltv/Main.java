@@ -416,6 +416,10 @@ public class Main {
 			action = ACTION_LICENSE;
 			return action; // do not read config file
 		}
+		if (line.hasOption("description")) {
+			action = ACTION_DESCRIPTION;
+			return action; // do not read config file
+		}
 		if (line.hasOption("config-file")) {
 			configFile = new File(line.getOptionValue("config-file"));
 		}
@@ -423,9 +427,6 @@ public class Main {
 		if (line.hasOption("quiet")) {
 			config.quiet = true;
 			Logger.getRootLogger().setLevel(Level.ERROR);
-		}
-		if (line.hasOption("description")) {
-			action = ACTION_DESCRIPTION;
 		}
 		if (line.hasOption("help")) {
 			action = ACTION_HELP;
