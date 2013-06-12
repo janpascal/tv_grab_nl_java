@@ -32,7 +32,7 @@ Installatie (Linux)
    installeren met 
    $ apt-get install openjdk-6-jre
 
-2. Download de laatste .zip file van https://github.com/janpascal/tv_grab_nl_java/downloads
+2. Download de laatste .zip file van http://www.vanbest.org/drupal6/content/tv_grab_nl_java
    en pak 'm uit.
    $ unzip tv_grab_nl_java-<VERSIE>.zip
    $ cd tv_grab_nl_java-<VERSIE> 
@@ -53,7 +53,7 @@ Installatie (Windows)
    Kies de laatste versie van de Java JRE.
 
 2. Download het Windows installatiebestand (Setup-tv_grab_nl_java-<VERSIE>.exe)
-   van https://github.com/janpascal/tv_grab_nl_java/downloads
+   van http://www.vanbest.org/drupal6/content/tv_grab_nl_java
    en draai de installer. 
 
 3. Na de installatie is er in een startmenu een link naar tv_grab_nl_java
@@ -93,6 +93,18 @@ Je hebt telkens de keus uit:
 De configuratie wordt opgeslagen in het bestand $HOME/.xmltv/tv_grab_nl_java.conf. 
 Je kunt dit bestand eventueel handmatig bewerken. Als je tv_grab_nl_java nogmaals 
 aanroept met de --configure optie, dan worden je eerdere keuzes als default gebruikt. 
+
+Pas op met het handmatig bewerken van het configuratiebestand. Fouten in dit
+bestand kunnen ertoe leiden dat de grabber niet meer werkt. De volgende velden
+kunnen handmatig worden bewerkt:
+- fetch-channel-logos. Vul in 'yes' (standaard) of 'no'. Bij 'no' worden in het
+  uitvoerbestand geen channel-logo's opgenomen. Dit kun je gebruiken als je zelf
+  channel-logo's hebt ingesteld en niet wilt dat deze worden overschreven.
+- nice-time-milliseconds (standaard 500). Het aantal milliseconden tussen
+  achtereenvolgende verzoeken naar de webservers van tvgids etc. Een kortere
+  tijd maakt de grabber sneller, maar kan ertoe leiden dat de provider je
+  'vervelend' gaat vinden en je blokkeert. De standaardwaarde van 500 is een
+  goed compromis.
 
 Gebruik
 -------
@@ -158,5 +170,5 @@ The full license text can be found in the LICENSE file.
 
 Laatste aanpassing
 ------------------
-5/3/2013 (versie 1.1.0)
+2013-06-12 (versie 1.3.1)
 
