@@ -167,7 +167,8 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 			String id = genericChannelId(k.toString());
 			String name = (String) j.get(0);
                         String icon = icon_url + id + ".gif";
-			Channel c = Channel.getChannel(getId(), id, name, icon);
+			Channel c = Channel.getChannel(getId(), id, name);
+                        c.addIcon(icon);
 			result.add(c);
 		}
 

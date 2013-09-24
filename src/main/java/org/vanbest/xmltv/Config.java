@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 
 public class Config {
 	// constants
-	private final static int CURRENT_FILE_FORMAT = 4;
+	private final static int CURRENT_FILE_FORMAT = 5;
 
 	// in config file
 	public int niceMilliseconds;
@@ -164,14 +164,7 @@ public class Config {
 		out.println("fetch-channel-logos: " + (fetchLogos?"yes":"no"));
 		out.println("nice-time-milliseconds: " + niceMilliseconds);
 		for (Channel c : channels) {
-			// FIXME: handle multiple channels names, icons and urls
-			out.print("channel: " + c.getSourceName() + ": " + c.id + ": "
-					+ (c.enabled ? "enabled" : "disabled") + ": "
-					+ escape(c.defaultName()));
-			if (!c.icons.isEmpty()) {
-				out.print(" : " + escape(c.icons.get(0).url));
-			}
-			out.println();
+                        c.writeConfig(out);
 		}
 		for (Map.Entry<String, String> entry : cattrans.entrySet()) {
 			out.println("category: " + escape(entry.getKey()) + ": "
@@ -244,62 +237,9 @@ public class Config {
 				List<String> parts = splitLine(s);
 				String key = parts.get(0).toLowerCase();
 				if (key.equals("channel")) {
-					Channel c = null;
 					// System.out.println("Adding channel " + parts +
 					// " in file format " + fileformat);
-					switch (fileformat) {
-					case 0:
-						c = Channel.getChannel(EPGSourceFactory.newInstance()
-								.getChannelSourceId("tvgids.nl"), parts.get(1),
-								parts.get(2));
-						if (parts.size() > 3) {
-							c.addIcon(parts.get(3));
-						}
-						break;
-					case 1:
-						c = Channel.getChannel(EPGSourceFactory.newInstance()
-								.getChannelSourceId("tvgids.nl"), parts.get(1),
-								parts.get(3));
-						if (parts.size() > 4) {
-							c.addIcon(parts.get(4));
-						}
-						String value = parts.get(2);
-						if (value.equals("enabled")) {
-							c.setEnabled(true);
-						} else if (value.equals("disabled")) {
-							c.setEnabled(false);
-						} else {
-							logger.error("Error in config file, unknown channel status \""
-									+ parts.get(2)
-									+ "\", should be enabled or disabled");
-						}
-						break;
-					case 2:
-					case 3:
-					case 4:
-						int source;
-						if (fileformat == 2) {
-							source = Integer.parseInt(parts.get(1));
-						} else {
-							source = EPGSourceFactory.newInstance()
-									.getChannelSourceId(parts.get(1));
-						}
-						c = Channel.getChannel(source, parts.get(2),
-								parts.get(4));
-						if (parts.size() > 5) {
-							c.addIcon(parts.get(5));
-						}
-						value = parts.get(3);
-						if (value.equals("enabled")) {
-							c.setEnabled(true);
-						} else if (value.equals("disabled")) {
-							c.setEnabled(false);
-						} else {
-							logger.error("Error in config file, unknown channel status \""
-									+ parts.get(3)
-									+ "\", should be enabled or disabled");
-						}
-					}
+					Channel c = Channel.parseConfig(fileformat, parts);
 					result.channels.add(c);
 				} else if (key.equals("category")) {
 					result.cattrans.put(parts.get(1), parts.get(2));

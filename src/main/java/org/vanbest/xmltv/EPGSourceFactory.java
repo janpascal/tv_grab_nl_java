@@ -81,11 +81,13 @@ public class EPGSourceFactory {
 		return createEPGSource(sourceId, config);
 	}
 
-	public String getChannelSourceName(int id) {
+	public static String getChannelSourceName(int id) {
+                init();
 		return names.get(id);
 	}
 
-	public int getChannelSourceId(String name) {
+	public static int getChannelSourceId(String name) {
+                init();
 		return ids.get(name);
 	}
 

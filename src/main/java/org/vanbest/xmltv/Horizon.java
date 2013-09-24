@@ -45,9 +45,31 @@ import net.sf.json.JSONObject;
 
 public class Horizon extends AbstractEPGSource implements EPGSource {
 
+        static class HorizonChannel extends Channel {
+            long horizonId;
+	    protected HorizonChannel(int source, String id, long horizonId) {
+                super(source,id);
+                this.horizonId = horizonId;
+            }
+	    protected HorizonChannel(int source, long horizonId, String name) {
+                super(source,sanitise(name));
+                this.horizonId = horizonId;
+            }
+            public String getXmltvChannelId() {
+                    return sanitise(defaultName()) + "." + getSourceName();
+            }
+            public static String sanitise(String name) {
+              return name.replaceAll("[^a-zA-Z0-9]","");
+            }
+            @Override
+            public String extraConfig() {
+                    return Long.toString(horizonId);
+            }
+
+        }
+
 	static String channels_url = "https://www.horizon.tv/oesp/api/NL/nld/web/channels/";
 	static String listings_url = "https://www.horizon.tv/oesp/api/NL/nld/web/listings";
-	//  ?byStationId=28070126&sort=startTime&range=1-100&byStartTime=1362000000000~1362100000000";
 
 	public static String NAME = "horizon.tv";
 
@@ -61,11 +83,12 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		return NAME;
 	}
 
-	public static URL programmeUrl(Channel channel, int day)
+	public static URL programmeUrl(Channel c, int day)
 			throws Exception {
+                HorizonChannel channel = (HorizonChannel) c;
 		StringBuilder s = new StringBuilder(listings_url);
 		s.append("?byStationId=");
-		s.append(channel.id);
+		s.append(channel.horizonId);
 		s.append("&sort=startTime&range=1-100");
 		Calendar startTime=Calendar.getInstance();
 		startTime.set(Calendar.HOUR_OF_DAY, 0);
@@ -120,7 +143,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			JSONObject firstSchedule = stationSchedules.getJSONObject(0);
 			JSONObject station = firstSchedule.getJSONObject("station");
 			logger.debug("firstschedule: " + firstSchedule.toString());
-			long id = station.getLong("id");
+			long horizonId = station.getLong("id");
 			String name = station.getString("title");
 			// Use the largest available station logo as icon
 			JSONArray images = station.getJSONArray("images");
@@ -134,8 +157,10 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
                                         maxSize = image.getInt("width");
                                 }
                         }
-			Channel c = Channel.getChannel(getId(), Long.toString(id), name,
-					icon);
+                        String id = HorizonChannel.sanitise(name);
+			Channel c = Channel.getChannel(getId(), id, name, Long.toString(horizonId));
+			//Channel c = new HorizonChannel(getId(), horizonId, name);
+                        c.addIcon(icon);
 			result.add(c);
 		}
 
