@@ -126,6 +126,7 @@ public class RTLTest {
 			assertFalse("GTST should have at least one non-empty description",
 					gtstOriginal.descriptions.get(0).title.isEmpty());
 
+                        /* Not provided any more
 			assertNotNull("GTST should have kijkwijzer information",
 					gtstOriginal.ratings);
 			assertTrue("GTST should have at least one kijkwijzer ratings",
@@ -138,6 +139,7 @@ public class RTLTest {
 					gtstOriginal.ratings.get(0).value);
 			assertFalse("GTST rating should have value",
 					gtstOriginal.ratings.get(0).value.isEmpty());
+                        */
 
 			List<Programme> reruns = rtl.getProgrammes(rtl4, rerun);
 			Programme gtstRerun = null;

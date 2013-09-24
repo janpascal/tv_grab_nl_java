@@ -42,7 +42,8 @@ public class HorizonTest {
 		// there should be an "RTL4" channel
 		boolean foundRTL4 = false;
 		for (Channel c : channels) {
-			if (c.defaultName().equals("RTL 4")) {
+			if (c.defaultName().equals("RTL 4") ||
+                            c.defaultName().equals("RTL 4 HD")) {
 				foundRTL4 = true;
 				assertFalse("RTL 4 channel should have at least one icon",
 						c.icons.isEmpty());
@@ -65,7 +66,8 @@ public class HorizonTest {
 		fetchChannels();
 		Channel rtl4 = null;
 		for (Channel c : channels) {
-			if (c.defaultName().equals("RTL 4")) {
+			if (c.defaultName().equals("RTL 4") ||
+                            c.defaultName().equals("RTL 4 HD")) {
 				rtl4 = c;
                                 break;
 			}
@@ -106,26 +108,25 @@ public class HorizonTest {
 			List<Programme> first = horizon.getProgrammes(rtl4, offset);
 			Programme gtstOriginal = null;
 			for (Programme p : first) {
-				if (p.getFirstTitle().matches("Goede Tijden.*")) {
+				if (p.getFirstTitle().matches("Goede Tijden.*") ||
+				    p.getFirstTitle().matches("Goede tijden.*")) {
 					if (p.startTime.getHours() >= 19) {
 						gtstOriginal = p;
 						break;
 					}
 				}
 			}
-			assertNotNull(
-					"Should have a programme called Goede Tijden, Slechte Tijden after 19:00 on date with offset "
+			assertNotNull("Should have a programme called Goede Tijden, Slechte Tijden after 19:00 on date with offset "
 							+ offset + " for today", gtstOriginal);
 			assertNotNull("GTST should have a description",
 					gtstOriginal.descriptions);
 			assertTrue("GTST should have at least one description",
 					gtstOriginal.descriptions.size() > 0);
-			assertNotNull(
-					"GTST should have at least one non-empty description",
+			assertNotNull("GTST should have at least one non-empty description",
 					gtstOriginal.descriptions.get(0).title);
 			assertFalse("GTST should have at least one non-empty description",
 					gtstOriginal.descriptions.get(0).title.isEmpty());
-
+                        /* Not provided any more
 			assertNotNull("GTST should have kijkwijzer information",
 					gtstOriginal.ratings);
 			assertTrue("GTST should have at least one kijkwijzer ratings",
@@ -138,11 +139,13 @@ public class HorizonTest {
 					gtstOriginal.ratings.get(0).value);
 			assertFalse("GTST rating should have value",
 					gtstOriginal.ratings.get(0).value.isEmpty());
+                        */
 
 			List<Programme> reruns = horizon.getProgrammes(rtl4, rerun);
 			Programme gtstRerun = null;
 			for (Programme p : reruns) {
-				if (p.getFirstTitle().matches("Goede Tijden.*")) {
+				if (p.getFirstTitle().matches("Goede Tijden.*") ||
+				    p.getFirstTitle().matches("Goede tijden.*")) {
 					if (p.startTime.getHours() <= 15) {
 						gtstRerun = p;
 						break;
