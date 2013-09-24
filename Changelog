@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.4.0 (2013-09-24)
+- Config file format change: Horizon now uses friendly channel ids
+
 tv_grab_nl_java-1.3.1 (2013-06-11)
 - When reconfiguring, keep channels from source if either channel id
   or channel name is identical
