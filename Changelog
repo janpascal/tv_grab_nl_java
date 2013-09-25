@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.4.1 (2013-09-25)
+- Config file format change: now the xmltv id per channel is editable
+
 tv_grab_nl_java-1.4.0 (2013-09-24)
 - Config file format change: Horizon now uses friendly channel ids
 
