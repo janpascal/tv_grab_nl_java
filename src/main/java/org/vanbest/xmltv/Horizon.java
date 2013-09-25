@@ -45,29 +45,6 @@ import net.sf.json.JSONObject;
 
 public class Horizon extends AbstractEPGSource implements EPGSource {
 
-        static class HorizonChannel extends Channel {
-            long horizonId;
-	    protected HorizonChannel(int source, String id, long horizonId) {
-                super(source,id);
-                this.horizonId = horizonId;
-            }
-	    protected HorizonChannel(int source, long horizonId, String name) {
-                super(source,sanitise(name));
-                this.horizonId = horizonId;
-            }
-            public String getXmltvChannelId() {
-                    return sanitise(defaultName()) + "." + getSourceName();
-            }
-            public static String sanitise(String name) {
-              return name.replaceAll("[^a-zA-Z0-9]","");
-            }
-            @Override
-            public String extraConfig() {
-                    return Long.toString(horizonId);
-            }
-
-        }
-
 	static String channels_url = "https://www.horizon.tv/oesp/api/NL/nld/web/channels/";
 	static String listings_url = "https://www.horizon.tv/oesp/api/NL/nld/web/listings";
 
@@ -83,12 +60,11 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		return NAME;
 	}
 
-	public static URL programmeUrl(Channel c, int day)
+	public static URL programmeUrl(Channel channel, int day)
 			throws Exception {
-                HorizonChannel channel = (HorizonChannel) c;
 		StringBuilder s = new StringBuilder(listings_url);
 		s.append("?byStationId=");
-		s.append(channel.horizonId);
+		s.append(channel.id);
 		s.append("&sort=startTime&range=1-100");
 		Calendar startTime=Calendar.getInstance();
 		startTime.set(Calendar.HOUR_OF_DAY, 0);
@@ -157,8 +133,8 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
                                         maxSize = image.getInt("width");
                                 }
                         }
-                        String id = HorizonChannel.sanitise(name);
-			Channel c = Channel.getChannel(getId(), id, name, Long.toString(horizonId));
+                        String xmltv = name.replaceAll("[^a-zA-Z0-9]", "")+"."+getName();
+			Channel c = Channel.getChannel(getId(), Long.toString(horizonId), xmltv, name);
 			//Channel c = new HorizonChannel(getId(), horizonId, name);
                         c.addIcon(icon);
 			result.add(c);

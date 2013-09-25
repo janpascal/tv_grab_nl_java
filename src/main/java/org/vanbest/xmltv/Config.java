@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 
 public class Config {
 	// constants
-	private final static int CURRENT_FILE_FORMAT = 5;
+	private final static int CURRENT_FILE_FORMAT = 6;
 
 	// in config file
 	public int niceMilliseconds;

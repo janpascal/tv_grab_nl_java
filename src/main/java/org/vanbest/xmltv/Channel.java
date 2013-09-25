@@ -8,7 +8,8 @@ import javax.xml.stream.XMLStreamWriter;
 import org.apache.log4j.Logger;
 
 public class Channel {
-	String id;
+	String id; // Internal id, used by EPG provider
+        String xmltv; // xmltv id such as '1.tvgids.nl' or 'Nederland1.horizon.tv'
 	List<String> names; // at least one name is obligatory
 	List<Icon> icons;
 	List<String> urls;
@@ -16,9 +17,10 @@ public class Channel {
 	int source;
 	static Logger logger = Logger.getLogger(Channel.class);
 
-	protected Channel(int source, String id) {
+	protected Channel(int source, String id, String xmltv) {
 		this.id = id;
 		this.source = source;
+                this.xmltv = xmltv;
 		names = new ArrayList<String>();
 		icons = new ArrayList<Icon>();
 		urls = new ArrayList<String>();
@@ -28,18 +30,20 @@ public class Channel {
 		return names.get(0);
 	}
 
-	static Channel getChannel(int source, String id, String name) {
-                Channel c;
-                if(EPGSourceFactory.getChannelSourceName(source).equals(Horizon.NAME)) {
-                        long horizonId=Long.parseLong(id);
-		        c = new Horizon.HorizonChannel(source, id, horizonId);
-                } else {
-		        c = new Channel(source, id);
-                }
+	static Channel getChannel(int source, String id, String xmltv, String name) {
+                Channel c = new Channel(source, id, xmltv);
 		c.names.add(name);
 		return c;
 	}
 
+        // Use default xmltvid with id+"."+sourceName
+	static Channel getChannel(int source, String id, String name) {
+                String xmltv = id + "." + EPGSourceFactory.getChannelSourceName(source);
+                Channel c = new Channel(source, id, xmltv);
+		c.names.add(name);
+		return c;
+	}
+/*
 	static Channel getChannel(int source, String id, String name, String extraConfig) {
                 Channel c;
                 if(EPGSourceFactory.getChannelSourceName(source).equals(Horizon.NAME)) {
@@ -51,13 +55,13 @@ public class Channel {
 		c.names.add(name);
 		return c;
 	}
-
+*/
 	public String getXmltvChannelId() {
-		return id + "." + getSourceName();
+		return xmltv; // id + "." + getSourceName();
 	}
 
 	public String getSourceName() {
-		return EPGSourceFactory.newInstance().getChannelSourceName(source);
+		return EPGSourceFactory.getChannelSourceName(source);
 	}
 
 	public void serialize(XMLStreamWriter writer, boolean writeLogos) throws XMLStreamException {
@@ -100,6 +104,7 @@ public class Channel {
         public void writeConfig(PrintWriter out) {
 		// FIXME: handle multiple channels names, icons and urls
                 out.print("channel: " + getSourceName() + ": "
+                                + Config.escape(xmltv) + ": "
                                 + id + ": "
                                 + (enabled ? "enabled" : "disabled") + ": "
                                 + Config.escape(defaultName()) + ": "
@@ -142,7 +147,7 @@ public class Channel {
                 case 2:
                 case 3:
                 case 4:
-                case 5:
+                case 5: {
                         int source;
                         if (fileformat == 2) {
                                 source = Integer.parseInt(parts.get(1));
@@ -150,27 +155,63 @@ public class Channel {
                                 source = EPGSourceFactory.newInstance()
                                                 .getChannelSourceId(parts.get(1));
                         }
+                        String id = parts.get(2);
+                        String enabled = parts.get(3);
+                        String name = parts.get(4);
+                        logger.info("         id: " + id);
+                        logger.info("    enabled: " + enabled);
+                        logger.info("       name: " + name);
                         if(fileformat<5) {
-                                c = Channel.getChannel(source, parts.get(2),
-                                        parts.get(4));
+                                c = Channel.getChannel(source, id, name);
                         } else {
-                                c = Channel.getChannel(source, parts.get(2),
-                                        parts.get(4), parts.get(5));
+                                String extra = parts.get(5);
+                                if(extra.isEmpty()) {
+                                    c = Channel.getChannel(source, id, name);
+                                } else {
+                                    // Horizon channel
+                                    String xmltv=id+"."+EPGSourceFactory.getChannelSourceName(source);
+                                    String horizonId=extra;
+                                    logger.info("      xmltv: " + xmltv );
+                                    logger.info("   horizonI: " + horizonId);
+                                    c = Channel.getChannel(source, horizonId, xmltv, name);
+                                }
                         }
                         int iconPart = (fileformat<5?5:6);
                         if (parts.size() > iconPart) {
                                 c.addIcon(parts.get(iconPart));
                         }
-                        value = parts.get(3);
-                        if (value.equals("enabled")) {
+                        if (enabled.equals("enabled")) {
                                 c.setEnabled(true);
-                        } else if (value.equals("disabled")) {
+                        } else if (enabled.equals("disabled")) {
                                 c.setEnabled(false);
                         } else {
                                 logger.error("Error in config file, unknown channel status \""
-                                                + parts.get(3)
+                                                + enabled 
                                                 + "\", should be enabled or disabled");
                         }
+                        break;
+                }
+                case 6: {
+                        int source = EPGSourceFactory.getChannelSourceId(parts.get(1));
+                        String xmltv = parts.get(2);
+                        String id = parts.get(3);
+                        String enabled = parts.get(4);
+                        String name = parts.get(5);
+                        String extra = parts.get(6);
+                        c = Channel.getChannel(source, id, xmltv, name);
+                        if (parts.size() > 7) {
+                                c.addIcon(parts.get(7));
+                        }
+                        if (enabled.equals("enabled")) {
+                                c.setEnabled(true);
+                        } else if (enabled.equals("disabled")) {
+                                c.setEnabled(false);
+                        } else {
+                                logger.error("Error in config file, unknown channel status \""
+                                                + enabled
+                                                + "\", should be enabled or disabled");
+                        }
+                }
                 }
                 return c;
         }
