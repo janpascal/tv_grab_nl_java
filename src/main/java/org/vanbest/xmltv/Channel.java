@@ -158,9 +158,6 @@ public class Channel {
                         String id = parts.get(2);
                         String enabled = parts.get(3);
                         String name = parts.get(4);
-                        logger.info("         id: " + id);
-                        logger.info("    enabled: " + enabled);
-                        logger.info("       name: " + name);
                         if(fileformat<5) {
                                 c = Channel.getChannel(source, id, name);
                         } else {
@@ -171,8 +168,6 @@ public class Channel {
                                     // Horizon channel
                                     String xmltv=id+"."+EPGSourceFactory.getChannelSourceName(source);
                                     String horizonId=extra;
-                                    logger.info("      xmltv: " + xmltv );
-                                    logger.info("   horizonI: " + horizonId);
                                     c = Channel.getChannel(source, horizonId, xmltv, name);
                                 }
                         }
