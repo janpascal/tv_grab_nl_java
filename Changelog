@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.5.0 (2013-12-24)
+- ZiggoGids (www.ziggogids.nl) module added
+
 tv_grab_nl_java-1.4.2 (2013-09-25)
 - Remove superfluous debug statement that polluted stdout output
 

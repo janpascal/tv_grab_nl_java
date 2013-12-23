@@ -232,6 +232,7 @@ public class Main {
 			}
 		}
 
+		System.out.println("Please wait, fetching channel information...");
 		List<Channel> channels = new ArrayList<Channel>();
 		for (EPGSource guide : guides) {
 			channels.addAll(guide.getChannels());
