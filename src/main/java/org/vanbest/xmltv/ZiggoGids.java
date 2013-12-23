@@ -24,6 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -48,8 +49,21 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.util.EntityUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity; 
+import org.apache.http.client.methods.HttpPost;
+
 public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 
+	static String base_url = "http://www.ziggogids.nl";
 	static String channels_url = "http://www.ziggogids.nl/nl/zenders";
 	static String programme_base_url = "http://www.ziggogids.nl/nl";
 	static String detail_base_url = "http://www.ziggogids.nl/module/ajax/nl/program_popinfo";
@@ -97,6 +111,73 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 		s.append(id);
 		return new URL(s.toString());
 	}
+
+
+        private void setActiveChannel(CloseableHttpClient client, String channel) throws IOException {
+            setActiveChannels(client, Collections.singletonList(channel));
+        }
+
+        private Document fetchJsoup(CloseableHttpClient client, String url) throws IOException {
+            Document doc = null;
+
+            HttpGet httpGet = new HttpGet(url);
+            CloseableHttpResponse response = client.execute(httpGet);
+            try {
+                //logger.debug(response.getStatusLine());
+                HttpEntity entity = response.getEntity();
+                doc = Jsoup.parse(entity.getContent(), null, url);
+                EntityUtils.consume(entity);
+            } finally {
+                response.close();
+            }
+            return doc;
+        }
+
+        private void setActiveChannels(CloseableHttpClient client, List<String> channels) throws IOException {
+            Document doc;
+            try { 
+                HttpPost post = new HttpPost(channels_url);
+                List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+                for(String ch: channels) {
+                    nvps.add(new BasicNameValuePair("channel_selection[]", ch));
+                }
+                post.setEntity(new UrlEncodedFormEntity(nvps));
+                CloseableHttpResponse response = client.execute(post);
+                try {
+                    // logger.debug(response.getStatusLine());
+                    HttpEntity entity = response.getEntity();
+                    doc = Jsoup.parse(entity.getContent(), null, channels_url);
+                    EntityUtils.consume(entity);
+                } finally {
+                        response.close();
+                }
+            } catch (IOException e) {
+                logger.error("IO Exception trying to get ziggo channel list from "+channels_url, e);
+                throw e;
+            }
+            //logger.debug("ziggogids POST result: " + doc.outerHtml());
+        }
+
+        private String fetchIconUrl(CloseableHttpClient client, String channel) throws IOException
+        {
+            setActiveChannel(client, channel);
+
+            String url = programme_base_url+"/2013-12-24T1615";
+            Document doc = fetchJsoup(client, url);
+
+            // logger.debug("ziggogids programme: " + doc.outerHtml());
+
+            Elements logos = doc.select(".gids-row-label .gids-row-channellogo");
+            if (logos.size()!=1) {
+                logger.error("number of channel logos for channel "+channel+" is "+logos.size()+"; should be 1");
+                for(Element e: logos) {
+                    String name = e.attr("title");
+                    String logo_url = e.select("img").first().attr("src");
+                    logger.debug("    \""+name+"\": "+logo_url);
+                }
+            }
+            return base_url + logos.first().select("img").first().attr("src");
+        }
 	/*
 	 * (non-Javadoc)
 	 *
@@ -107,18 +188,17 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 		List<Channel> result = new ArrayList<Channel>(100);
 
                 Document doc;
-                Connection.Response res;
-                try { 
-                    res = Jsoup.connect(channels_url).execute();
-                    logger.debug(res.statusCode()+": \""+res.statusMessage()+"\"");
-                    doc = res.parse();
+                CloseableHttpClient httpclient = HttpClients.createDefault();
+                try {
+                    doc = fetchJsoup(httpclient, channels_url);
                 } catch (IOException e) {
                     logger.error("IO Exception trying to get ziggo channel list from "+channels_url, e);
                     return result;
                 }
+
                 String title = doc.title();
 
-		logger.debug("ziggogids channels html: " + doc.outerHtml());
+		// logger.debug("ziggogids channels html: " + doc.outerHtml());
 
                 Elements fields = doc.select(".channel_field");
                 for(Element e: fields) {
@@ -126,82 +206,15 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
                     String name = e.select("label").first().text();
                     logger.debug("    "+index+": \""+name+"\"");
 		    Channel c = Channel.getChannel(getId(), index, name);
-                    //c.addIcon(icon);
-                    // TODO: get icons
+                    try {
+                        String icon = fetchIconUrl(httpclient, index);
+                        logger.debug("    "+icon);
+                        c.addIcon(icon);
+                    } catch (IOException e2) {
+                        logger.error("IO Exception trying to get channel log for channel "+index, e2);
+                    }
 		    result.add(c);
                 }
-
-                try { 
-                    res = Jsoup.connect(channels_url)
-                        .data("channel_selection[]", "135")
-                        .cookies(res.cookies())
-                        .method(Connection.Method.POST)
-                        .execute();
-                    logger.debug(res.statusCode()+": \""+res.statusMessage()+"\"");
-                    doc = res.parse();
-                } catch (IOException e) {
-                    logger.error("IO Exception trying to get ziggo channel list from "+channels_url, e);
-                    return result;
-                }
-		logger.debug("ziggogids POST result: " + doc.outerHtml());
-/*
-                try { 
-
-                    String url = "pid=l22&preferences=%7B%22title%22%3A%22TV-Gids%22%2C%22height%22%3A%221200%22%2C%22url%22%3A%22https%3A%2F%2Fwww.ziggogids.nl%22%7D&module=gadget&action=update&id=g23&";
-                    //pid=l22&preferences={"title":"TV-Gids","height":"1200","url":"https://www.ziggogids.nl"}&module=gadget&action=update&id=g23&
-                    res = Jsoup.connect("http://www.ziggo.nl/session")
-                        .data("pid","l22")
-                        .data("preferences", "{\"title\":\"TV-Gids\",\"height\":\"1200\",\"url\":\"https://www.ziggogids.nl\"}")
-                        .data("module", "gadget")
-                        .data("action", "update")
-                        .data("id", "g23")
-                        .cookies(res.cookies())
-                        .method(Connection.Method.POST)
-                        .execute();
-                    logger.debug(res.statusCode()+": \""+res.statusMessage()+"\"");
-                    doc = res.parse();
-                } catch (IOException e) {
-                    logger.error("IO Exception trying to get ziggo channel list from "+channels_url, e);
-                    return result;
-                }
-		logger.debug("ziggogids POST result: " + doc.outerHtml());
-*/
-                try {
-                    res = Jsoup.connect(programme_base_url+"/2013-12-23T1615")
-                        .cookies(res.cookies())
-                        .execute();
-                    logger.debug(res.statusCode()+": \""+res.statusMessage()+"\"");
-                    doc = res.parse();
-                } catch (IOException e) {
-                    logger.error("IO Exception trying to get ziggo channel list from "+channels_url, e);
-                    return result;
-                }
-		logger.debug("ziggogids programme: " + doc.outerHtml());
-
-                Elements logos = doc.select(".gids-row-label .gids-row-channellogo");
-                for(Element e: logos) {
-                    String name = e.attr("title");
-                    String logo_url = e.select("img").first().attr("src");
-                    logger.debug("    \""+name+"\": "+logo_url);
-                }
-
-
-
-/*
-		for (int i = 0; i < jsonArray.size(); i++) {
-			JSONObject zender = jsonArray.getJSONObject(i);
-			// System.out.println( "id: " + zender.getString("id"));
-			// System.out.println( "name: " + zender.getString("name"));
-			int id = zender.getInt("id");
-			String name = org.apache.commons.lang.StringEscapeUtils
-					.unescapeHtml(zender.getString("name"));
-                        String icon = "http://ziggogidsassets.nl/img/channels/53x27/" + id
-                                    + ".png";
-			Channel c = Channel.getChannel(getId(), Integer.toString(id), name);
-                        c.addIcon(icon);
-			result.add(c);
-		}
-*/
 		return result;
 	}
 
@@ -492,7 +505,7 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 		ZiggoGids gids = new ZiggoGids(4, config);
 		try {
 			List<Channel> channels = gids.getChannels();
-			//System.out.println("Channels: " + channels);
+			System.out.println("Channels: " + channels);
                         /*
 			XMLStreamWriter writer = XMLOutputFactory.newInstance()
 					.createXMLStreamWriter(new FileWriter("ziggogids.xml"));
