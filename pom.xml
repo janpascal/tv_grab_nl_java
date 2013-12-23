@@ -81,29 +81,35 @@
                                       </execution>
                                     </executions>
 			</plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <tasks>
-                <!-- Safety -->
-                <mkdir dir="${project.build.directory}" />
+                      <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                          <execution>
+                            <phase>generate-resources</phase>
+                            <goals>
+                              <goal>run</goal>
+                            </goals>
+                            <configuration>
+                              <tasks>
+                                <!-- Safety -->
+                                <mkdir dir="${project.build.directory}" />
 
-                <tstamp>
-                  <format property="last.updated" pattern="yyyy-MM-dd hh:mm:ss" />
-                </tstamp>
-                <echo file="${basedir}/target/filter.properties" message="build.time=${last.updated}" />
-              </tasks>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+                                <tstamp>
+                                  <format property="last.updated" pattern="yyyy-MM-dd hh:mm:ss" />
+                                </tstamp>
+                                <echo file="${basedir}/target/filter.properties" message="build.time=${last.updated}" />
+                              </tasks>
+                            </configuration>
+                          </execution>
+                        </executions>
+                      </plugin>
+
+                      <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>emma-maven-plugin</artifactId>
+                        <version>1.0-alpha-3</version>
+                      </plugin>
 		</plugins>
 		
       <resources>
