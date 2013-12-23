@@ -202,7 +202,6 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
                     String name = e.select("label").first().text();
                     logger.debug("    "+index+": \""+name+"\"");
 		    Channel c = Channel.getChannel(getId(), index, name);
-                    /* Too slow for now
                     try {
                         String icon = fetchIconUrl(httpclient, index);
                         logger.debug("    "+icon);
@@ -210,7 +209,6 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
                     } catch (IOException e2) {
                         logger.error("IO Exception trying to get channel log for channel "+index, e2);
                     }
-                    */
 		    result.add(c);
                 }
 		return result;
@@ -232,30 +230,37 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 
                 CloseableHttpClient httpclient = HttpClients.createDefault();
 
+                // TODO fetch multiple channels in one go
 		for (Channel c : channels) {
                     setActiveChannel(httpclient, c.id);
+                    Date lastStartTime=null;
+                    for(int daypart=0; daypart<4; daypart++) {
+                        String url = programmeUrl(day, daypart*6); // hour
+                        logger.debug("url: "+url);
 
-                    String url = programmeUrl(day, 20); // hour
-                    logger.debug("url: "+url);
+                        Document doc;
+                        try {
+                            doc = fetchJsoup(httpclient, url);
+                        } catch (IOException e) {
+                            logger.error("IO Exception trying to get ziggo channel list from "+url, e);
+                            return result;
+                        }
+                        // logger.debug("ziggogids programme: " + doc.outerHtml());
 
-                    Document doc;
-                    try {
-                        doc = fetchJsoup(httpclient, url);
-                    } catch (IOException e) {
-                        logger.error("IO Exception trying to get ziggo channel list from "+url, e);
-                        return result;
-                    }
-
-//                    logger.debug("ziggogids programme: " + doc.outerHtml());
-
-                    Elements rows = doc.select(".gids-item-row");
-                    for(Element row: rows) {
-                        logger.debug("*** row ***");
-                        for(Element item: row.select(".gids-row-item")) {
-                            Programme p = programmeFromElement(httpclient, item);
-                            p.channel = c.getXmltvChannelId();
-                            result.add(p);
-                            logger.debug(p.toString());
+                        Elements rows = doc.select(".gids-item-row");
+                        for(Element row: rows) {
+                            logger.debug("*** row ***");
+                            for(Element item: row.select(".gids-row-item")) {
+                                Programme p = programmeFromElement(httpclient, item);
+                                p.channel = c.getXmltvChannelId();
+                                // Handle overlapping result sets due to the
+                                // four windows per day
+                                if(lastStartTime==null || p.startTime.after(lastStartTime)) {
+                                    result.add(p);
+                                    lastStartTime = p.startTime;
+                                }
+                                logger.debug(p.toString());
+                            }
                         }
                     }
                 }
@@ -313,7 +318,6 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
             if(time!=null) {
                 logger.debug("progpop_time: "+time.text());
                 String genre = time.text().replaceFirst("^[^,]+,","").trim();
-                logger.debug("Genre: " + genre);
                 p.addCategory(config.translateCategory(genre));
             }
         }
@@ -338,7 +342,7 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 			writer.writeStartElement("tv");
 			// List<Channel> my_channels = channels;
 			//List<Channel> my_channels = channels.subList(0, 15);
-			List<Channel> my_channels = channels.subList(0, 3);
+			List<Channel> my_channels = channels.subList(0, 6);
 			for (Channel c : my_channels) {
 				c.serialize(writer, true);
 			}
