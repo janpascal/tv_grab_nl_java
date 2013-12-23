@@ -152,6 +152,10 @@ public class Programme implements Serializable {
 		descriptions.add(new Title(title, lang));
 	}
 
+        public boolean hasDescription() {
+            return (descriptions == null || descriptions.size()==0 );
+        }
+
 	public void addEpisode(String episode, String system) {
 		if (episodes == null)
 			episodes = new ArrayList<Episode>();
