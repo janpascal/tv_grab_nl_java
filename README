@@ -4,13 +4,13 @@ README for tv_grab_nl_java
 English Summary
 ---------------
 tv_grab_nl_java is an XMLTV-compatible grabber for Dutch television that uses
-TVGids.nl, rtl.nl and/or horizon.tv (UPC) as sources.
+TVGids.nl, rtl.nl, horizon.tv (UPC) and/or ziggogids.nl as sources.
 
 Algemeen
 --------
 tv_grab_nl_java is een XMLTV-compatibele grabber voor Nederlandse televisie 
-die TVGids.nl, rtl.nl en horizon.tv (UPC) als bron kan gebruiken. tv_grab_nl_java is geschreven 
-in Java en gebruikt o.a. de JSON-interface van TVGids.nl.
+die TVGids.nl, rtl.nl, horizon.tv (UPC) en ziggogids.nl als bron kan gebruiken. 
+tv_grab_nl_java is geschreven in Java en gebruikt o.a. de JSON-interface van TVGids.nl.
 
 Kenmerken van tv_grab_nl_java:
 - detailinformatie wordt gecached
@@ -19,6 +19,7 @@ Kenmerken van tv_grab_nl_java:
 - --configure behoudt de zenderinstellingen van het oude configuratiebestand 
   als default
 - geeft informatie over acteurs, presentatie, regisseur weer in xmltv
+  (afhankelijk van de bron)
 - geschikt voor mythtv
 
 Geschiedenis
@@ -32,7 +33,7 @@ Installatie (Linux)
    installeren met 
    $ apt-get install openjdk-6-jre
 
-2. Download de laatste .zip file van http://www.vanbest.org/drupal6/content/tv_grab_nl_java
+2. Download de laatste .zip file van https://github.com/janpascal/tv_grab_nl_java/releases
    en pak 'm uit.
    $ unzip tv_grab_nl_java-<VERSIE>.zip
    $ cd tv_grab_nl_java-<VERSIE> 
@@ -53,7 +54,7 @@ Installatie (Windows)
    Kies de laatste versie van de Java JRE.
 
 2. Download het Windows installatiebestand (Setup-tv_grab_nl_java-<VERSIE>.exe)
-   van http://www.vanbest.org/drupal6/content/tv_grab_nl_java
+   van https://github.com/janpascal/tv_grab_nl_java/releases
    en draai de installer. 
 
 3. Na de installatie is er in een startmenu een link naar tv_grab_nl_java
@@ -78,10 +79,11 @@ kanalen je de programmagegevens op wilt halen.
 $ tv_grab_nl_java --configure
 
 Er wordt eerst een aantal algemene vragen gesteld. Hiervoor is de defaultwaarde
-meestal prima. Vervolgens zoekt het programma uit voor welke kanalen er
-programma-informatie beschikbaar is uit de bronnen tvgids.nl en rtl.nl. Je wordt
-eerst gevraagd welke van deze bronnen je wilt gebruiken. Daarna volgt een lange
-reeks vragen over de kanalen van de bronnen die je hebt geselecteerd.
+meestal prima. Je wordt eerst gevraagd welke van de beschikbare bronnen je wilt
+gebruiken.  Vervolgens zoekt het programma uit voor welke kanalen er
+programma-informatie beschikbaar is uit de door jou geselecteerde bronnen.
+Daarna volgt een lange reeks vragen over de kanalen van de bronnen die je hebt
+geselecteerd.
 
 Je hebt telkens de keus uit:
 - Y (yes): gebruik kanaal
@@ -105,7 +107,9 @@ kunnen handmatig worden bewerkt:
   tijd maakt de grabber sneller, maar kan ertoe leiden dat de provider je
   'vervelend' gaat vinden en je blokkeert. De standaardwaarde van 500 is een
   goed compromis.
-- per channel: regel kan het xmltvid aangepast worden (in de derde kolom)
+- per channel:-regel kan het xmltvid aangepast worden (in de derde kolom). Je
+  kunt kanalen ook uit- en aanzetten door in de vijfde kolom "enabled" of 
+  "disabled" in te vullen.
 
 Gebruik
 -------
@@ -171,5 +175,5 @@ The full license text can be found in the LICENSE file.
 
 Laatste aanpassing
 ------------------
-2013-09-25 (versie 1.4.1)
+2013-12-24 (versie 1.5.1)
 
