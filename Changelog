@@ -1,6 +1,11 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.5.1 (2014-01-02)
+- Implement --config-yes flag
+- Fix error when program duration from ziggogids is not an integer
+- Fix error when writing to config file in local directory
+
 tv_grab_nl_java-1.5.0 (2013-12-24)
 - ZiggoGids (www.ziggogids.nl) module added
 
