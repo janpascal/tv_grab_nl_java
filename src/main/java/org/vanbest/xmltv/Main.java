@@ -175,20 +175,24 @@ public class Main {
 		System.out
 				.print("Delay between each request to the server (in milliseconds, default="
 						+ config.niceMilliseconds + "):");
-		while (true) {
-			String s = reader.readLine().toLowerCase();
-			if (s.isEmpty()) {
-				break;
-			}
-			try {
-				config.niceMilliseconds = Integer.parseInt(s);
-				break;
-			} catch (NumberFormatException e) {
-				System.out.println("\"" + s
-						+ "\" is not a valid number, please try again");
-				continue;
-			}
-		}
+                if(config.configYes) {
+                    System.out.println();
+                } else {
+                    while (true) {
+                            String s = reader.readLine().toLowerCase();
+                            if (s.isEmpty()) {
+                                    break;
+                            }
+                            try {
+                                    config.niceMilliseconds = Integer.parseInt(s);
+                                    break;
+                            } catch (NumberFormatException e) {
+                                    System.out.println("\"" + s
+                                                    + "\" is not a valid number, please try again");
+                                    continue;
+                            }
+                    }
+                }
 
 		// TODO configure cache location
 		// public String cacheDbHandle;
@@ -217,6 +221,12 @@ public class Main {
 			EPGSource guide = factory.createEPGSource(source, config);
 			System.out.print("    Use \"" + guide.getName()
 					+ "\" (Y/N, default=" + (selected ? "Y" : "N") + "):");
+                        if(config.configYes) {
+			    guides.add(guide);
+                            System.out.println("Y");
+                            continue;
+                        }
+
 			while (true) {
 				String s = reader.readLine().toLowerCase();
 				if (s.isEmpty()) {
@@ -235,8 +245,11 @@ public class Main {
 		System.out.println("Please wait, fetching channel information...");
 		List<Channel> channels = new ArrayList<Channel>();
 		for (EPGSource guide : guides) {
-			channels.addAll(guide.getChannels());
+                    System.out.print(guide.getName()+"... ");
+		    channels.addAll(guide.getChannels());
+                    System.out.println("OK");
 		}
+                System.out.println();
 
 		boolean all = false;
 		boolean none = false;
@@ -253,7 +266,7 @@ public class Main {
 				System.out.println(selected ? "Y" : "N");
 				continue;
 			}
-			if (all) {
+			if (all || config.configYes) {
 				c.enabled = true;
 				System.out.println("Y");
 				continue;
@@ -375,6 +388,10 @@ public class Main {
 								.withDescription("Interactive configuration")
 								.create())
 				.addOption(
+						OptionBuilder.withLongOpt("config-yes")
+								.withDescription("Answer 'yes' to all configuration questions")
+								.create())
+				.addOption(
 						OptionBuilder.withLongOpt("config-file").hasArg()
 								.withDescription("Configuration file location")
 								.create())
@@ -462,6 +479,9 @@ public class Main {
 		}
 		if (line.hasOption("configure")) {
 			action = ACTION_CONFIGURE;
+		}
+		if (line.hasOption("config-yes")) {
+			config.configYes = true;
 		}
 		return action;
 	}

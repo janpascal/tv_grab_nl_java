@@ -53,6 +53,7 @@ public class Config {
 
 	// command-line options
 	boolean quiet = false;
+        boolean configYes = false;
 
 	String project_version;
 	String build_time;
