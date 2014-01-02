@@ -1,7 +1,7 @@
 package org.vanbest.xmltv;
 
 /*
- Copyright (c) 2012,2013 Jan-Pascal van Best <janpascal@vanbest.org>
+ Copyright (c) 2012,2013,2014 Jan-Pascal van Best <janpascal@vanbest.org>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ public class Main {
 	public void showHeader() {
 		logger.info("tv_grab_nl_java version " + config.project_version
 				+ " (built " + config.build_time + ")");
-		logger.info("Copyright (C) 2012 Jan-Pascal van Best <janpascal@vanbest.org>");
+		logger.info("Copyright (C) 2012-2014 Jan-Pascal van Best <janpascal@vanbest.org>");
 		logger.info("tv_grab_nl_java comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it");
 		logger.info("under certain conditions; `tv_grab_nl_java --license' for details.");
 	}
@@ -316,7 +316,7 @@ public class Main {
 		}
 	}
 
-	static String copyright = "Copyright (c) 2012 Jan-Pascal van Best <janpascal@vanbest.org>"
+	static String copyright = "Copyright (c) 2012-2014 Jan-Pascal van Best <janpascal@vanbest.org>"
 			+ System.getProperty("line.separator")
 			+ ""
 			+ System.getProperty("line.separator")

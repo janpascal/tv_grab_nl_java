@@ -159,7 +159,7 @@ Het adres van de git repository is git://github.com/janpascal/tv_grab_nl_java.gi
 
 License
 -------
-Copyright (c) 2012-2013 Jan-Pascal van Best <janpascal@vanbest.org>
+Copyright (c) 2012-2014 Jan-Pascal van Best <janpascal@vanbest.org>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -175,5 +175,5 @@ The full license text can be found in the LICENSE file.
 
 Laatste aanpassing
 ------------------
-2013-12-24 (versie 1.5.1)
+2014-01-02 (versie 1.5.2)
 
