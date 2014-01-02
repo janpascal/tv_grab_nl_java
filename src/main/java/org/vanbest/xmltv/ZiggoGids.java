@@ -285,8 +285,8 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
                 stats.cacheHits++;
             }
             p.startTime = new Date(1000L*start);
-            long duration = Integer.parseInt(item.attr("pr-duration")); // minutes
-            p.endTime = new Date(1000L*(start+60*duration));
+            double duration = Double.parseDouble(item.attr("pr-duration")); // minutes
+            p.endTime = new Date(1000L*Math.round(start+60*duration));
             if (config.fetchDetails && ( !cached || !p.hasDescription() ) ) {
                 fillDetails(httpclient, p, progid);
             }
