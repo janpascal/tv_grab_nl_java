@@ -155,7 +155,9 @@ public class Config {
 	}
 
 	public void writeConfig(File configFile) throws IOException {
-		FileUtils.forceMkdir(configFile.getParentFile());
+                if (configFile.getParentFile()!=null) {
+                    FileUtils.forceMkdir(configFile.getParentFile());
+                }
 		PrintWriter out = new PrintWriter(new OutputStreamWriter(
 				new FileOutputStream(configFile)));
 		out.println("config-file-format: " + CURRENT_FILE_FORMAT);
