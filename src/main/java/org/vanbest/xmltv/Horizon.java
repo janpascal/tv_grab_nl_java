@@ -48,6 +48,8 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	static String channels_url = "https://www.horizon.tv/oesp/api/NL/nld/web/channels/";
 	static String listings_url = "https://www.horizon.tv/oesp/api/NL/nld/web/listings";
 
+	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_HORIZON = 7;
+
 	public static String NAME = "horizon.tv";
 
 	static Logger logger = Logger.getLogger(Horizon.class);
@@ -153,6 +155,9 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	public List<Programme> getProgrammes(List<Channel> channels, int day)
 			throws Exception {
 		List<Programme> result = new ArrayList<Programme>();
+		if (day > MAX_DAYS_AHEAD_SUPPORTED_BY_HORIZON) {
+			return result; // empty list
+		}
 		for (Channel c : channels) {
 			URL url = programmeUrl(c, day);
 			logger.debug("Programme url:" + url);
