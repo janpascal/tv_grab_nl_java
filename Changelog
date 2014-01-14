@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.5.2 (2014-01-14)
+- Fix null object exception (thanks to Stephan for the bug report)
+
 tv_grab_nl_java-1.5.1 (2014-01-02)
 - Implement --config-yes flag
 - Fix error when program duration from ziggogids is not an integer

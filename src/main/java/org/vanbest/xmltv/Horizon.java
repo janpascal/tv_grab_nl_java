@@ -223,6 +223,8 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 			result.startTime = new Date(json.getLong("startTime"));
 			result.endTime = new Date(json.getLong("endTime"));
 			JSONObject prog = json.getJSONObject("program");
+                        // Sometimes the JSON doesnt contains a prog item
+                        if (prog==null || prog.isNullObject()) return result;
 			String title = null;
 			if (prog.has("title")){
 				title = prog.getString("title");
