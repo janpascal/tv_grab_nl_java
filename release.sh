@@ -7,6 +7,8 @@ if [ "$1" != "--testing" ]; then
     echo "Release $VERSION not found in changelog, please update Changelog first";
     exit 1;
   fi
+else
+  MVN_ARGUMENTS="-DskipTests"
 fi
 
 tmpdir=$( mktemp -d ) || exit 1
@@ -17,13 +19,15 @@ mkdir "$DESTDIR"
 rm -f "$ZIPFILE"
 
 mvn compiler:compile
-mvn test
-if [ "$?" != 0 ]; then
-  echo "Test failed, aborting"
-  exit 1;
+if [ "$1" != "--testing" ]; then
+    mvn test
+    if [ "$?" != 0 ]; then
+      echo "Test failed, aborting"
+      exit 1;
+    fi
 fi
-mvn package
-mvn assembly:single
+mvn $MVN_ARGUMENTS package
+mvn $MVN_ARGUMENTS assembly:single
 cp target/tv_grab_nl_java-$VERSION-dep.jar "$DESTDIR/tv_grab_nl_java.jar"
 cp tv_grab_nl_java install.sh README LICENSE Changelog "$DESTDIR"
 
