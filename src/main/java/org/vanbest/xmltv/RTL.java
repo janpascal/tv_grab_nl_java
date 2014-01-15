@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
@@ -100,11 +102,58 @@ public class RTL extends AbstractEPGSource implements EPGSource {
         List<Channel> result = new ArrayList<Channel>(10);
         return new ArrayList<Channel>(channels.values());
     }
+    /* 
+    * (AL|6|9|12|16){0,1}[GASTHD]+
+    * AL = alle leeftijden
+    * A Angst
+    * G Geweld
+    * S Sex
+    * T Grof Taalgebruik
+    * H drugs/alcoHol
+    * D?  Discriminatie
+    *
+    * Voorkomende combinaties:
+    *   G
+    *   GA
+    *   GAT
+    *   GST
+    *   GT
+    *   A
+    *   AH
+    *   AL
+    *   ALT
+    *   AT
+    *   HT
+    *   DT
+    *   ST
+    */
 
+    private Pattern kijkwijzerPattern = Pattern.compile("^(AL|\\d+)(.*)");
     @Override
     List<String> parseKijkwijzer(String s) {
+        logger.trace("Kijkwijzer: " +s);
 	List<String> result = new ArrayList<String>();
-	for (int i = 0; i < s.length(); i++) {
+        Matcher m = kijkwijzerPattern.matcher(s);
+        if (m.matches()) {
+            String l = m.group(1);
+            if(l.equals("AL")) {
+                result.add("Voor alle leeftijden");
+            } else {
+                int leeftijd = Integer.parseInt(l);
+                result.add("Afgeraden voor kinderen jonger dan "+leeftijd+" jaar");
+            }
+            String cat = m.group(2).toLowerCase();
+            for (int i = 0; i < cat.length(); i++) {
+	        char c = cat.charAt(i);
+                String tekst = kijkwijzerCategorie(c);
+                if(tekst!=null) {
+                    result.add(tekst);
+                } else {
+                    logger.warn("Unknown RTL Kijkwijzer combination \""+s+"\"");
+                }
+            }
+        } else {
+            logger.warn("Unknown RTL Kijkwijzer combination \""+s+"\"");
         }
         return result;
     }
@@ -119,6 +168,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
         if(abstractKey!=null) {
             JSONObject abstrac = abstracts.get(abstractKey);
             prog.addTitle(abstrac.getString("name"));
+            logger.debug("\""+prog.getFirstTitle()+"\"");
         }
         String episodeKey = schedule.optString("episode_key");
         if(episodeKey!=null) {
@@ -131,9 +181,6 @@ public class RTL extends AbstractEPGSource implements EPGSource {
             if(s!=null && !s.isEmpty()) prog.addDescription(s);
             String kijkwijzer = episode.optString("nicam");
             if (kijkwijzer != null && !kijkwijzer.isEmpty()) {
-                logger.debug("kijkwijzer: "+kijkwijzer);
-                prog.addRating("kijkwijzer", kijkwijzer);
-                /*
                 List<String> list = parseKijkwijzer(kijkwijzer);
                 if (config.joinKijkwijzerRatings) {
                     // mythtv doesn't understand multiple <rating> tags
@@ -143,7 +190,6 @@ public class RTL extends AbstractEPGSource implements EPGSource {
                         prog.addRating("kijkwijzer", rating);
                     }
                 }
-                */
             }
         }
         String seasonKey = schedule.optString("season_key");
