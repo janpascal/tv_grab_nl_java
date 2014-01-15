@@ -167,14 +167,27 @@ public class RTL extends AbstractEPGSource implements EPGSource {
         String abstractKey = schedule.optString("abstract_key");
         if(abstractKey!=null) {
             JSONObject abstrac = abstracts.get(abstractKey);
-            prog.addTitle(abstrac.getString("name"));
-            logger.debug("\""+prog.getFirstTitle()+"\"");
+            String name = abstrac.getString("name");
+            if(name.endsWith(":")) name=name.substring(0, name.length()-1);
+            name=name.trim();
+            prog.addTitle(name);
+            logger.trace("\""+prog.getFirstTitle()+"\"");
         }
         String episodeKey = schedule.optString("episode_key");
         if(episodeKey!=null) {
             JSONObject episode = episodes.get(episodeKey);
             String s = episode.optString("name");
-            if(s!=null && !s.isEmpty()) prog.addSecondaryTitle(s);
+            if(s!=null && !s.isEmpty()) {
+                String title = prog.getFirstTitle();
+                if(title!=null && s.startsWith(title)) {
+                    s=s.substring(title.length(), s.length()).trim();
+                    if(s.startsWith(":")) s=s.substring(1,s.length()).trim();
+                    if(s.startsWith("-")) s=s.substring(1,s.length()).trim();
+                    if(s.startsWith("\"")) s=s.substring(1,s.length()).trim();
+                    if(s.endsWith("\"")) s=s.substring(0,s.length()-1).trim();
+                }
+                prog.addSecondaryTitle(s);
+            }
             s = episode.optString("episode_number");
             if(s!=null && !s.isEmpty()) prog.addEpisode(s, "onscreen");
             s = episode.optString("synopsis");
@@ -252,7 +265,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
             String station=schedule.getString("station");
             if (!channelMap.containsKey(station)) {
                 if (!config.quiet)
-                   logger.info("Skipping programmes for channel " + station);
+                   logger.trace("Skipping programmes for channel " + station);
                 continue;
             }
             result.add(createProgramme(schedule, channelMap));
