@@ -2,11 +2,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.vanbest.xmltv.tv_grab_nl_java</groupId>
 	<artifactId>tv_grab_nl_java</artifactId>
-	<version>1.5.3-SNAPSHOT</version>
+	<version>1.6.0</version>
     	<scm>
   		<connection>scm:git:git://github.com/janpascal/tv_grab_nl_java.git</connection>
- 	 	<developerConnection>scm:git:https://janpascal@github.com/janpascal/tv_grab_nl_java.git</developerConnection>
- 	 	<url>https://github.com/janpascal/tv_grab_nl_java</url>
+ 	 	<developerConnection>scm:git:git://github.com/janpascal/tv_grab_nl_java.git</developerConnection>
+ 	 	<url>scm:git:git://github.com/janpascal/tv_grab_nl_java.git</url>
     	</scm>
 	<dependencies>
 		<dependency>

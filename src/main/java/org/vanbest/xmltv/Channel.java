@@ -43,19 +43,7 @@ public class Channel {
 		c.names.add(name);
 		return c;
 	}
-/*
-	static Channel getChannel(int source, String id, String name, String extraConfig) {
-                Channel c;
-                if(EPGSourceFactory.getChannelSourceName(source).equals(Horizon.NAME)) {
-                        long horizonId=Long.parseLong(extraConfig);
-		        c = new Horizon.HorizonChannel(source, id, horizonId);
-                } else {
-		        c = new Channel(source, id);
-                }
-		c.names.add(name);
-		return c;
-	}
-*/
+
 	public String getXmltvChannelId() {
 		return xmltv; // id + "." + getSourceName();
 	}

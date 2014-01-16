@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.6.0 (2014-01-16)
+- Parser for new RTL site. Only provides RTL4, 5, 7 and 8.
+
 tv_grab_nl_java-1.5.2 (2014-01-14)
 - Fix null object exception (thanks to Stephan for the bug report)
 
