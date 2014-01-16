@@ -50,12 +50,12 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 
 	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_HORIZON = 7;
 
-	public static String NAME = "horizon.tv";
+        public final static String NAME="horizon.tv";
 
 	static Logger logger = Logger.getLogger(Horizon.class);
 
-	public Horizon(int sourceId, Config config) {
-		super(sourceId, config);
+	public Horizon(Config config) {
+		super(config);
 	}
 
 	public String getName() {
@@ -136,7 +136,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
                                 }
                         }
                         String xmltv = name.replaceAll("[^a-zA-Z0-9]", "")+"."+getName();
-			Channel c = Channel.getChannel(getId(), Long.toString(horizonId), xmltv, name);
+			Channel c = Channel.getChannel(getName(), Long.toString(horizonId), xmltv, name);
 			//Channel c = new HorizonChannel(getId(), horizonId, name);
                         c.addIcon(icon);
 			result.add(c);
@@ -214,7 +214,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	private Programme programmeFromJSON(JSONObject json,
 			boolean fetchDetails) throws Exception {
 		String id = json.getString("id");
-		Programme result = cache.get(getId(), id);
+		Programme result = cache.get(getName(), id);
 		boolean cached = (result != null);
 		boolean doNotCache = false;
 		if (result == null) {
@@ -308,7 +308,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		// TODO other fields
 
 		if (!cached && !doNotCache) {
-			cache.put(getId(), id, result);
+			cache.put(getName(), id, result);
 		}
 		logger.debug(result);
 		return result;
@@ -318,7 +318,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
-		Horizon horizon = new Horizon(3, config);
+		Horizon horizon = new Horizon(config);
 		horizon.clearCache();
 		try {
 			List<Channel> channels = horizon.getChannels();

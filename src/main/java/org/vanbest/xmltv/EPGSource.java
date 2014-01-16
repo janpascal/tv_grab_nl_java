@@ -11,14 +11,11 @@ public interface EPGSource {
 		int cacheMisses = 0;
 	}
 
-	public int getId();
-
-	public void setId(int id);
+	// All implementing class must declare a
+	// public final static String NAME = "....";
+	// (e.g tvgids.nl or rtl.nl)
 
 	public String getName();
-
-	// All implementing class must declare a
-	// public static final String NAME (e.g tvgids.nl or rtl.nl)
 
 	public List<Channel> getChannels();
 

@@ -52,10 +52,11 @@ public class ProgrammeCache {
     private PreparedStatement clearSourceStatement;
 
     /** The Constant SCHEMA_VERSION. */
-    private final static Integer SCHEMA_VERSION = 2;
+    private final static Integer SCHEMA_VERSION = 3;
 
-    /** The Constant SCHEMA_KEY. */
-    private final static String SCHEMA_KEY = "TV_GRAB_NL_JAVA_SCHEMA_VERSION";
+    /** The Constant SCHEMA_KEY_ID. */
+    private final static String SCHEMA_KEY_SOURCE = "TV_GRAB_NL_JAVA";
+    private final static String SCHEMA_KEY_ID = "SCHEMA_VERSION";
 
     /** The logger. */
     static Logger logger = Logger.getLogger(ProgrammeCache.class);
@@ -90,8 +91,8 @@ public class ProgrammeCache {
             try {
                 PreparedStatement stat = db
                         .prepareStatement("SELECT programme FROM cache WHERE source=? AND id=?");
-                stat.setInt(1, 1);
-                stat.setString(2, SCHEMA_KEY);
+                stat.setString(1, SCHEMA_KEY_SOURCE);
+                stat.setString(2, SCHEMA_KEY_ID);
                 ResultSet result = stat.executeQuery();
                 if (!result.next()) {
                     logger.debug("No schema version found in database");
@@ -125,18 +126,18 @@ public class ProgrammeCache {
                 logger.info("Unknown cache schema, removing and recreating cache");
                 try {
                     Statement stat = db.createStatement();
-                    // System.out.println("Dropping old table");
+                    logger.trace("Dropping old table");
                     stat.execute("DROP TABLE IF EXISTS cache");
-                    // System.out.println("Creating new table");
-                    stat.execute("CREATE CACHED TABLE IF NOT EXISTS cache (source INTEGER, id VARCHAR(128), date DATE, programme OTHER, PRIMARY KEY (source,id))");
+                    logger.trace("Creating new table");
+                    stat.execute("CREATE CACHED TABLE IF NOT EXISTS cache (source CHAR(20), id VARCHAR(128), date DATE, programme OTHER, PRIMARY KEY (source,id))");
                     stat.close();
 
-                    // System.out.println("Writing new schema version to database");
+                    logger.trace("Writing new schema version to database");
                     PreparedStatement stat2 = db
                             .prepareStatement("INSERT INTO cache VALUES (?,?,?,?)");
 
-                    stat2.setInt(1, 1);
-                    stat2.setString(2, SCHEMA_KEY);
+                    stat2.setString(1, SCHEMA_KEY_SOURCE);
+                    stat2.setString(2, SCHEMA_KEY_ID);
                     stat2.setDate(3, new java.sql.Date(new java.util.Date(2100,
                             11, 31).getTime()));
                     stat2.setObject(4, SCHEMA_VERSION);
@@ -179,11 +180,11 @@ public class ProgrammeCache {
      * @param id the id
      * @return the programme
      */
-    public Programme get(int source, String id) {
+    public Programme get(String source, String id) {
         if (db == null)
             return null;
         try {
-            getStatement.setInt(1, source);
+            getStatement.setString(1, source);
             getStatement.setString(2, id);
             ResultSet r = getStatement.executeQuery();
             if (!r.next())
@@ -211,9 +212,9 @@ public class ProgrammeCache {
      * @param source the source
      * @param id the id
      */
-    private void removeCacheEntry(int source, String id) {
+    private void removeCacheEntry(String source, String id) {
         try {
-            removeStatement.setInt(1, source);
+            removeStatement.setString(1, source);
             removeStatement.setString(2, id);
             removeStatement.execute();
         } catch (SQLException e) {
@@ -230,14 +231,13 @@ public class ProgrammeCache {
      * @param id the id
      * @param prog the prog
      */
-    public void put(int source, String id, Programme prog) {
+    public void put(String source, String id, Programme prog) {
         if (db == null)
             return;
         try {
-            putStatement.setInt(1, source);
+            putStatement.setString(1, source);
             putStatement.setString(2, id);
-            putStatement
-                    .setDate(3, new java.sql.Date(prog.startTime.getTime()));
+            putStatement.setDate(3, new java.sql.Date(prog.startTime.getTime()));
             putStatement.setObject(4, prog);
             // System.out.println(putStatement.toString());
             int count = putStatement.executeUpdate();
@@ -294,11 +294,11 @@ public class ProgrammeCache {
      *
      * @param source the source
      */
-    public void clear(int source) {
+    public void clear(String source) {
         if (db == null)
             return;
         try {
-            clearSourceStatement.setInt(1, source);
+            clearSourceStatement.setString(1, source);
             int count = clearSourceStatement.executeUpdate();
             if (!config.quiet && count > 0) {
                 logger.info("Cleared " + count + " entries from cache");

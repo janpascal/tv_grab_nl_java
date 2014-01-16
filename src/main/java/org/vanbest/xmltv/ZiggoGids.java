@@ -74,13 +74,12 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
 	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_ZIGGOGIDS = 3;
         private static final int MAX_CHANNELS_PER_REQUEST = 25;
-
-	public static String NAME = "ziggogids.nl";
+	public final static String NAME="ziggogids.nl";
 
 	static Logger logger = Logger.getLogger(ZiggoGids.class);
 
-	public ZiggoGids(int sourceId, Config config) {
-		super(sourceId, config);
+	public ZiggoGids(Config config) {
+		super(config);
 	}
 
 	public String getName() {
@@ -201,7 +200,7 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
                     String index = e.select("input").first().attr("value");
                     String name = e.select("label").first().text();
                     logger.debug("    "+index+": \""+name+"\"");
-		    Channel c = Channel.getChannel(getId(), index, name);
+		    Channel c = Channel.getChannel(getName(), index, name);
                     try {
                         String icon = fetchIconUrl(httpclient, index);
                         logger.debug("    "+icon);
@@ -272,7 +271,7 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
             long start = Long.parseLong(item.attr("pr-start")); // unix time
 
             String id = Long.toString(start)+"_"+progid;
-            Programme p = cache.get(getId(), id);
+            Programme p = cache.get(getName(), id);
             boolean cached = (p != null);
             if (p == null) {
                 stats.cacheMisses++;
@@ -292,7 +291,7 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
             }
             if (!cached) {
                 // FIXME where to do this?
-                cache.put(getId(), id, p);
+                cache.put(getName(), id, p);
             }
             return p;
         }
@@ -328,7 +327,7 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
                 logger.setLevel(Level.TRACE);
-		ZiggoGids gids = new ZiggoGids(4, config);
+		ZiggoGids gids = new ZiggoGids(config);
 		try {
 			List<Channel> channels = gids.getChannels();
 			System.out.println("Channels: " + channels);

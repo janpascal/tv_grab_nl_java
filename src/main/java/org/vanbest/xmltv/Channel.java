@@ -14,10 +14,10 @@ public class Channel {
 	List<Icon> icons;
 	List<String> urls;
 	protected boolean enabled = true;
-	int source;
+	String source;
 	static Logger logger = Logger.getLogger(Channel.class);
 
-	protected Channel(int source, String id, String xmltv) {
+	protected Channel(String source, String id, String xmltv) {
 		this.id = id;
 		this.source = source;
                 this.xmltv = xmltv;
@@ -30,15 +30,15 @@ public class Channel {
 		return names.get(0);
 	}
 
-	static Channel getChannel(int source, String id, String xmltv, String name) {
+	static Channel getChannel(String source, String id, String xmltv, String name) {
                 Channel c = new Channel(source, id, xmltv);
 		c.names.add(name);
 		return c;
 	}
 
         // Use default xmltvid with id+"."+sourceName
-	static Channel getChannel(int source, String id, String name) {
-                String xmltv = id + "." + EPGSourceFactory.getChannelSourceName(source);
+	static Channel getChannel(String source, String id, String name) {
+                String xmltv = id + "." + source;
                 Channel c = new Channel(source, id, xmltv);
 		c.names.add(name);
 		return c;
@@ -61,7 +61,7 @@ public class Channel {
 	}
 
 	public String getSourceName() {
-		return EPGSourceFactory.getChannelSourceName(source);
+		return source;
 	}
 
 	public void serialize(XMLStreamWriter writer, boolean writeLogos) throws XMLStreamException {
@@ -119,16 +119,14 @@ public class Channel {
                 Channel c = null;
                 switch (fileformat) {
                 case 0:
-                        c = Channel.getChannel(EPGSourceFactory.newInstance()
-                                        .getChannelSourceId("tvgids.nl"), parts.get(1),
+                        c = Channel.getChannel("tvgids.nl", parts.get(1),
                                         parts.get(2));
                         if (parts.size() > 3) {
                                 c.addIcon(parts.get(3));
                         }
                         break;
                 case 1:
-                        c = Channel.getChannel(EPGSourceFactory.newInstance()
-                                        .getChannelSourceId("tvgids.nl"), parts.get(1),
+                        c = Channel.getChannel("tvgids.nl", parts.get(1),
                                         parts.get(3));
                         if (parts.size() > 4) {
                                 c.addIcon(parts.get(4));
@@ -145,16 +143,12 @@ public class Channel {
                         }
                         break;
                 case 2:
+                        System.err.println("This config file format is no longer supported...");
+                        break;
                 case 3:
                 case 4:
                 case 5: {
-                        int source;
-                        if (fileformat == 2) {
-                                source = Integer.parseInt(parts.get(1));
-                        } else {
-                                source = EPGSourceFactory.newInstance()
-                                                .getChannelSourceId(parts.get(1));
-                        }
+                        String source = parts.get(1);
                         String id = parts.get(2);
                         String enabled = parts.get(3);
                         String name = parts.get(4);
@@ -166,7 +160,7 @@ public class Channel {
                                     c = Channel.getChannel(source, id, name);
                                 } else {
                                     // Horizon channel
-                                    String xmltv=id+"."+EPGSourceFactory.getChannelSourceName(source);
+                                    String xmltv=id+"."+source;
                                     String horizonId=extra;
                                     c = Channel.getChannel(source, horizonId, xmltv, name);
                                 }
@@ -187,7 +181,7 @@ public class Channel {
                         break;
                 }
                 case 6: {
-                        int source = EPGSourceFactory.getChannelSourceId(parts.get(1));
+                        String source = parts.get(1);
                         String xmltv = parts.get(2);
                         String id = parts.get(3);
                         String enabled = parts.get(4);

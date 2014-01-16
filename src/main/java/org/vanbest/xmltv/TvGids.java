@@ -50,17 +50,16 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
 	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_TVGIDS = 3;
-
-	public static String NAME = "tvgids.nl";
+	public static final String NAME="tvgids.nl";
 
 	static Logger logger = Logger.getLogger(TvGids.class);
 
-	public TvGids(int sourceId, Config config) {
-		super(sourceId, config);
+	public TvGids(Config config) {
+        	super(config);
 	}
 
 	public String getName() {
-		return NAME;
+	    return NAME;
 	}
 
 	public static URL programmeUrl(List<Channel> channels, int day)
@@ -142,7 +141,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 					.unescapeHtml(zender.getString("name"));
                         String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id
                                     + ".png";
-			Channel c = Channel.getChannel(getId(), Integer.toString(id), name);
+			Channel c = Channel.getChannel(getName(), Integer.toString(id), name);
                         c.addIcon(icon);
 			result.add(c);
 		}
@@ -220,7 +219,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	private Programme programmeFromJSON(JSONObject programme,
 			boolean fetchDetails) throws Exception {
 		String id = programme.getString("db_id");
-		Programme result = cache.get(getId(), id);
+		Programme result = cache.get(getName(), id);
 		boolean cached = (result != null);
 		if (result == null) {
 			stats.cacheMisses++;
@@ -265,7 +264,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		}
 		if (!cached) {
 			// FIXME where to do this?
-			cache.put(getId(), id, result);
+			cache.put(getName(), id, result);
 		}
 		logger.debug(result);
 		return result;
@@ -431,7 +430,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 */
 	public static void main(String[] args) {
 		Config config = Config.getDefaultConfig();
-		TvGids gids = new TvGids(1, config);
+		TvGids gids = new TvGids(config);
 		try {
 			List<Channel> channels = gids.getChannels();
 			System.out.println("Channels: " + channels);

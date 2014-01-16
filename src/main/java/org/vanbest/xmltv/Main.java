@@ -97,7 +97,7 @@ public class Main {
 			cache.clear();
 			cache.close();
 		}
-		Map<Integer, EPGSource> guides = new HashMap<Integer, EPGSource>();
+		Map<String, EPGSource> guides = new HashMap<String, EPGSource>();
 		EPGSourceFactory factory = EPGSourceFactory.newInstance();
 		// EPGSource gids = new TvGids(config);
 		// if (clearCache) gids.clearCache();
@@ -148,13 +148,13 @@ public class Main {
 		writer.flush();
 		writer.close();
 
-		for (int source : guides.keySet()) {
+		for (String source : guides.keySet()) {
 			guides.get(source).close();
 		}
 
 		if (!config.quiet) {
 			EPGSource.Stats stats = new EPGSource.Stats();
-			for (int source : guides.keySet()) {
+			for (String source : guides.keySet()) {
 				EPGSource.Stats part = guides.get(source).getStats();
 				stats.cacheHits += part.cacheHits;
 				stats.cacheMisses += part.cacheMisses;
@@ -201,7 +201,7 @@ public class Main {
 
 		Set<String> oldChannels = new HashSet<String>();
 		Set<String> oldChannelNames = new HashSet<String>();
-		Set<Integer> oldGuides = new HashSet<Integer>();
+		Set<String> oldGuides = new HashSet<String>();
 		for (Channel c : config.channels) {
 			if (c.enabled) {
 				oldChannels.add(c.source + "::" + c.id);
@@ -211,18 +211,16 @@ public class Main {
 		}
 
 		EPGSourceFactory factory = EPGSourceFactory.newInstance();
-		int[] sources = factory.getAll();
+		List<? extends EPGSource> allSources = factory.getAll(config);
 
-		System.out
-				.println("Please select the TV programme information sources to use");
+		System.out.println("Please select the TV programme information sources to use");
 		List<EPGSource> guides = new ArrayList<EPGSource>();
-		for (int source : sources) {
-			boolean selected = oldGuides.contains(source);
-			EPGSource guide = factory.createEPGSource(source, config);
-			System.out.print("    Use \"" + guide.getName()
+		for(EPGSource source: allSources) {
+			boolean selected = oldGuides.contains(source.getName());
+			System.out.print("    Use \"" + source.getName()
 					+ "\" (Y/N, default=" + (selected ? "Y" : "N") + "):");
                         if(config.configYes) {
-			    guides.add(guide);
+			    guides.add(source);
                             System.out.println("Y");
                             continue;
                         }
@@ -231,10 +229,10 @@ public class Main {
 				String s = reader.readLine().toLowerCase();
 				if (s.isEmpty()) {
 					if (selected)
-						guides.add(guide);
+						guides.add(source);
 					break;
 				} else if (s.startsWith("y")) {
-					guides.add(guide);
+					guides.add(source);
 					break;
 				} else if (s.startsWith("n")) {
 					break;

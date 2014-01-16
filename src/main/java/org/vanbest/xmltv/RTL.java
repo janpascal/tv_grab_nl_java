@@ -49,7 +49,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 
     private static final String icon_url = "http://www.rtl.nl/service/gids/components/vaste_componenten/";
     private static final int MAX_PROGRAMMES_PER_DAY = 9999;
-    public static final String NAME = "rtl.nl";
+    public static final String NAME="rtl.nl";
     static Logger logger = Logger.getLogger(RTL.class);
 
     static boolean debug = false;
@@ -65,8 +65,8 @@ public class RTL extends AbstractEPGSource implements EPGSource {
         }
     }
 
-    public RTL(int sourceId, Config config) {
-        super(sourceId, config);
+    public RTL(Config config) {
+        super(config);
     }
 
     public String getName() {
@@ -94,7 +94,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
             JSONObject schedule = schedules.getJSONObject(i);
             String channel = schedule.getString("station");
             if(!channels.containsKey(channel)) {
-                Channel c = Channel.getChannel(getId(), channel, channel);
+                Channel c = Channel.getChannel(getName(), channel, channel);
                 // TODO: channel icon
                 channels.put(channel, c);
             }
@@ -246,7 +246,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
         List<Programme> result = new LinkedList<Programme>();
         Map<String, Channel> channelMap = new HashMap<String, Channel>();
         for (Channel c : channels) {
-            if (c.enabled && c.source == getId())
+            if (c.enabled && c.source.equals(getName()))
                 channelMap.put(c.id, c);
         }
         URL url = programmeUrl(0, day);
@@ -284,7 +284,7 @@ public class RTL extends AbstractEPGSource implements EPGSource {
 
             Config config = Config.getDefaultConfig();
             config.niceMilliseconds = 50;
-            RTL rtl = new RTL(2, config);
+            RTL rtl = new RTL(config);
             if (debug) {
                     rtl.cache.clear();
                     logger.info("Writing CSV to rtl.csv");

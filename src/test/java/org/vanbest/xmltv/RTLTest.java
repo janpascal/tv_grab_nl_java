@@ -13,13 +13,12 @@ import org.junit.Test;
 public class RTLTest {
 
 	private static RTL rtl;
-	private final static int RTL_SOURCE_ID = 2;
 	private static List<Channel> channels = null;
 
 	@BeforeClass
 	public static void setUp() throws Exception {
 		Config config = Config.getDefaultConfig();
-		rtl = new RTL(RTL_SOURCE_ID, config);
+		rtl = new RTL(config);
 		rtl.clearCache();
 	}
 
@@ -49,7 +48,7 @@ public class RTLTest {
 				//assertFalse("RTL4 channel should have at least one icon", c.icons.isEmpty());
 			}
 			assertEquals("All channels should have RTL.nl source id",
-					RTL_SOURCE_ID, c.source);
+					rtl.getName(), c.source);
 		}
 		if (!foundRTL4) {
 			fail("Channel RTL4 not found, should be there");

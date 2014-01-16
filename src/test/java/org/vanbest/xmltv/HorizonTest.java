@@ -12,13 +12,12 @@ import org.junit.Test;
 public class HorizonTest {
 
 	private static Horizon horizon;
-	private final static int HORIZON_SOURCE_ID = 3;
 	private static List<Channel> channels = null;
 
 	@BeforeClass
 	public static void setUp() throws Exception {
 		Config config = Config.getDefaultConfig();
-		horizon = new Horizon(HORIZON_SOURCE_ID, config);
+		horizon = new Horizon(config);
 		horizon.clearCache();
 	}
 
@@ -49,7 +48,7 @@ public class HorizonTest {
 						c.icons.isEmpty());
 			}
 			assertEquals("All channels should have RTL.nl source id",
-					HORIZON_SOURCE_ID, c.source);
+					horizon.getName(), c.source);
 		}
 		if (!foundRTL4) {
 			fail("Channel RTL4 not found, should be there");

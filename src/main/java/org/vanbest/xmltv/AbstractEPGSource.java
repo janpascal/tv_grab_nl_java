@@ -29,7 +29,6 @@ import org.apache.log4j.Logger;
 
 public abstract class AbstractEPGSource implements EPGSource {
 
-	private int sourceId;
 	protected Config config;
 	protected ProgrammeCache cache;
 	protected Stats stats = new Stats();
@@ -37,18 +36,9 @@ public abstract class AbstractEPGSource implements EPGSource {
 
 	public static final int MAX_FETCH_TRIES = 5;
 
-	public AbstractEPGSource(int sourceId, Config config) {
+	public AbstractEPGSource(Config config) {
 		this.config = config;
-		this.sourceId = sourceId;
 		cache = new ProgrammeCache(config);
-	}
-
-	public int getId() {
-		return sourceId;
-	}
-
-	public void setId(int id) {
-		sourceId = id;
 	}
 
 	public List<Programme> getProgrammes(Channel channel, int day)
@@ -103,7 +93,7 @@ public abstract class AbstractEPGSource implements EPGSource {
 	}
 
 	public void clearCache() {
-		cache.clear(sourceId);
+		cache.clear(getName());
 	}
 
         String kijkwijzerCategorie(char c) {
