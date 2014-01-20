@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -249,6 +250,15 @@ public class RTL extends AbstractEPGSource implements EPGSource {
             if (c.enabled && c.source.equals(getName()))
                 channelMap.put(c.id, c);
         }
+
+        GregorianCalendar now = new GregorianCalendar();
+        GregorianCalendar date = new GregorianCalendar(now.get(Calendar.YEAR),
+                now.get(Calendar.MONTH), 
+                now.get(Calendar.DAY_OF_MONTH));
+        date.add(Calendar.DAY_OF_MONTH, day);
+
+        // Note: this fetches all programmes up to and including the
+        // requested date!
         URL url = programmeUrl(0, day);
         JSONObject json = fetchJSON(url);
 
@@ -268,7 +278,8 @@ public class RTL extends AbstractEPGSource implements EPGSource {
                    logger.trace("Skipping programmes for channel " + station);
                 continue;
             }
-            result.add(createProgramme(schedule, channelMap));
+            Programme prog = createProgramme(schedule, channelMap);
+            if(!prog.startTime.before(date.getTime())) result.add(prog);
         }
 
         return result;
