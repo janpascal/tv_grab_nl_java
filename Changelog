@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.6.1 (2014-01-20)
+- RTL: do not fetch programs for dates earlier than requested.
+
 tv_grab_nl_java-1.6.0 (2014-01-16)
 - Parser for new RTL site. Only provides RTL4, 5, 7 and 8.
 
