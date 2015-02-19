@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.6.2 (2015-02-19)
+- RTL: channel icons
+
 tv_grab_nl_java-1.6.1 (2014-01-20)
 - RTL: do not fetch programs for dates earlier than requested.
 
