@@ -80,6 +80,20 @@ public class RTL extends AbstractEPGSource implements EPGSource {
         return new URL(programme_base_url + "?output=json&days_ahead="+days_ahead+"&days_back="+days_back+"&station=ALL");
     }
 
+    private static final String icon_base_url = "http://staticfiles.rtl.nl/styles/img/logos";
+    // http://staticfiles.rtl.nl/styles/img/logos/logo_rtllounge.png
+    private static String iconUrl(String channel) 
+    {
+    	channel = channel.toLowerCase();
+    	if (channel.equals("rtll")) 
+    		channel = "rtllounge";
+    	else if (channel.equals("rtcr")) 
+    		channel = "rtlcrime";
+    	else if (channel.equals("rtlt")) 
+    		channel = "telekids";
+        return icon_base_url + "/logo_" + channel + ".png";
+    }
+
     public List<Channel> getChannels() {
         Map<String,Channel> channels = new HashMap<String,Channel>(5);
         JSONObject o;
@@ -96,11 +110,11 @@ public class RTL extends AbstractEPGSource implements EPGSource {
             String channel = schedule.getString("station");
             if(!channels.containsKey(channel)) {
                 Channel c = Channel.getChannel(getName(), channel, channel);
-                // TODO: channel icon
+                c.addIcon(iconUrl(channel));
                 channels.put(channel, c);
             }
         }
-        List<Channel> result = new ArrayList<Channel>(10);
+        //List<Channel> result = new ArrayList<Channel>(10);
         return new ArrayList<Channel>(channels.values());
     }
     /* 
