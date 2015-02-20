@@ -1,7 +1,7 @@
 package org.vanbest.xmltv;
 
 /*
- Copyright (c) 2012-2013 Jan-Pascal van Best <janpascal@vanbest.org>
+ Copyright (c) 2012-2015 Jan-Pascal van Best <janpascal@vanbest.org>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,11 +25,13 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,37 +48,32 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.jsoup.Jsoup;
-import org.jsoup.Connection;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.util.EntityUtils;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity; 
-import org.apache.http.client.methods.HttpPost;
-
 public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 
-	static String base_url = "http://www.ziggogids.nl";
-	static String channels_url = "http://www.ziggogids.nl/nl/zenders";
-	static String programme_base_url = "http://www.ziggogids.nl/nl";
-	static String detail_base_url = "http://www.ziggogids.nl/module/ajax/nl/program_popinfo";
+    private static final String base_data_root="https://api2.ziggo-apps.nl/base_data";
+    private static final String epg_data_root="https://api2.ziggo-apps.nl/programs";
+    private static final String programs_data_root="https://api2.ziggo-apps.nl/program_details";
+    private static final String channel_image_root="https://static.ziggo-apps.nl/images/channels/";
+    private static final String program_image_root="https://static.ziggo-apps.nl/images/programs/";
+
+    // NOTE: 
+    // the base_data json object also contains information about program Genres
+    // IDs, icon base urls, and kijkwijzer IDs
 
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
 	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_ZIGGOGIDS = 3;
-        private static final int MAX_CHANNELS_PER_REQUEST = 25;
+        //private static final int MAX_CHANNELS_PER_REQUEST = 25;
 	public final static String NAME="ziggogids.nl";
 
 	static Logger logger = Logger.getLogger(ZiggoGids.class);
+
+        
+        class Statics {
+            Map<String,String> genre; // id => name
+            Map<String,String> kijkwijzer; // id => description; FIXME: also contains icons
+        }
+
+        private Statics statics = null;
 
 	public ZiggoGids(Config config) {
 		super(config);
@@ -86,93 +83,70 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 		return NAME;
 	}
 
-	public static String programmeUrl(int day, int hour)
-			throws Exception {
-		StringBuilder s = new StringBuilder(programme_base_url);
-		s.append("/");
+        // https://api2.ziggo-apps.nl/programs?channelIDs=1&date=2015-02-20+8&period=3
+        // period: number of hours ahead to fetch program data
+        // TODO: multiple channels, "channelIDs=1,2,3"
+	public static URL programmeUrl(Channel channel, int day, int hour, int period) throws Exception {
+		StringBuilder s = new StringBuilder(epg_data_root);
+		s.append("?channelIDs=");
+		s.append(channel.id);
                 GregorianCalendar cal = new GregorianCalendar();
                 cal.add(Calendar.DAY_OF_MONTH, day);
                 cal.set(Calendar.HOUR_OF_DAY, hour);
                 cal.set(Calendar.MINUTE, 0);
-                String date = new SimpleDateFormat("yyyyMMdd'T'HHmm").format(cal.getTime());
-		s.append(date);
+                String date = new SimpleDateFormat("yyyy-MM-dd+HH").format(cal.getTime());
+		s.append("&date="+date);
+		s.append("&period="+period);
 
-		return s.toString();
+		return new URL(s.toString());
 	}
 
-	public static String detailUrl(String id) {
-		StringBuilder s = new StringBuilder(detail_base_url);
-		s.append("/typefav=false?progid=");
+    // https://api2.ziggo-apps.nl/program_details?programID=1011424477400760329465668
+	public static URL detailUrl(String id) throws Exception {
+		StringBuilder s = new StringBuilder(programs_data_root);
+		s.append("?programID=");
 		s.append(id);
-		return s.toString();
+		return new URL(s.toString());
 	}
 
+        public void fetchStatics() {
+            if (statics != null) return;
 
-        private Document fetchJsoup(CloseableHttpClient client, String url) throws IOException {
-            Document doc = null;
 
-            HttpGet httpGet = new HttpGet(url);
-            CloseableHttpResponse response = client.execute(httpGet);
+            URL url = null;
             try {
-                //logger.debug(response.getStatusLine());
-                HttpEntity entity = response.getEntity();
-                doc = Jsoup.parse(entity.getContent(), null, url);
-                EntityUtils.consume(entity);
-            } finally {
-                response.close();
+                    url = new URL(base_data_root);
+            } catch (MalformedURLException e) {
+                    logger.error("Exception creating ziggo base data url", e);
             }
-            return doc;
-        }
 
-        private void setActiveChannel(CloseableHttpClient client, String channel) throws IOException {
-            setActiveChannels(client, Collections.singletonList(channel));
-        }
-
-        private void setActiveChannels(CloseableHttpClient client, List<String> channels) throws IOException {
-            Document doc;
-            try { 
-                HttpPost post = new HttpPost(channels_url);
-                List <NameValuePair> nvps = new ArrayList <NameValuePair>();
-                for(String ch: channels) {
-                    nvps.add(new BasicNameValuePair("channel_selection[]", ch));
-                }
-                post.setEntity(new UrlEncodedFormEntity(nvps));
-                CloseableHttpResponse response = client.execute(post);
-                try {
-                    // logger.debug(response.getStatusLine());
-                    HttpEntity entity = response.getEntity();
-                    doc = Jsoup.parse(entity.getContent(), null, channels_url);
-                    EntityUtils.consume(entity);
-                } finally {
-                        response.close();
-                }
-            } catch (IOException e) {
-                logger.error("IO Exception trying to get ziggo channel list from "+channels_url, e);
-                throw e;
+            JSONObject base_data;
+            try {
+                base_data = fetchJSON(url);
+            } catch (Exception e) {
+                logger.error("IO Exception trying to get ziggo base data from "+base_data_root, e);
+                return;
             }
-            //logger.debug("ziggogids POST result: " + doc.outerHtml());
-        }
 
-        private String fetchIconUrl(CloseableHttpClient client, String channel) throws IOException
-        {
-            setActiveChannel(client, channel);
+            statics = new Statics();
+            statics.genre = new HashMap<String,String>();
+            statics.kijkwijzer = new HashMap<String,String>();
 
-            String url = programme_base_url+"/";
-            Document doc = fetchJsoup(client, url);
-
-            // logger.debug("ziggogids programme: " + doc.outerHtml());
-
-            Elements logos = doc.select(".gids-row-label .gids-row-channellogo");
-            if (logos.size()!=1) {
-                logger.error("number of channel logos for channel "+channel+" is "+logos.size()+"; should be 1");
-                for(Element e: logos) {
-                    String name = e.attr("title");
-                    String logo_url = e.select("img").first().attr("src");
-                    logger.debug("    \""+name+"\": "+logo_url);
-                }
+            JSONArray genres = base_data.getJSONArray("Genres");
+            for(int i=0; i<genres.size(); i++) {
+                JSONObject genre = genres.getJSONObject(i);
+                statics.genre.put(genre.getString("id"), genre.getString("name"));
             }
-            return base_url + logos.first().select("img").first().attr("src");
+
+            JSONArray parentals = base_data.getJSONArray("ParentalGuidances");
+            for(int i=0; i<parentals.size(); i++) {
+                JSONObject parental = parentals.getJSONObject(i);
+                String rating =
+                parental.getString("name").replace("Kijkwijzer","").trim();
+                statics.kijkwijzer.put(parental.getString("id"), rating);
+            }
         }
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -182,37 +156,132 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(100);
 
-                Document doc;
-                CloseableHttpClient httpclient = HttpClients.createDefault();
+                URL url = null;
+		try {
+			url = new URL(base_data_root);
+		} catch (MalformedURLException e) {
+			logger.error("Exception creating horizon channel list url", e);
+		}
+
+                JSONObject base_data;
                 try {
-                    doc = fetchJsoup(httpclient, channels_url);
-                } catch (IOException e) {
-                    logger.error("IO Exception trying to get ziggo channel list from "+channels_url, e);
+                    base_data = fetchJSON(url);
+                } catch (Exception e) {
+                    logger.error("IO Exception trying to get ziggo channel list from "+base_data_root, e);
                     return result;
                 }
 
-                String title = doc.title();
+		logger.debug("ziggogids channels json: " + base_data.toString());
 
-		// logger.debug("ziggogids channels html: " + doc.outerHtml());
-
-                Elements fields = doc.select(".channel_field");
-                for(Element e: fields) {
-                    String index = e.select("input").first().attr("value");
-                    String name = e.select("label").first().text();
-                    logger.debug("    "+index+": \""+name+"\"");
-		    Channel c = Channel.getChannel(getName(), index, name);
-                    try {
-                        String icon = fetchIconUrl(httpclient, index);
-                        logger.debug("    "+icon);
-                        c.addIcon(icon);
-                    } catch (IOException e2) {
-                        logger.error("IO Exception trying to get channel log for channel "+index, e2);
-                    }
+                JSONArray channels = base_data.getJSONArray("Channels");
+                for(int i=0; i < channels.size(); i++) {
+                    JSONObject zender = channels.getJSONObject(i);
+                    String name = zender.getString("name");
+                    String id = zender.getString("id");
+                    String xmltv = id + "." + getName();
+                    String icon = channel_image_root + zender.getString("icon");
+		    Channel c = Channel.getChannel(getName(), id, xmltv, name);
+                    c.addIcon(icon);
 		    result.add(c);
                 }
 		return result;
 	}
 
+	private void fillDetails(String id, Programme result) throws Exception {
+		URL url = detailUrl(id);
+		JSONObject json = fetchJSON(url);
+                logger.debug(json.toString());
+                JSONArray programs = json.getJSONArray("Program");
+                JSONObject program = programs.getJSONObject(0);
+                if (program.has("genre")) {
+                    String genre = statics.genre.get("" + program.getInt("genre"));
+    		    result.addCategory(config.translateCategory(genre));
+                    // logger.debug("    FIXME genre: " + program.getInt("genre"));
+                }
+
+                JSONArray detail_list = json.getJSONArray("ProgramDetails");
+                JSONObject details = detail_list.getJSONObject(0);
+                if (details.has("description")) {
+                    result.addDescription(details.getString("description"));
+                }
+                if (details.has("parentalGuidances")) {
+                    // logger.debug("    FIXME kijkwijzer " + details.getJSONArray("parentalGuidances").toString());
+                    JSONArray guidances = details.getJSONArray("parentalGuidances");
+                    List<String> kijkwijzers = new ArrayList<String>(guidances.size());
+                    for(int i=0; i<guidances.size(); i++) {
+                        kijkwijzers.add(statics.kijkwijzer.get("" + guidances.getInt(i)));
+                    }
+
+                    result.addRating("kijkwijzer", StringUtils.join(kijkwijzers, ","));
+                }
+                if (details.has("rerun")) {
+                    // TODO
+                    // logger.debug("    FIXME rerun: " + details.getString("rerun"));
+                    boolean rerun = details.getString("rerun").equals("true");
+                    if (rerun) {
+                        result.setPreviouslyShown();
+                    }
+                }
+                if (details.has("infoUrl")) {
+                    String info = details.getString("infoUrl");
+                    if (info != null && ! info.isEmpty()) {
+                        result.addUrl(info);
+                    }
+                }
+                if (details.has("ppeUrl")) {
+                    String ppe = details.getString("ppeUrl");
+                    if (ppe != null && ! ppe.isEmpty()) {
+                        logger.debug("    FIXME ppe URL: " + ppe);
+                    }
+                }
+        }
+        /*
+          {
+             "title" : "NOS Journaal",
+             "inHome" : "1",
+             "endDateTime" : "2015-02-20 19:30:00",
+             "id" : "1011424458800760329485668",
+             "startDate" : "2015-02-20",
+             "startDateTime" : "2015-02-20 19:00:00",
+             "outOfCountry" : "0",
+             "genre" : 12,
+             "series_key" : "1_NOS Journaal",
+             "outOfHome" : "1",
+             "channel" : "1"
+          },
+        */
+	private Programme programmeFromJSON(JSONObject json,
+			boolean fetchDetails) throws Exception {
+		String id = json.getString("id");
+		Programme result = cache.get(getName(), id);
+		boolean cached = (result != null);
+		boolean doNotCache = false;
+		if (result == null) {
+			stats.cacheMisses++;
+			result = new Programme();
+                        if (json.has("title")){
+                                result.addTitle(json.getString("title"));
+                        } 
+                } else {
+			stats.cacheHits++;
+                }
+
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                                new Locale("nl"));
+                result.startTime = df.parse(json.getString("startDateTime"));
+                result.endTime = df.parse(json.getString("endDateTime"));
+
+                if (fetchDetails && !cached) {
+                        // TODO also read details if those have not been cached
+                        fillDetails(id, result);
+                }
+                if (!cached) {
+                        // FIXME where to do this?
+                        cache.put(getName(), id, result);
+                }
+		logger.debug(result);
+		return result;
+	}
 	/*
 	 * (non-Javadoc)
 	 *
@@ -222,104 +291,35 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 	@Override
 	public List<Programme> getProgrammes(List<Channel> channels, int day)
 			throws Exception {
+
+                fetchStatics();
+
 		List<Programme> result = new ArrayList<Programme>();
 		if (day > MAX_DAYS_AHEAD_SUPPORTED_BY_ZIGGOGIDS) {
 			return result; // empty list
 		}
 
-                CloseableHttpClient httpclient = HttpClients.createDefault();
-
                 // TODO fetch multiple channels in one go
 		for (Channel c : channels) {
-                    setActiveChannel(httpclient, c.id);
-                    Date lastStartTime=null;
-                    for(int daypart=0; daypart<4; daypart++) {
-                        String url = programmeUrl(day, daypart*6); // hour
+                        // start day hour=0 with 24 hours ahead
+                        URL url = programmeUrl(c, day, 0, 24); 
                         logger.debug("url: "+url);
 
-                        Document doc;
-                        try {
-                            doc = fetchJsoup(httpclient, url);
-                        } catch (IOException e) {
-                            logger.error("IO Exception trying to get ziggo channel list from "+url, e);
-                            return result;
-                        }
-                        // logger.debug("ziggogids programme: " + doc.outerHtml());
+			JSONObject json = fetchJSON(url);
+			logger.debug(json.toString());
 
-                        Elements rows = doc.select(".gids-item-row");
-                        for(Element row: rows) {
-                            logger.debug("*** row ***");
-                            for(Element item: row.select(".gids-row-item")) {
-                                Programme p = programmeFromElement(httpclient, item);
-                                p.channel = c.getXmltvChannelId();
-                                // Handle overlapping result sets due to the
-                                // four windows per day
-                                if(lastStartTime==null || p.startTime.after(lastStartTime)) {
-                                    result.add(p);
-                                    lastStartTime = p.startTime;
-                                }
-                                logger.debug(p.toString());
-                            }
-                        }
-                    }
+                        JSONArray programs = json.getJSONArray("Programs");
+			for (int i = 0; i < programs.size(); i++) {
+				JSONObject program = programs.getJSONObject(i);
+				Programme p = programmeFromJSON(program,
+						config.fetchDetails);
+				p.channel = c.getXmltvChannelId();
+				result.add(p);
+			}
                 }
 		return result;
 	}
 
-        private Programme programmeFromElement(CloseableHttpClient httpclient, Element item) {
-            String progid = item.attr("popup-id");
-            long start = Long.parseLong(item.attr("pr-start")); // unix time
-
-            String id = Long.toString(start)+"_"+progid;
-            Programme p = cache.get(getName(), id);
-            boolean cached = (p != null);
-            if (p == null) {
-                stats.cacheMisses++;
-                p = new Programme();
-                String description = item.select(".gids-row-item-title").text();
-                p.addTitle(description);
-            } else {
-                // System.out.println("From cache: " +
-                // programme.getString("titel"));
-                stats.cacheHits++;
-            }
-            p.startTime = new Date(1000L*start);
-            double duration = Double.parseDouble(item.attr("pr-duration")); // minutes
-            p.endTime = new Date(1000L*Math.round(start+60*duration));
-            if (config.fetchDetails && ( !cached || !p.hasDescription() ) ) {
-                fillDetails(httpclient, p, progid);
-            }
-            if (!cached) {
-                // FIXME where to do this?
-                cache.put(getName(), id, p);
-            }
-            return p;
-        }
-
-        private void fillDetails(CloseableHttpClient httpclient, Programme p, String progid) {
-            Document doc;
-            String url = detailUrl(progid);
-            try {
-                doc = fetchJsoup(httpclient, url);
-            } catch (IOException e) {
-                logger.error("IO Exception trying to get ziggo detail info from "+url, e);
-                return;
-            }
-            //logger.debug("ziggogids detail: " + doc.outerHtml());
-            Element desc = doc.select(".progpop_descr").first();
-            if(desc!=null) p.addDescription(desc.text());
-            
-            Element kijkwijzer = doc.select(".progpop_kijkwijzer").first();
-            if(kijkwijzer!=null) {
-                // TODO
-            }
-            Element time = doc.select(".progpop_time").first();
-            if(time!=null) {
-                logger.debug("progpop_time: "+time.text());
-                String genre = time.text().replaceFirst("^[^,]+,","").trim();
-                p.addCategory(config.translateCategory(genre));
-            }
-        }
 
 	/**
 	 * @param args
@@ -339,9 +339,9 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 			writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
-			// List<Channel> my_channels = channels;
+			List<Channel> my_channels = channels;
 			//List<Channel> my_channels = channels.subList(0, 15);
-			List<Channel> my_channels = channels.subList(0, 6);
+			//List<Channel> my_channels = channels.subList(0, 6);
 			for (Channel c : my_channels) {
 				c.serialize(writer, true);
 			}

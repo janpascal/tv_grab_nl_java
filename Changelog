@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.6.3 (2015-02-20)
+- Ziggo: rewritten completely after complete breakage, use JSON interface
+
 tv_grab_nl_java-1.6.2 (2015-02-19)
 - RTL: channel icons
 
