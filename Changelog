@@ -1,6 +1,10 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.6.4 (2015-02-22)
+- Ziggo: Fixed timezone issue, which caused all programmes to be off by one
+  hour. Closes #17
+
 tv_grab_nl_java-1.6.3 (2015-02-20)
 - Ziggo: rewritten completely after complete breakage, use JSON interface
 

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,7 +62,7 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
     // IDs, icon base urls, and kijkwijzer IDs
 
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
-	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_ZIGGOGIDS = 3;
+	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_ZIGGOGIDS = 7;
         //private static final int MAX_CHANNELS_PER_REQUEST = 25;
 	public final static String NAME="ziggogids.nl";
 
@@ -228,12 +229,15 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
                         result.addUrl(info);
                     }
                 }
+                /*
+                ppe: some kind of pay-per-view
                 if (details.has("ppeUrl")) {
                     String ppe = details.getString("ppeUrl");
                     if (ppe != null && ! ppe.isEmpty()) {
                         logger.debug("    FIXME ppe URL: " + ppe);
                     }
                 }
+                */
         }
         /*
           {
@@ -268,6 +272,11 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 
                 SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
                                 new Locale("nl"));
+                //Calendar cal = df.getCalendar();
+                //cal.setTimeZone(TimeZone.getTimeZone("UTC"));
+                //df.setCalendar(cal);
+                df.setTimeZone(TimeZone.getTimeZone("UTC"));
+
                 result.startTime = df.parse(json.getString("startDateTime"));
                 result.endTime = df.parse(json.getString("endDateTime"));
 
@@ -339,9 +348,9 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
 			writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
-			List<Channel> my_channels = channels;
+			//List<Channel> my_channels = channels;
 			//List<Channel> my_channels = channels.subList(0, 15);
-			//List<Channel> my_channels = channels.subList(0, 6);
+			List<Channel> my_channels = channels.subList(0, 4);
 			for (Channel c : my_channels) {
 				c.serialize(writer, true);
 			}
