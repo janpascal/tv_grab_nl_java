@@ -202,6 +202,7 @@ public class Main {
 		Set<String> oldChannels = new HashSet<String>();
 		Set<String> oldChannelNames = new HashSet<String>();
 		Set<String> oldGuides = new HashSet<String>();
+		System.out.println("Please wait, fetching EPG source information...");
 		for (Channel c : config.channels) {
 			if (c.enabled) {
 				oldChannels.add(c.source + "::" + c.id);
