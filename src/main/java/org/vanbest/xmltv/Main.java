@@ -439,6 +439,10 @@ public class Main {
 			action = ACTION_DESCRIPTION;
 			return action; // do not read config file
 		}
+		if (line.hasOption("capabilities")) {
+			action = ACTION_CAPABILITIES;
+			return action; // do not try to read config file
+		}
 		if (line.hasOption("config-file")) {
 			configFile = new File(line.getOptionValue("config-file"));
 		}
@@ -471,9 +475,6 @@ public class Main {
 		}
 		if (line.hasOption("offset")) {
 			this.offset = Integer.parseInt(line.getOptionValue("offset"));
-		}
-		if (line.hasOption("capabilities")) {
-			action = ACTION_CAPABILITIES;
 		}
 		if (line.hasOption("configure")) {
 			action = ACTION_CONFIGURE;
