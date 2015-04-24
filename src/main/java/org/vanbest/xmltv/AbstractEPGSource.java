@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,13 +60,17 @@ public abstract class AbstractEPGSource implements EPGSource {
 	}
 
 	protected String fetchURL(URL url) throws Exception {
+		return fetchURL(url, Charset.defaultCharset().name());
+	}
+	
+	protected String fetchURL(URL url, String charset) throws Exception {
 		StringBuffer buf = new StringBuffer();
 		boolean done = false;
 		for (int count = 0; !done; count++) {
 			Thread.sleep(config.niceMilliseconds*(1<<count));
 			try {
 				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(url.openStream()));
+						new InputStreamReader(url.openStream(), charset));
 				String s;
 				while ((s = reader.readLine()) != null)
 					buf.append(s);
@@ -86,10 +91,14 @@ public abstract class AbstractEPGSource implements EPGSource {
 		return buf.toString();
 	}
 
-	protected JSONObject fetchJSON(URL url) throws Exception {
-		String json = fetchURL(url);
+	protected JSONObject fetchJSON(URL url, String charset) throws Exception {
+		String json = fetchURL(url, charset);
 		logger.debug(json);
 		return JSONObject.fromObject(json);
+	}
+
+	protected JSONObject fetchJSON(URL url) throws Exception {
+		return fetchJSON(url, Charset.defaultCharset().name());
 	}
 
 	public void clearCache() {

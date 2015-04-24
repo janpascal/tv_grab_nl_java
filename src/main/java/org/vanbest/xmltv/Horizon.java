@@ -16,30 +16,20 @@ package org.vanbest.xmltv;
  The full license text can be found in the LICENSE file.
  */
 
-import java.io.BufferedReader;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -100,7 +90,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		}
 		JSONObject channels;
 		try {
-			channels = fetchJSON(url);
+			channels = fetchJSON(url, "UTF8");
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -161,7 +151,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 		for (Channel c : channels) {
 			URL url = programmeUrl(c, day);
 			logger.debug("Programme url:" + url);
-			JSONObject jsonObject = fetchJSON(url);
+			JSONObject jsonObject = fetchJSON(url, "UTF-8");
 			logger.debug(jsonObject.toString());
 			JSONArray listings = jsonObject.getJSONArray("listings");
 			for (int i = 0; i < listings.size(); i++) {
@@ -317,6 +307,7 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		Logger.getRootLogger().setLevel(Level.TRACE);
 		Config config = Config.getDefaultConfig();
 		Horizon horizon = new Horizon(config);
 		horizon.clearCache();
