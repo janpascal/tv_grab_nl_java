@@ -38,8 +38,8 @@ public class Channel {
 
         // Use default xmltvid with id+"."+sourceName
 	static Channel getChannel(String source, String id, String name) {
-                String xmltv = id + "." + source;
-                Channel c = new Channel(source, id, xmltv);
+		String xmltv = id + "." + source;
+        Channel c = new Channel(source, id, xmltv);
 		c.names.add(name);
 		return c;
 	}

@@ -19,6 +19,7 @@ The full license text can be found in the LICENSE file.
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -57,6 +58,11 @@ public abstract class AbstractEPGSource implements EPGSource {
 	@Override
 	public void close() {
 		cache.close();
+	}
+
+	protected String fetchURL(String s) throws Exception {
+		URL url = new URL(s);
+		return fetchURL(url);
 	}
 
 	protected String fetchURL(URL url) throws Exception {

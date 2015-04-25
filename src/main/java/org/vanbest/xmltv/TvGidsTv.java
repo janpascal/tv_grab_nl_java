@@ -1,7 +1,7 @@
 package org.vanbest.xmltv;
 
 /*
- Copyright (c) 2012-2013 Jan-Pascal van Best <janpascal@vanbest.org>
+ Copyright (c) 2012-2015 Jan-Pascal van Best <janpascal@vanbest.org>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,9 +24,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,33 +38,45 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-public class TvGids extends AbstractEPGSource implements EPGSource {
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-	static String channels_url = "http://www.tvgids.nl/json/lists/channels.php";
-	static String programme_base_url = "http://www.tvgids.nl/json/lists/programs.php";
-	static String detail_base_url = "http://www.tvgids.nl/json/lists/program.php";
-	static String html_detail_base_url = "http://www.tvgids.nl/programma/";
+public class TvGidsTv extends AbstractEPGSource implements EPGSource {
+
+	static String BASE_URL = "http://www.tvgids.tv";
+	static String CHANNEL_BASE_URL = BASE_URL + "/zenders";
+	static String DETAIL_BASE_URL = BASE_URL + "/tv";
 
 	private static final int MAX_PROGRAMMES_PER_DAY = 9999;
 	private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_TVGIDS = 3;
-	public static final String NAME="tvgids.nl";
+	public static final String NAME="tvgids.tv";
 
 	static Logger logger = Logger.getLogger(TvGids.class);
 
-	public TvGids(Config config) {
+	public TvGidsTv(Config config) {
         	super(config);
 	}
 
 	public String getName() {
 	    return NAME;
 	}
+	
+	public static String programmeUrl(Channel channel, int day)
+			throws Exception 
+	{
+		return CHANNEL_BASE_URL + "/" + channel.id + "/" + day;
+	}
 
+	/*
 	public static URL programmeUrl(List<Channel> channels, int day)
 			throws Exception {
 		StringBuilder s = new StringBuilder(programme_base_url);
@@ -106,43 +121,37 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	@Override
 	public List<Channel> getChannels() {
 		List<Channel> result = new ArrayList<Channel>(10);
-		URL url = null;
+
+		Document doc;
 		try {
-			url = new URL(channels_url);
-		} catch (MalformedURLException e) {
-			logger.error("Exception creating tvgids channel list url", e);
-		}
-
-		StringBuffer json = new StringBuffer();
-		try {
-
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					url.openStream()));
-
-			String s;
-			while ((s = reader.readLine()) != null)
-				json.append(s);
+			doc = Jsoup.connect(CHANNEL_BASE_URL).get();
 		} catch (IOException e) {
-			logger.error(
-					"IO Exception reading channel information from tvgids url "
-							+ url.toString(), e);
+			logger.error("Exception reading tvgids.tv channel list", e);
+			return result;
 		}
 
-		logger.debug("tvgids channels json: " + json.toString());
-		JSONArray jsonArray = JSONArray.fromObject(json.toString());
-		// System.out.println( jsonArray );
-
-		for (int i = 0; i < jsonArray.size(); i++) {
-			JSONObject zender = jsonArray.getJSONObject(i);
-			// System.out.println( "id: " + zender.getString("id"));
-			// System.out.println( "name: " + zender.getString("name"));
-			int id = zender.getInt("id");
-			String name = org.apache.commons.lang.StringEscapeUtils
-					.unescapeHtml(zender.getString("name"));
-			String icon = "http://tvgidsassets.nl/img/channels/53x27/" + id + ".png";
-			Channel c = Channel.getChannel(getName(), Integer.toString(id), name);
-			c.addIcon(icon);
-			result.add(c);
+		Elements links = doc.select("div.channels a[href^=/zenders/]");
+		for (Element link: links) {
+			logger.debug(link.toString());
+			String name = link.select("div.channel-name").text();
+			String url = link.attr("href");
+			String id = url.replace("/zenders/", "");
+			Element iconElement = link.select("div.channel-icon").first();
+			String iconUrl = null;
+			if (iconElement != null) {
+				Set<String> classNames = iconElement.classNames();
+				for(String s: classNames) {
+					if (s.startsWith("sprite-channel")) {
+						String sprite = s.replace("sprite-channel-", "");
+						iconUrl = "http://images.cdn.tvgids.tv/channels/channel_" + sprite + "_BIG@2x.png"; 
+					}
+				}
+			}
+			if (id != null) {
+				Channel c = Channel.getChannel(getName(), id, name);
+				if (iconUrl != null) c.addIcon(iconUrl);
+				result.add(c);
+			}
 		}
 
 		return result;
@@ -158,11 +167,90 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	public List<Programme> getProgrammes(List<Channel> channels, int day)
 			throws Exception {
 		List<Programme> result = new ArrayList<Programme>();
+
+		for (Channel c : channels) {
+			Document doc;
+			try {
+				logger.debug("Programme url: " + programmeUrl(c, day));
+				doc = Jsoup.connect(programmeUrl(c, day)).get();
+			} catch (IOException e) {
+				logger.error("Exception reading tvgids.tv programme list for " + c.defaultName() + " @" + day, e);
+				return result;
+			}
+	
+			Elements links = doc.select("a.section-item");
+			boolean afternoon = false;
+			for (Element link: links) {
+				// logger.debug(link.toString());
+				String detailUrl = BASE_URL + link.attr("href");
+				String programmeId = link.attr("href").replace("/tv/", "");
+				String timeTitle = link.select(".section-item-title").text();
+				String[] parts = timeTitle.trim().split(" ", 2);
+				String time = parts[0];
+				String title = parts[1];
+				if (parts.length!=2) {
+					logger.error("Programme time/title weird: \"" + timeTitle + "\"");
+					continue;
+				}
+				Calendar cal = Calendar.getInstance(Locale.forLanguageTag("nl-NL"));
+				//SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+				cal.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
+				//Date date = sdf.parse(time);
+				String[] time_parts = time.split(":", 2);
+				if (time_parts.length!=2) { 
+					logger.error("Programme time weird: \"" + timeTitle + "\"");
+					continue;
+				}
+				int hour = Integer.parseInt(time_parts[0]);
+				int minute = Integer.parseInt(time_parts[1]);
+				cal.set(Calendar.HOUR_OF_DAY, hour);
+				cal.set(Calendar.MINUTE, minute);
+				cal.set(Calendar.SECOND, 0);
+				cal.set(Calendar.MILLISECOND, 0);
+				if (hour >= 15) afternoon = true;
+				if (hour < 11 && afternoon) {
+					// We've rolled into the night, so it's the next day
+					// We're supposing that the programmes are time-ordered here
+					cal.add(Calendar.DAY_OF_MONTH, 1);
+				}
+				
+				Programme p = cache.get(getName(), programmeId);
+				boolean cached = (p != null);
+				if (p == null) {
+					stats.cacheMisses++;
+					p = new Programme();
+					p.channel = c.getXmltvChannelId();
+					// Do this here, because we can only add to these fields. Pity if
+					// they're updated
+					p.addTitle(title);
+				} else {
+					// System.out.println("From cache: " +
+					// programme.getString("titel"));
+					stats.cacheHits++;
+				}
+				p.startTime = cal.getTime();
+
+				//logger.trace("    Programme \"" + title + "\" at " + time + " (" + cal.getTime().toString() + "); details " + detailUrl);
+
+				if (config.fetchDetails && !cached) {
+					// TODO also read details if those have not been cached
+					fillDetails(detailUrl, p);
+				}
+				if (!cached) {
+					// FIXME where to do this?
+					cache.put(getName(), programmeId, p);
+				}
+				logger.debug(p.toString());
+				result.add(p);
+			}
+		}
+
+			/*
 		if (day > MAX_DAYS_AHEAD_SUPPORTED_BY_TVGIDS) {
 			return result; // empty list
 		}
 
-		URL url = programmeUrl(channels, day);
+		URL url = programmeUrl(channels, day);t
 
 		JSONObject jsonObject = fetchJSON(url);
 
@@ -193,28 +281,10 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 				}
 			}
 		}
-
+*/
 		return result;
 	}
-
-	/*
-	 * {"4": [{"db_id":"12436404", "titel":"RTL Boulevard", "genre":"Amusement",
-	 * "soort":"Amusementsprogramma", "kijkwijzer":"", "artikel_id":null,
-	 * "datum_start":"2012-03-30 23:45:00", "datum_end":"2012-03-31 00:40:00"},
-	 * {"db_id":"12436397","titel":"Teleshop 4","genre":"Overige","soort":
-	 * "Homeshopping"
-	 * ,"kijkwijzer":"","artikel_id":null,"datum_start":"2012-03-31 00:40:00"
-	 * ,"datum_end":"2012-03-31 00:41:00"},
-	 * {"db_id":"12436398","titel":"Cupido TV"
-	 * ,"genre":"Overige","soort":"","kijkwijzer"
-	 * :"","artikel_id":null,"datum_start"
-	 * :"2012-03-31 00:41:00","datum_end":"2012-03-31 04:30:00"},
-	 * {"db_id":"12436399"
-	 * ,"titel":"Morning chat","genre":"Overige","soort":"","kijkwijzer"
-	 * :"","artikel_id"
-	 * :null,"datum_start":"2012-03-31 04:30:00","datum_end":"2012-03-31 06:00:00"
-	 * }, ....... ]}
-	 */
+/*
 	private Programme programmeFromJSON(JSONObject programme,
 			boolean fetchDetails) throws Exception {
 		String id = programme.getString("db_id");
@@ -268,7 +338,9 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		logger.debug(result);
 		return result;
 	}
+*/
 
+/*
 	private void fillDetails(String id, Programme result) throws Exception {
 		try {
 			fillJSONDetails(id, result);
@@ -298,7 +370,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			}
 		}
 	}
-
+*/
 	/*
 	 * {"db_id":"12436404", "titel":"RTL Boulevard", "datum":"2012-03-30",
 	 * "btijd":"23:45:00", "etijd":"00:40:00", "synop":
@@ -307,6 +379,7 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 	 * "presentatie":"Winston Gerschtanowitz, Albert Verlinde",
 	 * "acteursnamen_rolverdeling":"", "regisseur":"", "zender_id":"4"}
 	 */
+/*	
 	private void fillJSONDetails(String id, Programme result) throws Exception {
 		URL url = JSONDetailUrl(id);
 		JSONObject json = fetchJSON(url);
@@ -363,8 +436,8 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 			}
 		}
 	}
-
-	private void fillScraperDetails(String id, Programme result)
+*/
+	private void fillDetails(String detailUrl, Programme result)
 			throws Exception {
 		Pattern progInfoPattern = Pattern.compile(
 				"prog-info-content.*prog-info-footer", Pattern.DOTALL);
@@ -373,7 +446,71 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 		Pattern HDPattern = Pattern.compile("HD \\d+[ip]?");
 		Pattern kijkwijzerPattern = Pattern
 				.compile("<img src=\"http://tvgidsassets.nl/img/kijkwijzer/.*?\" alt=\"(.*?)\" />");
+		
+		Document doc;
+		try {
+			doc = Jsoup.connect(detailUrl).get();
+		} catch (IOException e) {
+			logger.error("Exception reading tvgids.tv detail for programme " + detailUrl, e);
+			return;
+		}
+		
+		Elements details = doc.select(".program-details dt");
+		for(Element element: details)
+		{
+			//logger.debug("    " + element.nodeName() + ": " + element.text());
+			Element next = element.nextElementSibling();
+			//logger.debug("     > " + next.nodeName() + ": " + next.text());
+			String key = element.text().toLowerCase();
+			String value = next.text();
+			if (key.equals("datum")) {
+			
+			} else if (key.equals("tijd")) {
+					
+			} else if (key.equals("genre")) {
+				
+			} else if (key.equals("deel-url")) {
+				result.addUrl(value);
+				logger.trace(element.toString());
+				logger.trace(next.toString());
+			} else if (key.equals("presentatie")) {
+				String[] presenters = value.split(",");
+				for(String presenter: presenters) {
+					result.addPresenter(presenter.trim());
+				}
+			} else if (key.equals("jaar")) {
+				
+			} else if (key.equals("acteurs")) {
+				String[] actors = value.split(",");
+				for(String actor: actors) {
+					result.addActor(actor.trim());
+				}
+			} else if (key.equals("regisseur")) {
+				result.addDirector(value);
+			} else if (key.equals("officiële website")) {
+				result.addUrl(value);
+			} else if (key.equals("twitter hashtag")) {
+				
+			} else if (key.equals("officiële twitter")) {
+				
+			} else if (key.equals("uitzending gemist")) {
+				//logger.debug("Uitzending gemist: \"" + value + "\"");
+				//logger.trace(element.toString());
+				//logger.trace(next.toString());
+				//logger.debug("    gemist URL: " + next.select("a[href]").attr("href"));
+				result.addUrl(next.select("a[href]").attr("href"));
+			} else if (key.equals("imdb")) {
+				logger.trace(element.toString());
+				logger.trace(next.toString());
+			} else {
+				logger.warn("Unknown details element \"" + key + "\": \"" + value + "\"");
+			}
+		}
 
+		Elements descElements = doc.select(".section-item p");
+		//logger.debug("Description: " + descElements.text() );
+		
+/*
 		URL url = HTMLDetailUrl(id);
 		String clob = fetchURL(url);
 		Matcher m = progInfoPattern.matcher(clob);
@@ -422,27 +559,30 @@ public class TvGids extends AbstractEPGSource implements EPGSource {
 				}
 			}
 		}
+		*/
 	}
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		Logger.getRootLogger().setLevel(Level.TRACE);
 		Config config = Config.getDefaultConfig();
-		TvGids gids = new TvGids(config);
+		TvGidsTv gids = new TvGidsTv(config);
+		gids.clearCache();
 		try {
 			List<Channel> channels = gids.getChannels();
 			System.out.println("Channels: " + channels);
 			XMLStreamWriter writer = XMLOutputFactory.newInstance()
-					.createXMLStreamWriter(new FileWriter("tvgids.xml"));
+					.createXMLStreamWriter(new FileWriter("tvgids.tv.xml"));
 			writer.writeStartDocument();
 			writer.writeCharacters("\n");
 			writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
 			// List<Channel> my_channels = channels;
-			List<Channel> my_channels = channels.subList(0, 15);
-			for (Channel c : my_channels) {
+			List<Channel> my_channels = channels.subList(0, 2);
+			for (Channel c : channels) {
 				c.serialize(writer, true);
 			}
 			writer.flush();
