@@ -86,6 +86,12 @@ public class Programme implements Serializable {
 		String value;
 		List<Icon> icons;
 	}
+	
+	class StarRating implements Serializable {
+		int stars;
+		int max;
+		List<Icon> icons;
+	}
 
 	public Date startTime; // required
 	public Date endTime;
@@ -101,6 +107,7 @@ public class Programme implements Serializable {
 	public List<Title> descriptions;
 	public Credits credits;
 	public Date date; // copyright date, original date
+	public Integer year; // see above, if only the year is known
 	public List<Title> categories;
 	Title language;
 	Title origLanguage;
@@ -117,9 +124,10 @@ public class Programme implements Serializable {
 	 */
 	public List<Subtitle> subtitles;
 	public List<Rating> ratings;
+	public List<StarRating> starRatings;
 
 	/*
-	 * star-rating*, review*
+	 * review*
 	 */
 
 	public void addTitle(String title) {
@@ -281,6 +289,17 @@ public class Programme implements Serializable {
 		r.system = system;
 		r.value = value;
 		ratings.add(r);
+		// TODO icons
+	}
+	
+	public void addStarRating(int stars, int max) {
+		if (starRatings == null)
+			starRatings = new ArrayList<StarRating>();
+		StarRating r = new StarRating();
+		r.stars = stars;
+		r.max = max;
+		starRatings.add(r);
+		// TODO icons
 	}
 
 	private void writeTitle(Title title, String tag, XMLStreamWriter writer)
@@ -361,6 +380,8 @@ public class Programme implements Serializable {
 
 	public void serialize(XMLStreamWriter writer) throws XMLStreamException {
 		DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss Z");
+		DateFormat df_date = new SimpleDateFormat("yyyyMMdd");
+		DateFormat df_year = new SimpleDateFormat("yyyyMMdd");
 
 		writer.writeStartElement("programme");
 		if (startTime != null)
@@ -377,6 +398,15 @@ public class Programme implements Serializable {
 			writeStringList(credits.directors, "director", writer);
 			writeActorList(credits.actors, writer);
 			writeStringList(credits.presenters, "presenter", writer);
+			writer.writeEndElement();
+		}
+		if (date != null) {
+			writer.writeStartElement("date");
+			writer.writeCharacters(df_date.format(startTime));
+			writer.writeEndElement();
+		} else if (year != null) {
+			writer.writeStartElement("date");
+			writer.writeCharacters(Integer.toString(year));
 			writer.writeEndElement();
 		}
 		writeTitleList(categories, "category", writer);
@@ -445,6 +475,14 @@ public class Programme implements Serializable {
 				writer.writeEndElement();
 			}
 
+		}
+		if (starRatings != null) {
+			for (StarRating r : starRatings) {
+				writer.writeStartElement("star-rating");
+   			    writeString(r.stars + " / " + r.max, "value", writer);
+				writeIconList(icons, writer);
+				writer.writeEndElement();
+			}
 		}
 		writer.writeEndElement();
 		writer.writeCharacters(System.getProperty("line.separator"));
