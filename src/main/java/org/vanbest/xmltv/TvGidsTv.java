@@ -124,15 +124,15 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 
 		Document doc;
 		try {
-			doc = Jsoup.connect(CHANNEL_BASE_URL).get();
-		} catch (IOException e) {
+			doc = fetchJsoup(CHANNEL_BASE_URL);
+		} catch (Exception e) {
 			logger.error("Exception reading tvgids.tv channel list", e);
 			return result;
 		}
 
 		Elements links = doc.select("div.channels a[href^=/zenders/]");
 		for (Element link: links) {
-			logger.debug(link.toString());
+			//logger.debug(link.toString());
 			String name = link.select("div.channel-name").text();
 			String url = link.attr("href");
 			String id = url.replace("/zenders/", "");
@@ -172,8 +172,8 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 			Document doc;
 			try {
 				logger.debug("Programme url: " + programmeUrl(c, day));
-				doc = Jsoup.connect(programmeUrl(c, day)).get();
-			} catch (IOException e) {
+				doc = fetchJsoup(programmeUrl(c, day));
+			} catch (Exception e) {
 				logger.error("Exception reading tvgids.tv programme list for " + c.defaultName() + " @" + day, e);
 				return result;
 			}
@@ -213,6 +213,7 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 					// We're supposing that the programmes are time-ordered here
 					cal.add(Calendar.DAY_OF_MONTH, 1);
 				}
+				cal.add(Calendar.DAY_OF_MONTH, day);
 				
 				Programme p = cache.get(getName(), programmeId);
 				boolean cached = (p != null);
@@ -437,20 +438,15 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 		}
 	}
 */
+	static private final Pattern timePattern = Pattern.compile("([0-9]+):([0-9]+).*?([0-9]+):([0-9]+)");
+
 	private void fillDetails(String detailUrl, Programme result)
 			throws Exception {
-		Pattern progInfoPattern = Pattern.compile(
-				"prog-info-content.*prog-info-footer", Pattern.DOTALL);
-		Pattern infoLinePattern = Pattern
-				.compile("<li><strong>(.*?):</strong>(.*?)</li>");
-		Pattern HDPattern = Pattern.compile("HD \\d+[ip]?");
-		Pattern kijkwijzerPattern = Pattern
-				.compile("<img src=\"http://tvgidsassets.nl/img/kijkwijzer/.*?\" alt=\"(.*?)\" />");
-		
+
 		Document doc;
 		try {
-			doc = Jsoup.connect(detailUrl).get();
-		} catch (IOException e) {
+			doc = fetchJsoup(detailUrl);
+		} catch (Exception e) {
 			logger.error("Exception reading tvgids.tv detail for programme " + detailUrl, e);
 			return;
 		}
@@ -463,23 +459,55 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 			//logger.debug("     > " + next.nodeName() + ": " + next.text());
 			String key = element.text().toLowerCase();
 			String value = next.text();
+			logger.trace("    " + key + ": " + value);
 			if (key.equals("datum")) {
-			
+				// ignored, already present
 			} else if (key.equals("tijd")) {
-					
+				//logger.trace("Tijd veld: \"" + value + "\"");
+				Matcher m = timePattern.matcher(value);
+				if (m.find() && m.groupCount()>=4 ) {
+					try {
+						//logger.trace(m.group(1) + ":" + m.group(2) + " en dan " + m.group(3) + ":" + m.group(4));
+						int hourFrom = Integer.parseInt(m.group(1));
+						int minuteFrom = Integer.parseInt(m.group(2));
+						int hourTo = Integer.parseInt(m.group(3));
+						int minuteTo = Integer.parseInt(m.group(4));
+						Calendar cal = Calendar.getInstance(Locale.forLanguageTag("nl-NL"));
+						cal.setTime(result.startTime);
+						cal.add(Calendar.HOUR_OF_DAY, hourTo - hourFrom);
+						cal.add(Calendar.MINUTE, minuteTo - minuteFrom);
+						if (hourTo < hourFrom) {
+							cal.add(Calendar.HOUR_OF_DAY,  24);
+						}
+						result.endTime = cal.getTime();
+					} catch (NumberFormatException e) {
+						logger.warn("Illegal tijd field \"" + value + "\"");
+					}
+				}
 			} else if (key.equals("genre")) {
-				
+				//String category = config.translateCategory(value);
+				//if(category.equals(value)) {
+				//	logger.warn("Untranslated genre: \"" + value + "\"");
+				//}
+				//result.addCategory(config.translateCategory(value));
+				result.addCategory(value);
 			} else if (key.equals("deel-url")) {
 				result.addUrl(value);
-				logger.trace(element.toString());
-				logger.trace(next.toString());
+				//logger.trace(element.toString());
+				//logger.trace(next.toString());
 			} else if (key.equals("presentatie")) {
 				String[] presenters = value.split(",");
 				for(String presenter: presenters) {
 					result.addPresenter(presenter.trim());
 				}
 			} else if (key.equals("jaar")) {
-				
+				//logger.trace(element.toString());
+				//logger.trace(next.toString());
+				try {
+					result.year = Integer.parseInt(value);
+				} catch (NumberFormatException e) {
+					logger.warn("Illegal year format \"" + value + "\"");
+				}
 			} else if (key.equals("acteurs")) {
 				String[] actors = value.split(",");
 				for(String actor: actors) {
@@ -488,11 +516,14 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 			} else if (key.equals("regisseur")) {
 				result.addDirector(value);
 			} else if (key.equals("officiële website")) {
-				result.addUrl(value);
+				result.addUrl(next.select("a[href]").attr("href"));
+				//logger.trace(element.toString());
+				//logger.trace(next.toString());
+				//logger.trace("    URL: " + next.select("a[href]").attr("href"));
 			} else if (key.equals("twitter hashtag")) {
-				
+				// ignore newfangled twitter thingie
 			} else if (key.equals("officiële twitter")) {
-				
+				// ignore
 			} else if (key.equals("uitzending gemist")) {
 				//logger.debug("Uitzending gemist: \"" + value + "\"");
 				//logger.trace(element.toString());
@@ -500,17 +531,68 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 				//logger.debug("    gemist URL: " + next.select("a[href]").attr("href"));
 				result.addUrl(next.select("a[href]").attr("href"));
 			} else if (key.equals("imdb")) {
-				logger.trace(element.toString());
-				logger.trace(next.toString());
+				//logger.trace(element.toString());
+				//logger.trace(next.toString());
+				// e.g. "width: 73%"
+				String ratingString = next.select(".stars .bar").attr("style");
+				Pattern widthPattern = Pattern.compile("(\\d+)%");
+				Matcher m = widthPattern.matcher(ratingString);
+				if (m.find() && m.groupCount()>=1 ) {
+					try {
+						int percentage = Integer.parseInt(m.group(1));
+						result.addStarRating(percentage, 100);
+					} catch (NumberFormatException e) {
+						logger.warn("Illegal imdb percentage: \"" + m.group(1) + "\"");
+						logger.debug(next.toString());
+					}
+				}
+				// Add IMDB url
+				result.addUrl(next.select("a[href]").attr("href"));
+			} else if (key.equals("kijkwijzer")) {
+				//logger.trace(element.toString());
+				//logger.trace(next.toString());
+
+				List<String> list = new ArrayList<String>();
+				for(Element icon: next.select(".kijkwijzer-icon"))
+				{
+					for(String c: icon.classNames()) {
+						//logger.debug("Looking at \"" + c + "\"");
+						if (c.startsWith("kijkwijzer-")) {
+							c = c.replace("kijkwijzer-", "");
+							if (c.equals("icon")) continue;
+							//logger.debug("Looking at \"" + c + "\"");
+							list.add(c);
+						}
+					}
+				}
+                if (config.joinKijkwijzerRatings) {
+                    // mythtv doesn't understand multiple <rating> tags
+                    result.addRating("kijkwijzer", StringUtils.join(list, ","));
+                } else {
+                    for (String rating : list) {
+                        result.addRating("kijkwijzer", rating);
+                    }
+                }
 			} else {
 				logger.warn("Unknown details element \"" + key + "\": \"" + value + "\"");
+				logger.trace(element.toString());
+				logger.trace(next.toString());
 			}
 		}
 
 		Elements descElements = doc.select(".section-item p");
+		result.addDescription(descElements.text());
 		//logger.debug("Description: " + descElements.text() );
 		
 /*
+		Pattern progInfoPattern = Pattern.compile(
+				"prog-info-content.*prog-info-footer", Pattern.DOTALL);
+		Pattern infoLinePattern = Pattern
+				.compile("<li><strong>(.*?):</strong>(.*?)</li>");
+		Pattern HDPattern = Pattern.compile("HD \\d+[ip]?");
+		Pattern kijkwijzerPattern = Pattern
+				.compile("<img src=\"http://tvgidsassets.nl/img/kijkwijzer/.*?\" alt=\"(.*?)\" />");
+		
 		URL url = HTMLDetailUrl(id);
 		String clob = fetchURL(url);
 		Matcher m = progInfoPattern.matcher(clob);
@@ -580,13 +662,13 @@ public class TvGidsTv extends AbstractEPGSource implements EPGSource {
 			writer.writeDTD("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
 			writer.writeCharacters("\n");
 			writer.writeStartElement("tv");
-			// List<Channel> my_channels = channels;
-			List<Channel> my_channels = channels.subList(0, 2);
+			List<Channel> my_channels = channels;
+			//List<Channel> my_channels = channels.subList(0, 15);
 			for (Channel c : channels) {
 				c.serialize(writer, true);
 			}
 			writer.flush();
-			List<Programme> programmes = gids.getProgrammes(my_channels, 2);
+			List<Programme> programmes = gids.getProgrammes(my_channels, 1);
 			for (Programme p : programmes) {
 				p.serialize(writer);
 			}

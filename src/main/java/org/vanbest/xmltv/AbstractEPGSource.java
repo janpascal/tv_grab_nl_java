@@ -70,6 +70,7 @@ public abstract class AbstractEPGSource implements EPGSource {
 	}
 	
 	protected String fetchURL(URL url, String charset) throws Exception {
+		logger.trace(url);
 		StringBuffer buf = new StringBuffer();
 		boolean done = false;
 		for (int count = 0; !done; count++) {
@@ -106,6 +107,20 @@ public abstract class AbstractEPGSource implements EPGSource {
 	protected JSONObject fetchJSON(URL url) throws Exception {
 		return fetchJSON(url, Charset.defaultCharset().name());
 	}
+	
+	protected org.jsoup.nodes.Document fetchJsoup(URL url, String charset) throws Exception {
+		String html = fetchURL(url, charset);
+		return org.jsoup.Jsoup.parse(html);
+	}
+
+	protected org.jsoup.nodes.Document fetchJsoup(URL url) throws Exception {
+		return fetchJsoup(url, Charset.defaultCharset().name());
+	}
+
+	protected org.jsoup.nodes.Document fetchJsoup(String url) throws Exception {
+		return fetchJsoup(new URL(url));
+	}
+
 
 	public void clearCache() {
 		cache.clear(getName());

@@ -131,26 +131,30 @@ public class Config {
 	static private Map<String, String> getDefaultCattrans() {
 		Map<String, String> result = new HashMap<String, String>();
 		result.put("amusement", "Unknown");
-		result.put("comedy", "Comedy");
-		result.put("documentaire", "Documentary");
-		result.put("educatief", "Educational");
+		result.put("overige", "Misc");
 		result.put("erotiek", "Adult");
-		result.put("film", "Movie");
 		result.put("muziek", "Art/Music");
-		result.put("informatief", "Educational");
-		result.put("jeugd", "Children");
-		result.put("kunst/cultuur", "Art/Music");
-		result.put("misdaad", "Crime/Mystery");
-		result.put("muziek", "Music");
-		result.put("natuur", "Science/Nature");
-		result.put("nieuws/actualiteiten", "News");
-		result.put("overige", "Unknown");
-		result.put("religieus", "Religion");
-		result.put("serie/soap", "Drama");
-		result.put("sport", "Sports");
 		result.put("theater", "Art/Music");
-		result.put("wetenschap", "Science/Nature");
+		result.put("kunst/cultuur", "Art/Music");
+		result.put("muziek", "Art/Music");
+		result.put("jeugd", "Children");
+		result.put("comedy", "Comedy");
+		result.put("misdaad", "Crime/Mystery");
+		result.put("documentaire", "Documentary");
+		result.put("Documentair portret", "Documentary");
+		result.put("serie/soap", "Drama");
+		result.put("educatief", "Educational");
+		result.put("informatief", "Educational");
+		result.put("film", "Movie");
+		result.put("nieuws/actualiteiten", "News");
 		result.put("news", "News");
+		result.put("Nieuwsuitzending", "News");
+		result.put("natuur", "Science/Nature");
+		result.put("Wetenschappelijk magazine", "Science/Nature");
+		result.put("religieus", "Religion");
+		result.put("wetenschap", "Science/Nature");
+		result.put("sport", "Sports");
+		result.put("Magazine",  "Talk");
 		return result;
 	}
 
