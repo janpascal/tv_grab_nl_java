@@ -133,14 +133,15 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
             JSONArray genres = base_data.getJSONArray("Genres");
             for(int i=0; i<genres.size(); i++) {
                 JSONObject genre = genres.getJSONObject(i);
+                logger.debug("Genre " + genre.getString("id") + ": " + genre.getString("name"));
                 statics.genre.put(genre.getString("id"), genre.getString("name"));
             }
 
             JSONArray parentals = base_data.getJSONArray("ParentalGuidances");
             for(int i=0; i<parentals.size(); i++) {
                 JSONObject parental = parentals.getJSONObject(i);
-                String rating =
-                parental.getString("name").replace("Kijkwijzer","").trim();
+                String rating = parental.getString("name").replace("Kijkwijzer","").trim();
+                logger.debug("Rating " + parental.getString("id") + ": " + rating);
                 statics.kijkwijzer.put(parental.getString("id"), rating);
             }
         }
@@ -193,7 +194,9 @@ public class ZiggoGids extends AbstractEPGSource implements EPGSource {
                 JSONObject program = programs.getJSONObject(0);
                 if (program.has("genre")) {
                     String genre = statics.genre.get("" + program.getInt("genre"));
-    		    result.addCategory(config.translateCategory(genre));
+                    if (genre != null) {
+                        result.addCategory(config.translateCategory(genre));
+                    }
                     // logger.debug("    FIXME genre: " + program.getInt("genre"));
                 }
 
