@@ -1,6 +1,9 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.6.5 (2015-09-21)
+- Ziggo: Fixed NullPointerException issue.
+
 tv_grab_nl_java-1.6.4 (2015-02-22)
 - Ziggo: Fixed timezone issue, which caused all programmes to be off by one
   hour. Closes #17
