@@ -1,6 +1,11 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.6.6 (2016-02-29)
+- Horizon: new URL
+- Horizon: do not cache "Zender verstrekt geen informatie" items, so that they
+  are fetched the next time
+
 tv_grab_nl_java-1.6.5 (2015-09-21)
 - Ziggo: Fixed NullPointerException issue.
 
