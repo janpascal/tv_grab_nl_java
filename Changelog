@@ -1,6 +1,10 @@
 Changelog for tv_grab_nl_java
 =============================
 
+tv_grab_nl_java-1.7.0 (2016-03-03)
+- Disabled ZiggoGids. After the merger of Ziggo with UPC, the Ziggo TV
+  guide has been discontinued.
+
 tv_grab_nl_java-1.6.6 (2016-02-29)
 - Horizon: new URL
 - Horizon: do not cache "Zender verstrekt geen informatie" items, so that they
