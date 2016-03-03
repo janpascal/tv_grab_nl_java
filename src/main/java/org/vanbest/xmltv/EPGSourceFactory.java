@@ -43,6 +43,10 @@ public class EPGSourceFactory {
                 }
                 logger.debug("EPG source classname: " + NAME.toString());
                 String sourceName = (String) NAME.get(null);
+                if (sourceName.equals("ziggogids.nl")) {
+                    logger.info("Ignoring deprecated source " + sourceName);
+                    continue;
+                }
                 sources.put(sourceName, clazz);
             } catch (Exception e) {
                 logger.error("Error reading EPG Source class " + clazz, e);
