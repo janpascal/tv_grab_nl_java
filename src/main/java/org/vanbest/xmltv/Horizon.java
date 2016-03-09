@@ -24,8 +24,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import javax.script.*;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
+
+import sun.org.mozilla.javascript.NativeObject;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -35,24 +39,117 @@ import net.sf.json.JSONObject;
 
 public class Horizon extends AbstractEPGSource implements EPGSource {
 
-    static String channels_url = "https://web-api-salt.horizon.tv/oesp/api/NL/nld/web/channels/";
-    static String listings_url = "https://web-api-salt.horizon.tv/oesp/api/NL/nld/web/listings";
+    static String config_url = "https://www.horizon.tv/content/orion-js-app/settings.js?countryhomepage=/content/www-horizon-tv/nl_nl";
+
+    private String channels_url = null;
+    private String listings_url = null;
 
     private static final int MAX_DAYS_AHEAD_SUPPORTED_BY_HORIZON = 7;
 
-        public final static String NAME="horizon.tv";
+    public final static String NAME="horizon.tv";
 
     static Logger logger = Logger.getLogger(Horizon.class);
 
     public Horizon(Config config) {
         super(config);
+        find_urls();
+    }
+
+    private void find_urls() {
+        URL url = null;
+        try {
+            url = new URL(config_url);
+        } catch (MalformedURLException e) {
+            logger.error("Exception creating horizon config url", e);
+        }
+        String config;
+        try {
+            config = fetchURL(url, "UTF-8");
+        } catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+            return;
+        }
+        //logger.debug("horizon config javascript: " + config);
+
+        // Prefix config javascript with definitions for the structures
+        // it will write to
+        String prefix = "var window = {" +
+                 "    location: {" +
+                 "           href: \"http://localhost\"" +
+                 "    }" +
+                 "};" +
+                 "var orion = {" +
+                 "    entities: {" +
+                 "    }" +
+                 "};";
+
+        //config = prefix + "var BBVSettingsObject = {test: \"test\"};\n" + /*config + */ postfix;
+        config = prefix + "\n" + config; //  + "\n" + postfix;
+
+        //System.out.println("\ntest config javascript: ");
+        //System.out.println(config);
+
+        // Get the JavaScript engine
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("JavaScript");
+
+        // Set JavaScript variables
+        Bindings vars = new SimpleBindings();
+        
+        // Evaluate script
+        try {
+            engine.eval(config);
+        } catch (Exception e) {
+            logger.error("Exception parsing Horizon javascript config", e);
+            return;
+        }
+
+        Object settings = engine.get("BBVSettingsObject");
+
+        String base_url = null;
+
+        // Parse URLs from settings object
+        if (settings instanceof NativeObject) {
+            NativeObject nObj = (NativeObject)settings;
+            Object api = nObj.get("api", nObj);
+            if (api instanceof NativeObject) {
+                NativeObject nApi = (NativeObject) api;
+                Object urls = nApi.get("urls", nApi);
+                if (urls instanceof NativeObject) {
+                    NativeObject nUrls = (NativeObject) urls;
+                    Object base = nUrls.get("base", nUrls);
+                    try {
+                        URL url_base = new URL((String) base);
+                        URL root_base = new URL(url_base.getProtocol(), url_base.getHost(), url_base.getPort(), "");
+                        base_url = root_base.toString();
+                    } catch (MalformedURLException e) {
+                        logger.error("Malformed URL trying to calculate Horizon base URL", e);
+                    }
+                }
+            }
+            Object routes = nObj.get("oespRoutes", nObj);
+            if (routes instanceof NativeObject) {
+                NativeObject nRoutes = (NativeObject) routes;
+
+                Object channels = nRoutes.get("channels", nRoutes);
+                this.channels_url = base_url + (String) channels;
+                //System.out.println("channels_url: " + channels_url);
+
+                Object listings = nRoutes.get("listings", nRoutes);
+                this.listings_url = base_url + (String) listings;
+                //System.out.println("listings_url: " + listings_url);
+            }
+
+        }
+                
     }
 
     public String getName() {
         return NAME;
     }
 
-    public static URL programmeUrl(Channel channel, int day)
+    public URL programmeUrl(Channel channel, int day)
             throws Exception {
         StringBuilder s = new StringBuilder(listings_url);
         s.append("?byStationId=");

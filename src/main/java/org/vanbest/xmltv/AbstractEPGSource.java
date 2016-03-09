@@ -72,8 +72,10 @@ public abstract class AbstractEPGSource implements EPGSource {
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(url.openStream(), charset));
 				String s;
-				while ((s = reader.readLine()) != null)
+				while ((s = reader.readLine()) != null) {
 					buf.append(s);
+                                        buf.append("\n");
+                                }
 				done = true;
 			} catch (IOException e) {
 				if (!config.quiet) {
