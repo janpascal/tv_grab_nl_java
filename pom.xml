@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.vanbest.xmltv.tv_grab_nl_java</groupId>
 	<artifactId>tv_grab_nl_java</artifactId>
-	<version>1.7.1</version>
+	<version>1.7.2-dev</version>
     	<scm>
   		<connection>scm:git:git://github.com/janpascal/tv_grab_nl_java.git</connection>
  	 	<developerConnection>scm:git:git://github.com/janpascal/tv_grab_nl_java.git</developerConnection>
@@ -63,6 +63,12 @@
                      <artifactId>reflections</artifactId>
                      <version>0.9.9-RC1</version>
                  </dependency>
+                <!-- https://mvnrepository.com/artifact/org.mozilla/rhino -->
+                <dependency>
+                    <groupId>org.mozilla</groupId>
+                    <artifactId>rhino</artifactId>
+                    <version>1.7.7.1</version>
+                </dependency>
 	</dependencies>
 	<build>
 		<plugins>

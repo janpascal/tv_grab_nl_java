@@ -24,12 +24,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import javax.script.*;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 
-import sun.org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.*;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -90,59 +88,59 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
         //System.out.println("\ntest config javascript: ");
         //System.out.println(config);
 
-        // Get the JavaScript engine
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("JavaScript");
-
-        // Set JavaScript variables
-        Bindings vars = new SimpleBindings();
-        
-        // Evaluate script
+        Context cx = Context.enter();
         try {
-            engine.eval(config);
-        } catch (Exception e) {
-            logger.error("Exception parsing Horizon javascript config", e);
-            return;
-        }
+            // Initialize the standard objects (Object, Function, etc.)
+            // This must be done before scripts can be executed. Returns
+            // a scope object that we use in later calls.
+            Scriptable scope = cx.initStandardObjects();
 
-        Object settings = engine.get("BBVSettingsObject");
+            // Now evaluate the string we've colected.
+            Object result = cx.evaluateString(scope, config, "<cmd>", 1, null);
 
-        String base_url = null;
-
-        // Parse URLs from settings object
-        if (settings instanceof NativeObject) {
-            NativeObject nObj = (NativeObject)settings;
-            Object api = nObj.get("api", nObj);
-            if (api instanceof NativeObject) {
-                NativeObject nApi = (NativeObject) api;
-                Object urls = nApi.get("urls", nApi);
-                if (urls instanceof NativeObject) {
-                    NativeObject nUrls = (NativeObject) urls;
-                    Object base = nUrls.get("base", nUrls);
-                    try {
-                        URL url_base = new URL((String) base);
-                        URL root_base = new URL(url_base.getProtocol(), url_base.getHost(), url_base.getPort(), "");
-                        base_url = root_base.toString();
-                    } catch (MalformedURLException e) {
-                        logger.error("Malformed URL trying to calculate Horizon base URL", e);
+            Object settings = scope.get("BBVSettingsObject", scope);
+            if (settings == Scriptable.NOT_FOUND) {
+                logger.error("settings is not defined.");
+            } else {
+                //System.out.println("Settings: = " + Context.toString(settings));
+                String base_url = null;
+                if (settings instanceof Scriptable) {
+                    Scriptable s = (Scriptable) settings;
+                    Scriptable api = (Scriptable) s.get("api", s);
+                    logger.debug("api: " + Context.toString(api));
+                    Scriptable urls =  (Scriptable) api.get("urls", api);
+                    logger.debug("urls: " + Context.toString(urls));
+                    Object base = urls.get("base", urls);
+                    if (settings== Scriptable.NOT_FOUND) {
+                        logger.error("Horizon config: base is not defined.");
+                    } else {
+                        String baseString = Context.toString(base);
+                        try {
+                            URL baseURL = new URL(baseString);
+                            URL root_base = new URL(baseURL.getProtocol(), baseURL.getHost(), baseURL.getPort(), "");
+                            base_url = root_base.toString();
+                        } catch (MalformedURLException e) {
+                            logger.error("Malformed URL trying to calculate Horizon base URL", e);
+                        }
                     }
+
+                    Scriptable routes = (Scriptable) s.get("oespRoutes", s);
+                    logger.debug("routes: " + Context.toString(routes));
+
+                    Object channels = routes.get("channels", routes);
+                    this.channels_url = base_url + Context.toString(channels);
+                    logger.debug("channels_url: " + channels_url);
+
+                    Object listings = routes.get("listings", routes);
+                    this.listings_url = base_url + Context.toString(listings);
+                    logger.debug("listings_url: " + listings_url);
                 }
             }
-            Object routes = nObj.get("oespRoutes", nObj);
-            if (routes instanceof NativeObject) {
-                NativeObject nRoutes = (NativeObject) routes;
-
-                Object channels = nRoutes.get("channels", nRoutes);
-                this.channels_url = base_url + (String) channels;
-                //System.out.println("channels_url: " + channels_url);
-
-                Object listings = nRoutes.get("listings", nRoutes);
-                this.listings_url = base_url + (String) listings;
-                //System.out.println("listings_url: " + listings_url);
-            }
-
+        } catch (Exception e) {
+            logger.error("Exception parsing Horizon javascript config", e);
+        } finally {
+            Context.exit();
         }
-                
     }
 
     public String getName() {
