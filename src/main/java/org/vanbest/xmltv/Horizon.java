@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
@@ -37,7 +39,8 @@ import net.sf.json.JSONObject;
 
 public class Horizon extends AbstractEPGSource implements EPGSource {
 
-    static String config_url = "https://www.horizon.tv/content/orion-js-app/settings.js?countryhomepage=/content/www-horizon-tv/nl_nl";
+    static String base_url = "https://www.horizon.tv";
+    static String index_url = base_url + "/nl_nl/tv-gids.html";
 
     private String channels_url = null;
     private String listings_url = null;
@@ -55,6 +58,41 @@ public class Horizon extends AbstractEPGSource implements EPGSource {
 
     private void find_urls() {
         URL url = null;
+
+        /*
+        try {
+            url = new URL(index_url);
+        } catch (MalformedURLException e) {
+            logger.error("Exception creating horizon index url", e);
+            return;
+        }
+        String index_html;
+        try {
+            logger.debug("horizon url: " + url.toString());
+            index_html = fetchURL(url);
+        } catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+            return;
+        }
+        logger.debug("horizon index.html: " + index_html);
+
+        //Pattern p = Pattern.compile("/content/orion-js-app/settings.js/content/www-horizon-tv/nl_nl.*\\.js");
+        //Matcher m = p.matcher(index_html);
+        //if (!m.find()) {
+        //    logger.error("Config URL not found in Horizon index.html!");
+        //    return;
+        //}
+        //String config_url = base_url + m.group();
+        */
+
+        String config_url = "https://www.horizon.tv/content/orion-js-app/settings.js/content/www-horizon-tv/nl_nl.1471858095071.js";
+        logger.info("Horizon config URL: " + config_url);
+
+        // Looking for a line like this:
+        //   <script src="/content/orion-js-app/settings.js/content/www-horizon-tv/nl_nl.1471858095071.js"></script> 
+        // Config url should look something like this:
+        //   https://www.horizon.tv/content/orion-js-app/settings.js/content/www-horizon-tv/nl_nl.1471858095071.js
         try {
             url = new URL(config_url);
         } catch (MalformedURLException e) {
