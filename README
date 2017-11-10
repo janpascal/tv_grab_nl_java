@@ -1,6 +1,11 @@
 README for tv_grab_nl_java
 ==========================
 
+NOTICE
+------
+tv_grab_nl_java has been discontinued. I would recommend tvgrabpiAPI 
+(https://github.com/tvgrabbers/tvgrabpyAPI) for grabbing Dutch XMLTV data.
+
 English Summary
 ---------------
 tv_grab_nl_java is an XMLTV-compatible grabber for Dutch television that uses
